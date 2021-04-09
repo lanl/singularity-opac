@@ -1,4 +1,7 @@
-# singularity-opac
+singularity-opac
+==
+
+[![Tests](https://github.com/lanl/singularity-opac/actions/workflows/tests.yml/badge.svg)](https://github.com/lanl/singularity-opac/actions/workflows/tests.yml)
 
 Performance Portable Opacity and Emissivity for simulation codes
 
