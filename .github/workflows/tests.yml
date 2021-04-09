@@ -24,6 +24,6 @@ jobs:
           run: |
             mkdir -p bin
             cd bin
-            cmake -DSINGULARITY_BUILD_TESTS=ON
+            cmake -DSINGULARITY_BUILD_TESTS=ON ..
             make -j
             make test
