@@ -16,10 +16,10 @@
 #ifndef OPACITIES_OPAC_VARIANT_HPP_
 #define OPACITIES_OPAC_VARIANT_HPP_
 
+#include "../utils/opac_utils/opac_error.hpp"
+#include "../utils/opac_utils/radiation_types.hpp"
 #include "../utils/ports-of-call/portability.hpp"
 #include "../utils/variant/include/mpark/variant.hpp"
-
-using Real = double;
 
 namespace singularity {
 
@@ -66,23 +66,79 @@ public:
         opac_);
   }
 
+  // opacity
   PORTABLE_INLINE_FUNCTION
-  int nlambda() const noexcept {
-    return mpark::visit([](const auto &eos) { return eos.nlambda(); }, eos_);
+  OpacityPerNu(const Real rho, const Real temp, const Real nu,
+               const RadiationType type, Real *lambda = nullptr) {
+    mpark::visit(
+        [=](const auto &opac) {
+          return opac.OpacityPerNu(rho, temp, nu, type, lambda);
+        },
+        opac_);
+  }
+
+  // emissivity with units of energy/time/frequency/volume/angle
+  PORTABLE_INLINE_FUNCTION
+  EmissivityPerNuOmega(const Real rho, const Real temp, const Real nu,
+                       const RadiationType type, Real *lambda = nullptr) {
+    mpark::visit(
+        [=](const auto &opac) {
+          return opac.EmissivityPerNuOmega(rho, temp, nu, type, lambda);
+        },
+        opac_);
+  }
+
+  // emissivity integrated over angle
+  PORTABLE_INLINE_FUNCTION
+  EmissivityPerNu(const Real rho, const Real temp, const Real nu,
+                  const RadiationType type, Real *lambda = nullptr) {
+    mpark::visit(
+        [=](const auto &opac) {
+          return opac.EmissivityPerNu(rho, temp, nu, type, lambda);
+        },
+        opac_);
+  }
+
+  // emissivity integrated over angle and frequency
+  PORTABLE_INLINE_FUNCTION
+  Emissivity(const Real rho, const Real temp, const RadiationType type,
+             Real *lambda = nullptr) {
+    mpark::visit(
+        [=](const auto &opac) {
+          return opac.Emissivity(rho, temp, type, lambda);
+        },
+        opac_);
+  }
+
+  // Emissivity of packet
+  PORTABLE_INLINE_FUNCTION
+  NumberEmissivity(const Real rho, const Real temp, RadiationType type,
+                   Real *lambda = nullptr) {
+    mpark::visit(
+        [=](const auto &opac) {
+          return opac.NumberEmissivity(rho, temp, type, lambda);
+        },
+        opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  int GetNLambda() const noexcept {
+    return mpark::visit([](const auto &opac) { return opac.GetNLambda(); },
+                        opac_);
   }
 
   template <typename T> PORTABLE_INLINE_FUNCTION bool IsType() const noexcept {
-    return mpark::holds_alternative<T>(eos_);
+    return mpark::holds_alternative<T>(opac_);
   }
 
   PORTABLE_INLINE_FUNCTION
   void PrintParams() const noexcept {
-    return mpark::visit([](const auto &eos) { return eos.PrintParams(); },
-                        eos_);
+    return mpark::visit([](const auto &opac) { return opac.PrintParams(); },
+                        opac_);
   }
 
   inline void Finalize() noexcept {
-    return mpark::visit([](auto &eos) { return eos.Finalize(); }, eos_);
+    return mpark::visit([](auto &opac) { return opac.Finalize(); }, opac_);
   }
 }
 
