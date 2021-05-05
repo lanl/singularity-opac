@@ -13,14 +13,20 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef OPACITIES_OPAC_
-#define OPACITIES_OPAC_
-
+#ifndef UTILS_OPAC_UTILS_OPAC_ERROR_
+#define UTILS_OPAC_UTILS_OPAC_ERROR_
 
 namespace singularity {
 
-
+#ifdef SINGULARITY_ENABLE_EXCEPTIONS
+#include <stdexcept>
+#define OPAC_ERROR(x) (throw std::runtime_error(x))
+#else
+#include <cstdlib>
+#define OPAC_ERROR(x) printf("%s", x); std::exit(1)
+#endif
+#define UNDEFINED_ERROR OPAC_ERROR("DEFINE ME\n")
 
 } // namespace singularity
 
-#endif // OPACITIES_OPAC_
+#endif // UTILS_OPAC_UTILS_OPAC_ERROR_
