@@ -16,10 +16,20 @@
 #ifndef OPACITIES_OPAC_
 #define OPACITIES_OPAC_
 
+#include "gray_opacity.hpp"
+#include "opac_variant.hpp"
+#include "thermal_distributions.hpp"
+#include "tophat_emissivity.hpp"
 
 namespace singularity {
 
+using GrayPhotonOpacity = GrayOpacity<PlanckDistribution<1>, 1>;
+// TODO(JMM): Change this to Fermi-Dirac
+using GrayNeutrinoOpacity = GrayOpacity<PlanckDistribution<3>, 3>;
+using TophatOpacity = TophatEmissivity<PlanckDistribution<3>>;
 
+using Opacity =
+    opac_impl::Variant<GrayPhotonOpacity, GrayNeutrinoOpacity, TophatOpacity>;
 
 } // namespace singularity
 

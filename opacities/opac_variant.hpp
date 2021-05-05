@@ -16,12 +16,14 @@
 #ifndef OPACITIES_OPAC_VARIANT_HPP_
 #define OPACITIES_OPAC_VARIANT_HPP_
 
-#include "../utils/opac_utils/opac_error.hpp"
-#include "../utils/opac_utils/radiation_types.hpp"
-#include "../utils/ports-of-call/portability.hpp"
-#include "../utils/variant/include/mpark/variant.hpp"
+#include <opac-utils/opac_error.hpp>
+#include <opac-utils/radiation_types.hpp>
+#include <ports-of-call/portability.hpp>
+#include <variant/include/mpark/variant.hpp>
 
 namespace singularity {
+
+namespace opac_impl {
 
 template <typename... Ts> using opac_variant = mpark::variant<Ts...>;
 
@@ -62,14 +64,14 @@ public:
 
   Variant GetOnDevice() {
     return mpark::visit(
-        [](auto &opac) { return opac_variant<OPACs...>(opac.GetOnDevice()); },
+        [](auto &opac) { return opac_variant<Opacs...>(opac.GetOnDevice()); },
         opac_);
   }
 
   // opacity
   PORTABLE_INLINE_FUNCTION
-  OpacityPerNu(const Real rho, const Real temp, const Real nu,
-               const RadiationType type, Real *lambda = nullptr) {
+  Real OpacityPerNu(const RadiationType type, const Real rho, const Real temp,
+                    const Real nu, Real *lambda = nullptr) {
     mpark::visit(
         [=](const auto &opac) {
           return opac.OpacityPerNu(rho, temp, nu, type, lambda);
@@ -79,8 +81,9 @@ public:
 
   // emissivity with units of energy/time/frequency/volume/angle
   PORTABLE_INLINE_FUNCTION
-  EmissivityPerNuOmega(const Real rho, const Real temp, const Real nu,
-                       const RadiationType type, Real *lambda = nullptr) {
+  Real EmissivityPerNuOmega(const RadiationType type, const Real rho,
+                            const Real temp, const Real nu,
+                            Real *lambda = nullptr) {
     mpark::visit(
         [=](const auto &opac) {
           return opac.EmissivityPerNuOmega(rho, temp, nu, type, lambda);
@@ -90,8 +93,8 @@ public:
 
   // emissivity integrated over angle
   PORTABLE_INLINE_FUNCTION
-  EmissivityPerNu(const Real rho, const Real temp, const Real nu,
-                  const RadiationType type, Real *lambda = nullptr) {
+  Real EmissivityPerNu(const RadiationType type, const Real rho,
+                       const Real temp, const Real nu, Real *lambda = nullptr) {
     mpark::visit(
         [=](const auto &opac) {
           return opac.EmissivityPerNu(rho, temp, nu, type, lambda);
@@ -101,8 +104,8 @@ public:
 
   // emissivity integrated over angle and frequency
   PORTABLE_INLINE_FUNCTION
-  Emissivity(const Real rho, const Real temp, const RadiationType type,
-             Real *lambda = nullptr) {
+  Real Emissivity(const RadiationType type, const Real rho, const Real temp,
+                  Real *lambda = nullptr) {
     mpark::visit(
         [=](const auto &opac) {
           return opac.Emissivity(rho, temp, type, lambda);
@@ -112,8 +115,8 @@ public:
 
   // Emissivity of packet
   PORTABLE_INLINE_FUNCTION
-  NumberEmissivity(const Real rho, const Real temp, RadiationType type,
-                   Real *lambda = nullptr) {
+  Real NumberEmissivity(RadiationType type, const Real rho, const Real temp,
+                        Real *lambda = nullptr) {
     mpark::visit(
         [=](const auto &opac) {
           return opac.NumberEmissivity(rho, temp, type, lambda);
@@ -122,9 +125,8 @@ public:
   }
 
   PORTABLE_INLINE_FUNCTION
-  int GetNLambda() const noexcept {
-    return mpark::visit([](const auto &opac) { return opac.GetNLambda(); },
-                        opac_);
+  int nlambda() const noexcept {
+    return mpark::visit([](const auto &opac) { return opac.nlambda(); }, opac_);
   }
 
   template <typename T> PORTABLE_INLINE_FUNCTION bool IsType() const noexcept {
@@ -140,8 +142,9 @@ public:
   inline void Finalize() noexcept {
     return mpark::visit([](auto &opac) { return opac.Finalize(); }, opac_);
   }
-}
+};
 
+} // namespace opac_impl
 } // namespace singularity
 
 #endif

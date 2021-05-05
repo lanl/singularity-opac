@@ -13,39 +13,15 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef UTILS_OPAC_UTILS_RADIATION_TYPES
-#define UTILS_OPAC_UTILS_RADIATION_TYPES
+#include <catch2/catch.hpp>
 
-#include "opac_error.hpp"
+#include "../opacities/opac.hpp"
 
-namespace singularity {
+using namespace singularity;
 
-enum class RadiationType {
-  TRACER = -1,
-  NU_ELECTRON = 0,
-  NU_ELECTRON_ANTI = 1,
-  NU_HEAVY = 2,
-  PHOTON = 3
-};
-
-int RadType2Idx(RadiationType type) { return static_cast<int>(type); }
-RadiationType Idx2RadType(int i) {
-  switch (i) {
-  case -1:
-    return RadiationType::TRACER;
-  case 0:
-    return RadiationType::NU_ELECTRON;
-  case 1:
-    return RadiationType::NU_ELECTRON_ANTI;
-  case 2:
-    return RadiationType::NU_HEAVY;
-  case 3:
-    return RadiationType::PHOTON;
-  default:
-    OPAC_ERROR("Unknown radiation type");
+TEST_CASE("Gray opacities", "[GrayPhoton][GrayNeutrinos]") {
+  WHEN("We initialize a gray photon opacity") {
+    Opacity opac_photon = GrayPhotonOpacity(1);
+    Opacity opac_neutrino = GrayNeutrinoOpacity(1);
   }
 }
-
-} // namespace singularity
-
-#endif // UTILS_OPAC_UTILS_RADIATION_TYPES
