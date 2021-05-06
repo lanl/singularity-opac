@@ -16,9 +16,11 @@
 #ifndef OPACITIES_OPAC_VARIANT_HPP_
 #define OPACITIES_OPAC_VARIANT_HPP_
 
-#include <opac-utils/opac_error.hpp>
-#include <opac-utils/radiation_types.hpp>
+#include <utility>
+
 #include <ports-of-call/portability.hpp>
+#include <singularity-opac/base/opac_error.hpp>
+#include <singularity-opac/base/radiation_types.hpp>
 #include <variant/include/mpark/variant.hpp>
 
 namespace singularity {
@@ -68,58 +70,58 @@ public:
         opac_);
   }
 
+  // TODO(JMM): Is this variatic magic too much? Would it be better to be more
+  // explicit? This is pretty gross.
+
   // opacity
-  PORTABLE_INLINE_FUNCTION
-  Real OpacityPerNu(const RadiationType type, const Real rho, const Real temp,
-                    const Real nu, Real *lambda = nullptr) {
+  // Signature should be at least
+  // rho, temp, nu, lambda
+  template <typename... Args>
+  PORTABLE_INLINE_FUNCTION Real OpacityPerNu(Args &&... args) {
     mpark::visit(
         [=](const auto &opac) {
-          return opac.OpacityPerNu(rho, temp, nu, type, lambda);
+          return opac.OpacityPerNu(std::forward<Args>(args)...);
         },
         opac_);
   }
 
   // emissivity with units of energy/time/frequency/volume/angle
-  PORTABLE_INLINE_FUNCTION
-  Real EmissivityPerNuOmega(const RadiationType type, const Real rho,
-                            const Real temp, const Real nu,
-                            Real *lambda = nullptr) {
+  // signature should be at least rho, temp, nu, lambda
+  template <typename... Args>
+  PORTABLE_INLINE_FUNCTION Real EmissivityPerNuOmega(Args &&... args) {
     mpark::visit(
         [=](const auto &opac) {
-          return opac.EmissivityPerNuOmega(rho, temp, nu, type, lambda);
+          return opac.EmissivityPerNuOmega(std::forward<Args>(args)...);
         },
         opac_);
   }
 
   // emissivity integrated over angle
-  PORTABLE_INLINE_FUNCTION
-  Real EmissivityPerNu(const RadiationType type, const Real rho,
-                       const Real temp, const Real nu, Real *lambda = nullptr) {
+  template <typename... Args>
+  PORTABLE_INLINE_FUNCTION Real EmissivityPerNu(Args &&... args) {
     mpark::visit(
         [=](const auto &opac) {
-          return opac.EmissivityPerNu(rho, temp, nu, type, lambda);
+          return opac.EmissivityPerNu(std::forward<Args>(args)...);
         },
         opac_);
   }
 
   // emissivity integrated over angle and frequency
-  PORTABLE_INLINE_FUNCTION
-  Real Emissivity(const RadiationType type, const Real rho, const Real temp,
-                  Real *lambda = nullptr) {
+  template <typename... Args>
+  PORTABLE_INLINE_FUNCTION Real Emissivity(Args &&... args) {
     mpark::visit(
         [=](const auto &opac) {
-          return opac.Emissivity(rho, temp, type, lambda);
+          return opac.Emissivity(std::forward<Args>(args)...);
         },
         opac_);
   }
 
   // Emissivity of packet
-  PORTABLE_INLINE_FUNCTION
-  Real NumberEmissivity(RadiationType type, const Real rho, const Real temp,
-                        Real *lambda = nullptr) {
+  template <typename... Args>
+  PORTABLE_INLINE_FUNCTION Real NumberEmissivity(Args &&... args) {
     mpark::visit(
         [=](const auto &opac) {
-          return opac.NumberEmissivity(rho, temp, type, lambda);
+          return opac.NumberEmissivity(std::forward<Args>(args)...);
         },
         opac_);
   }

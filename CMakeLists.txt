@@ -93,11 +93,11 @@ target_link_options(singularity-opac::flags INTERFACE
 target_include_directories(singularity-opac::libs
   INTERFACE
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/utils>
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/opacities>)
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
 target_include_directories(singularity-opac::flags
   INTERFACE
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/utils>
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/opacities>)
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
 
 # check for currently incompatible option
 if(SINGULARITY_USE_CUDA AND NOT SINGULARITY_USE_KOKKOS)

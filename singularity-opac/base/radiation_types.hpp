@@ -13,24 +13,39 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef OPACITIES_OPAC_
-#define OPACITIES_OPAC_
+#ifndef UTILS_OPAC_UTILS_RADIATION_TYPES
+#define UTILS_OPAC_UTILS_RADIATION_TYPES
 
-#include "gray_opacity.hpp"
-#include "opac_variant.hpp"
-#include "thermal_distributions.hpp"
-#include "tophat_emissivity.hpp"
+#include <singularity-opac/base/opac_error.hpp>
 
 namespace singularity {
 
-using GrayPhotonOpacity = GrayOpacity<PlanckDistribution<1>, 1>;
-// TODO(JMM): Change this to Fermi-Dirac
-using GrayNeutrinoOpacity = GrayOpacity<PlanckDistribution<3>, 3>;
-using TophatOpacity = TophatEmissivity<PlanckDistribution<3>>;
+enum class RadiationType {
+  TRACER = -1,
+  NU_ELECTRON = 0,
+  NU_ELECTRON_ANTI = 1,
+  NU_HEAVY = 2,
+  PHOTON = 3
+};
 
-using Opacity =
-    opac_impl::Variant<GrayPhotonOpacity, GrayNeutrinoOpacity, TophatOpacity>;
+int RadType2Idx(RadiationType type) { return static_cast<int>(type); }
+RadiationType Idx2RadType(int i) {
+  switch (i) {
+  case -1:
+    return RadiationType::TRACER;
+  case 0:
+    return RadiationType::NU_ELECTRON;
+  case 1:
+    return RadiationType::NU_ELECTRON_ANTI;
+  case 2:
+    return RadiationType::NU_HEAVY;
+  case 3:
+    return RadiationType::PHOTON;
+  default:
+    OPAC_ERROR("Unknown radiation type");
+  }
+}
 
 } // namespace singularity
 
-#endif // OPACITIES_OPAC_
+#endif // UTILS_OPAC_UTILS_RADIATION_TYPES

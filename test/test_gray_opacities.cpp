@@ -15,7 +15,7 @@
 
 #include <catch2/catch.hpp>
 
-#include "../opacities/opac.hpp"
+#include <singularity-opac/neutrinos/opac.hpp>
 
 using namespace singularity;
 

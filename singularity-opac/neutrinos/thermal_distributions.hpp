@@ -18,9 +18,9 @@
 
 #include <cmath>
 
-#include <opac-utils/physical_constants.hpp>
-#include <opac-utils/radiation_types.hpp>
 #include <ports-of-call/portability.hpp>
+#include <singularity-opac/base/physical_constants.hpp>
+#include <singularity-opac/base/radiation_types.hpp>
 
 namespace singularity {
 
@@ -40,13 +40,20 @@ template <int NSPECIES> struct PlanckDistribution {
            std::pow(temp, 4) /
            (15. * std::pow(cgs::CL, 2) * std::pow(cgs::HPL, 3));
   }
+  PORTABLE_INLINE_FUNCTION
+  static Real ThernalNumberDistribution(const Real temp) {
+    using namespace constants;
+    constexpr Real zeta3 = 1.20206;
+    return 12. * pow(cgs::KBOL, 3) * M_PI * NSPECIES * pow(temp, 3) * zeta3 /
+           (pow(cgs::CL, 2) * pow(cgs::HPL, 3));
+  }
 };
 
 template <typename Emissivity, typename ThermalDistribution>
 Real OpacityFromKirkhoff(Emissivity &J, ThermalDistribution &B,
-                         const RadiationType type,
-                         const Real rho, const Real temp, const Real nu,
-                         Real *lambda=nullptr) {
+                         const RadiationType type, const Real rho,
+                         const Real temp, const Real nu,
+                         Real *lambda = nullptr) {
   Real Bnu = B.ThermalDistributionOfTNu(temp, nu);
   Real jnu = J.EmissivityPerNuOmega(type, rho, temp, nu, lambda);
   return jnu / Bnu;
