@@ -13,8 +13,8 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef CONSTANTS_CONSTANTS_
-#define CONSTANTS_CONSTANTS_
+#ifndef SINGULARITY_CONSTANTS_CONSTANTS_
+#define SINGULARITY_CONSTANTS_CONSTANTS_
 
 #ifdef SINGULARITY_ENABLE_EXCEPTIONS
 #include <stdexcept>
@@ -22,7 +22,7 @@
 #else
 #define CONSTANTS_ERROR(x) printf("%s", x)
 #endif
-#define UNDEFINED_ERROR OPAC_ERROR("DEFINE ME\n")
+#define UNDEFINED_ERROR CONSTANTS_ERROR("DEFINE ME\n")
 
 namespace singularity {
 
@@ -232,4 +232,7 @@ constexpr double PhysicalConstants<T>::amu;
 
 } // namespace singularity
 
-#endif // CONSTANTS_CONSTANTS_
+#undef CONSTANTS_ERROR
+#undef UNDEFINED_ERROR
+
+#endif // SINGULARITY_CONSTANTS_CONSTANTS_
