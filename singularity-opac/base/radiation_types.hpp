@@ -13,8 +13,8 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef UTILS_OPAC_UTILS_RADIATION_TYPES
-#define UTILS_OPAC_UTILS_RADIATION_TYPES
+#ifndef SINGULARITY_OPAC_BASE_RADIATION_TYPES_
+#define SINGULARITY_OPAC_BASE_RADIATION_TYPES_
 
 #include <singularity-opac/base/opac_error.hpp>
 
@@ -48,4 +48,4 @@ RadiationType Idx2RadType(int i) {
 
 } // namespace singularity
 
-#endif // UTILS_OPAC_UTILS_RADIATION_TYPES
+#endif // SINGULARITY_OPAC_BASE_RADIATION_TYPES_

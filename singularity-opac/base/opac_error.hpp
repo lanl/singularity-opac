@@ -13,8 +13,8 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef UTILS_OPAC_UTILS_OPAC_ERROR_
-#define UTILS_OPAC_UTILS_OPAC_ERROR_
+#ifndef SINGULARITY_OPAC_BASE_OPAC_ERROR_
+#define SINGULARITY_OPAC_BASE_OPAC_ERROR_
 
 namespace singularity {
 
@@ -29,4 +29,4 @@ namespace singularity {
 
 } // namespace singularity
 
-#endif // UTILS_OPAC_UTILS_OPAC_ERROR_
+#endif // SINGULARITY_OPAC_BASE_OPAC_ERROR_

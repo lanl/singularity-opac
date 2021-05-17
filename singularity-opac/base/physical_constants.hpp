@@ -14,8 +14,8 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef UTILS_OPAC_UTILS_PHYSICAL_CONSTANTS
-#define UTILS_OPAC_UTILS_PHYSICAL_CONSTANTS
+#ifndef SINGULARITY_OPAC_BASE_PHYSICAL_CONSTANTS_
+#define SINGULARITY_OPAC_BASE_PHYSICAL_CONSTANTS_
 
 #include <cmath>
 #include <ports-of-call/portability.hpp>
@@ -65,4 +65,4 @@ constexpr Real LSUN = 3.827e33; // Solar luminosity
 } // namespace constants
 } // namespace singularity
 
-#endif // UTILS_OPAC_UTILS_PHYSICAL_CONSTANTS
+#endif // SINGULARITY_OPAC_BASE_PHYSICAL_CONSTANTS_

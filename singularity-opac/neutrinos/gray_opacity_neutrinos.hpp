@@ -13,60 +13,49 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef OPACITIES_TOPHAT_EMISSIVITY
-#define OPACITIES_TOPHAT_EMISSIVITY
+#ifndef SINGULARITY_OPAC_NEUTRINOS_GRAY_OPACITY_NEUTRINOS_
+#define SINGULARITY_OPAC_NEUTRINOS_GRAY_OPACITY_NEUTRINOS_
 
 #include <cassert>
 #include <cmath>
 #include <cstdio>
 
+#include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/physical_constants.hpp>
-#include <ports-of-call/portability.hpp>
 
-#include "thermal_distributions.hpp"
+#include "thermal_distributions_neutrinos.hpp"
 
 namespace singularity {
+namespace neutrinos {
 
-// Neutrino tophat emissivity from
-// Miller, Ryan, Dolence (2019). arXiv:1903.09273
-template <typename ThermalDistribution> class TophatEmissivity {
+template <typename ThermalDistribution> class GrayOpacity {
 public:
-  TophatEmissivity(const Real C, const Real numin, const Real numax)
-      : C_(C), numin_(numin), numax_(numax) {}
-  TophatEmissivity(const ThermalDistribution &dist, const Real C,
-                   const Real numin, const Real numax)
-      : dist_(dist), C_(C), numin_(numin), numax_(numax) {}
-  TophatEmissivity GetOnDevice() { return *this; }
+  GrayOpacity(const Real kappa) : kappa_(kappa) {}
+  GrayOpacity(const ThermalDistribution &dist, const Real kappa)
+      : dist_(dist), kappa_(kappa) {}
+
+  GrayOpacity GetOnDevice() { return *this; }
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return 1; }
   PORTABLE_INLINE_FUNCTION
   void PrintParams() const noexcept {
-    printf("Tophat emissivity. C, numin, numax = %g, %g, %g\n", C_, numin_,
-           numax_);
+    printf("Gray opacity. kappa = %g\n", kappa_);
   }
   inline void Finalize() noexcept {}
 
-  // TODO(JMM): Does this make sense for the tophat?
   PORTABLE_INLINE_FUNCTION
   Real OpacityPerNu(const RadiationType type, const Real rho, const Real temp,
                     const Real nu, Real *lambda = nullptr) {
-    return OpacityFromKirkhoff(*this, dist_);
+    return dist_.OpacityFromKirkhoff(*this, type, rho, temp, nu, lambda);
   }
 
   PORTABLE_INLINE_FUNCTION
   Real EmissivityPerNuOmega(const RadiationType type, const Real rho,
                             const Real temp, const Real nu,
                             Real *lambda = nullptr) {
-    assert(type == RadiationType::NU_ELECTRON ||
-           type == RadiationType::NU_ELECTRON_ANTI ||
-           type == RadiationType::NU_HEAVY);
-    Real Ye = lambda[0];
-    if (nu > numin_ && nu < numax_) {
-      return C_ * GetYeF(Ye, type) / (4. * M_PI);
-    } else {
-      return 0.;
-    }
+    Real Bnu = dist_.ThermalDistributionOfTNu(temp, nu);
+    return kappa_ * Bnu;
   }
 
   PORTABLE_INLINE_FUNCTION
@@ -79,44 +68,21 @@ public:
   PORTABLE_INLINE_FUNCTION
   Real Emissivity(const RadiationType type, const Real rho, const Real temp,
                   Real *lambda = nullptr) {
-    assert(type == RadiationType::NU_ELECTRON ||
-           type == RadiationType::NU_ELECTRON_ANTI ||
-           type == RadiationType::NU_HEAVY);
-    Real Ye = lambda[0];
-    Real Bc = C_ * (numax_ - numin_);
-    Real J = Bc * GetYeF(Ye, type);
-    return J;
+    return kappa_ * dist_.ThermalDistributionOfT(temp);
   }
 
   PORTABLE_INLINE_FUNCTION
   Real NumberEmissivity(RadiationType type, const Real rho, const Real temp,
                         Real *lambda = nullptr) {
-    using namespace constants;
-    assert(type == RadiationType::NU_ELECTRON ||
-           type == RadiationType::NU_ELECTRON_ANTI ||
-           type == RadiationType::NU_HEAVY);
-    Real Ye = lambda[0];
-    Real Ac = 1 / (cgs::HPL * rho) * C_ * log(numax_ / numin_);
-    return rho * Ac * GetYeF(Ye, type);
+    return kappa_ * dist_.ThermalNumberDistribution(temp);
   }
 
 private:
-  PORTABLE_INLINE_FUNCTION
-  Real GetYeF(Real Ye, RadiationType type) {
-    if (type == RadiationType::NU_ELECTRON) {
-      return 2. * Ye;
-    } else if (type == RadiationType::NU_ELECTRON_ANTI) {
-      return 1. - 2. * Ye;
-    } else {
-      return 0.;
-    }
-  }
-  Real C_;
-  Real numin_;
-  Real numax_;
+  Real kappa_; // absorption coefficient. Units of 1/cm
   ThermalDistribution dist_;
 };
 
+} // namespace neutrinos
 } // namespace singularity
 
-#endif // OPACITIES_TOPHAT_EMISSIVITY
+#endif // SINGULARITY_OPAC_NEUTRINOS_GRAY_OPACITY_NEUTRINOS_

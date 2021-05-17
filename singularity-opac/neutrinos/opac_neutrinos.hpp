@@ -13,25 +13,25 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef OPACITIES_OPAC_
-#define OPACITIES_OPAC_
+#ifndef SINGULARITY_OPAC_NEUTRINOS_OPAC_NEUTRINOS_
+#define SINGULARITY_OPAC_NEUTRINOS_OPAC_NEUTRINOS_
 
 #include <singularity-opac/base/opac_variant.hpp>
 
-#include "gray_opacity.hpp"
-#include "thermal_distributions.hpp"
-#include "tophat_emissivity.hpp"
+#include "gray_opacity_neutrinos.hpp"
+#include "thermal_distributions_neutrinos.hpp"
+#include "tophat_emissivity_neutrinos.hpp"
 
 namespace singularity {
+namespace neutrinos {
 
-using GrayPhotonOpacity = GrayOpacity<PlanckDistribution<1>>;
 // TODO(JMM): Change this to Fermi-Dirac
-using GrayNeutrinoOpacity = GrayOpacity<PlanckDistribution<3>>;
-using TophatOpacity = TophatEmissivity<PlanckDistribution<3>>;
+using Gray = GrayOpacity<PlanckDistribution<3>>;
+using Tophat = TophatEmissivity<PlanckDistribution<3>>;
 
-using Opacity =
-    opac_impl::Variant<GrayPhotonOpacity, GrayNeutrinoOpacity, TophatOpacity>;
+using Opacity = opac_impl::Variant<Gray, Tophat>;
 
+} // namespace neutrinos
 } // namespace singularity
 
-#endif // OPACITIES_OPAC_
+#endif // SINGULARITY_OPAC_NEUTRINOS_OPAC_NEUTRINOS_

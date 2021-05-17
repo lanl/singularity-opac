@@ -13,8 +13,8 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef OPACITIES_OPAC_VARIANT_HPP_
-#define OPACITIES_OPAC_VARIANT_HPP_
+#ifndef SINGULARITY_OPAC_BASE_OPAC_VARIANT_
+#define SINGULARITY_OPAC_BASE_OPAC_VARIANT_
 
 #include <utility>
 
@@ -149,4 +149,4 @@ public:
 } // namespace opac_impl
 } // namespace singularity
 
-#endif
+#endif // SINGULARITY_OPAC_BASE_OPAC_VARIANT_
