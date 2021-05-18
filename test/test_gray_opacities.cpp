@@ -28,7 +28,10 @@
 using namespace singularity;
 
 using pc = PhysicalConstants<CGS>;
+
+#ifdef PORTABILITY_STRATEGY_KOKKOS
 using atomic_view = Kokkos::MemoryTraits<Kokkos::Atomic>;
+#endif
 
 template <typename T>
 PORTABLE_INLINE_FUNCTION T FractionalDifference(const T &a, const T &b) {
