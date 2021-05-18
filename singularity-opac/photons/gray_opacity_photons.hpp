@@ -71,7 +71,7 @@ class GrayOpacity {
   }
 
  private:
-  Real kappa_; // absorption coefficient. Units of 1/cm
+  Real kappa_; // Opacity. Units of cm^2/g
   PlanckDistribution dist_;
 };
 
