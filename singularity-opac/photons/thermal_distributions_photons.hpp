@@ -13,8 +13,8 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef SINGULARITY_OPAC_NEUTRINOS_THERMAL_DISTRIBUTIONS_NEUTRINOS_
-#define SINGULARITY_OPAC_NEUTRINOS_THERMAL_DISTRIBUTIONS_NEUTRINOS_
+#ifndef SINGULARITY_OPAC_PHOTONS_THERMAL_DISTRIBUTIONS_PHOTONS_
+#define SINGULARITY_OPAC_PHOTONS_THERMAL_DISTRIBUTIONS_PHOTONS_
 
 #include <cmath>
 
@@ -23,46 +23,40 @@
 #include <singularity-opac/constants/constants.hpp>
 
 namespace singularity {
-namespace neutrinos {
+namespace photons {
 
 using pc = PhysicalConstants<CGS>;
 
-template <int NSPECIES>
-struct FermiDiracDistributionNoMu {
+struct PlanckDistribution {
   PORTABLE_INLINE_FUNCTION
-  Real ThermalDistributionOfTNu(const Real temp, const Real Ye, const RadiationType type,
-                                const Real nu, Real *lambda = nullptr) const {
+  Real ThermalDistributionOfTNu(const Real temp, const Real nu,
+                                Real *lambda = nullptr) const {
     Real x = pc::h * nu / (pc::kb * temp);
-    Real Bnu = NSPECIES * (2. * pc::h * nu * nu * nu / (pc::c * pc::c)) * 1. /
-               (std::exp(x) + 1.);
+    Real Bnu = (2. * pc::h * nu * nu * nu / (pc::c * pc::c)) * 1. / (std::exp(x) - 1.);
     return Bnu;
   }
   PORTABLE_INLINE_FUNCTION
-  Real ThermalDistributionOfT(const Real temp, const Real Ye, const RadiationType type,
-                              Real *lambda = nullptr) const {
-    return 7. * std::pow(M_PI, 5) * std::pow(pc::kb, 4) * NSPECIES * std::pow(temp, 4) /
+  Real ThermalDistributionOfT(const Real temp, Real *lambda = nullptr) const {
+    return 8. * std::pow(M_PI, 5) * std::pow(pc::kb, 4) * std::pow(temp, 4) /
            (15. * std::pow(pc::c, 2) * std::pow(pc::h, 3));
   }
   PORTABLE_INLINE_FUNCTION
-  Real ThermalNumberDistribution(const Real temp, const Real Ye, const RadiationType type,
-                                 Real *lambda = nullptr) const {
+  Real ThermalNumberDistribution(const Real temp, Real *lambda = nullptr) const {
     constexpr Real zeta3 = 1.20206;
-    return 12. * pow(pc::kb, 3) * M_PI * NSPECIES * pow(temp, 3) * zeta3 /
+    return 16. * pow(pc::kb, 3) * M_PI * pow(temp, 3) * zeta3 /
            (pow(pc::c, 2) * pow(pc::h, 3));
   }
   template <typename Emissivity>
   PORTABLE_INLINE_FUNCTION Real OpacityFromKirkhoff(const Emissivity &J, const Real rho,
-                                                    const Real temp, const Real Ye,
-                                                    const RadiationType type,
-                                                    const Real nu,
+                                                    const Real temp, const Real nu,
                                                     Real *lambda = nullptr) const {
     Real Bnu = ThermalDistributionOfTNu(temp, nu, lambda);
-    Real jnu = J.EmissivityPerNuOmega(rho, temp, type, nu, lambda);
+    Real jnu = J.EmissivityPerNuOmega(rho, temp, nu, lambda);
     return jnu / Bnu;
   }
 };
 
-} // namespace neutrinos
+} // namespace photons
 } // namespace singularity
 
-#endif // SINGULARITY_OPAC_NEUTRINOS_THERMAL_DISTRIBUTIONS_NEUTRINOS_
+#endif //  SINGULARITY_OPAC_PHOTONS_THERMAL_DISTRIBUTIONS_PHOTONS_

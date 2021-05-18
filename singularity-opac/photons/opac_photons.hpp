@@ -13,26 +13,21 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef SINGULARITY_OPAC_NEUTRINOS_OPAC_NEUTRINOS_
-#define SINGULARITY_OPAC_NEUTRINOS_OPAC_NEUTRINOS_
+#ifndef SINGULARITY_OPAC_PHOTONS_OPAC_PHOTONS_
+#define SINGULARITY_OPAC_PHOTONS_OPAC_PHOTONS_
 
-#include <variant/include/mpark/variant.hpp>
 #include <singularity-opac/base/opac_variant.hpp>
 
-#include <singularity-opac/neutrinos/gray_opacity_neutrinos.hpp>
-#include <singularity-opac/neutrinos/thermal_distributions_neutrinos.hpp>
-#include <singularity-opac/neutrinos/tophat_emissivity_neutrinos.hpp>
+#include <singularity-opac/photons/gray_opacity_photons.hpp>
+#include <singularity-opac/photons/thermal_distributions_photons.hpp>
 
 namespace singularity {
-namespace neutrinos {
+namespace photons {
 
-// TODO(JMM): Include chemical potential
-using Gray = GrayOpacity<FermiDiracDistributionNoMu<3>>;
-using Tophat = TophatEmissivity<FermiDiracDistributionNoMu<3>>;
+using Gray = GrayOpacity;
+using Opacity = opac_impl::Variant<Gray>;
 
-using Opacity = opac_impl::Variant<Gray, Tophat>;
-
-} // namespace neutrinos
+} // namespace photons
 } // namespace singularity
 
-#endif // SINGULARITY_OPAC_NEUTRINOS_OPAC_NEUTRINOS_
+#endif // SINGULARITY_OPAC_PHOTONS_OPAC_PHOTONS_

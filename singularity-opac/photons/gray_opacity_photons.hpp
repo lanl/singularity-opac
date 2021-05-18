@@ -13,8 +13,8 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef SINGULARITY_OPAC_NEUTRINOS_GRAY_OPACITY_NEUTRINOS_
-#define SINGULARITY_OPAC_NEUTRINOS_GRAY_OPACITY_NEUTRINOS_
+#ifndef SINGULARITY_OPAC_PHOTONS_GRAY_OPACITY_PHOTONS_
+#define SINGULARITY_OPAC_PHOTONS_GRAY_OPACITY_PHOTONS_
 
 #include <cassert>
 #include <cmath>
@@ -22,16 +22,15 @@
 
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
-#include <singularity-opac/neutrinos/thermal_distributions_neutrinos.hpp>
+#include <singularity-opac/photons/thermal_distributions_photons.hpp>
 
 namespace singularity {
-namespace neutrinos {
+namespace photons {
 
-template <typename ThermalDistribution>
 class GrayOpacity {
  public:
   GrayOpacity(const Real kappa) : kappa_(kappa) {}
-  GrayOpacity(const ThermalDistribution &dist, const Real kappa)
+  GrayOpacity(const PlanckDistribution &dist, const Real kappa)
       : dist_(dist), kappa_(kappa) {}
 
   GrayOpacity GetOnDevice() { return *this; }
@@ -42,46 +41,41 @@ class GrayOpacity {
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION
-  Real OpacityPerNu(const Real rho, const Real temp, const Real Ye,
-                    const RadiationType type, const Real nu,
+  Real OpacityPerNu(const Real rho, const Real temp, const Real nu,
                     Real *lambda = nullptr) const {
-    return dist_.OpacityFromKirkhoff(*this, rho, temp, Ye, type, nu, lambda);
+    return dist_.OpacityFromKirkhoff(*this, rho, temp, nu, lambda);
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real EmissivityPerNuOmega(const Real rho, const Real temp, const Real Ye,
-                            const RadiationType type, const Real nu,
+  Real EmissivityPerNuOmega(const Real rho, const Real temp, const Real nu,
                             Real *lambda = nullptr) const {
-    Real Bnu = dist_.ThermalDistributionOfTNu(temp, Ye, type, nu, lambda);
+    Real Bnu = dist_.ThermalDistributionOfTNu(temp, nu, lambda);
     return rho * kappa_ * Bnu;
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real EmissivityPerNu(const Real rho, const Real temp, const Real Ye,
-                       const RadiationType type, const Real nu,
+  Real EmissivityPerNu(const Real rho, const Real temp, const Real nu,
                        Real *lambda = nullptr) const {
-    return 4 * M_PI * EmissivityPerNuOmega(rho, temp, Ye, type, nu, lambda);
+    return 4 * M_PI * EmissivityPerNuOmega(rho, temp, nu, lambda);
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real Emissivity(const Real rho, const Real temp, const Real Ye,
-                  const RadiationType type, Real *lambda = nullptr) const {
-    Real B = dist_.ThermalDistributionOfT(temp, Ye, type, lambda);
+  Real Emissivity(const Real rho, const Real temp, Real *lambda = nullptr) const {
+    Real B = dist_.ThermalDistributionOfT(temp, lambda);
     return rho * kappa_ * B;
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real NumberEmissivity(const Real rho, const Real temp, Real Ye, RadiationType type,
-                        Real *lambda = nullptr) const {
-    return kappa_ * dist_.ThermalNumberDistribution(temp, Ye, type, lambda);
+  Real NumberEmissivity(const Real rho, const Real temp, Real *lambda = nullptr) const {
+    return kappa_ * dist_.ThermalNumberDistribution(temp, lambda);
   }
 
  private:
   Real kappa_; // absorption coefficient. Units of 1/cm
-  ThermalDistribution dist_;
+  PlanckDistribution dist_;
 };
 
-} // namespace neutrinos
+} // namespace photons
 } // namespace singularity
 
-#endif // SINGULARITY_OPAC_NEUTRINOS_GRAY_OPACITY_NEUTRINOS_
+#endif // SINGULARITY_OPAC_PHOTONS_GRAY_OPACITY_PHOTONS_
