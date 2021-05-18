@@ -74,9 +74,11 @@ class Variant {
   // Signature should be at least
   // rho, temp, nu, lambda
   template <typename... Args>
-  PORTABLE_INLINE_FUNCTION Real OpacityPerNu(Args &&...args) const {
+  PORTABLE_INLINE_FUNCTION Real AbsorptionCoefficientPerNu(Args &&...args) const {
     return mpark::visit(
-        [=](const auto &opac) { return opac.OpacityPerNu(std::forward<Args>(args)...); },
+        [=](const auto &opac) {
+          return opac.AbsorptionCoefficientPerNu(std::forward<Args>(args)...);
+        },
         opac_);
   }
 

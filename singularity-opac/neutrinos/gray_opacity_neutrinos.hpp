@@ -42,10 +42,11 @@ class GrayOpacity {
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION
-  Real OpacityPerNu(const Real rho, const Real temp, const Real Ye,
-                    const RadiationType type, const Real nu,
-                    Real *lambda = nullptr) const {
-    return dist_.OpacityFromKirkhoff(*this, rho, temp, Ye, type, nu, lambda);
+  Real AbsorptionCoefficientPerNu(const Real rho, const Real temp, const Real Ye,
+                                  const RadiationType type, const Real nu,
+                                  Real *lambda = nullptr) const {
+    return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, Ye, type, nu,
+                                                   lambda);
   }
 
   PORTABLE_INLINE_FUNCTION

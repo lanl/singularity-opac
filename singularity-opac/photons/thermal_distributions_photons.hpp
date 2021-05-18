@@ -47,9 +47,9 @@ struct PlanckDistribution {
            (pow(pc::c, 2) * pow(pc::h, 3));
   }
   template <typename Emissivity>
-  PORTABLE_INLINE_FUNCTION Real OpacityFromKirkhoff(const Emissivity &J, const Real rho,
-                                                    const Real temp, const Real nu,
-                                                    Real *lambda = nullptr) const {
+  PORTABLE_INLINE_FUNCTION Real
+  AbsorptionCoefficientFromKirkhoff(const Emissivity &J, const Real rho, const Real temp,
+                                    const Real nu, Real *lambda = nullptr) const {
     Real Bnu = ThermalDistributionOfTNu(temp, nu, lambda);
     Real jnu = J.EmissivityPerNuOmega(rho, temp, nu, lambda);
     return jnu / Bnu;
