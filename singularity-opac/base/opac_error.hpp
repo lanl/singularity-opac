@@ -13,28 +13,20 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef OPACITIES_OPAC_
-#define OPACITIES_OPAC_
+#ifndef SINGULARITY_OPAC_BASE_OPAC_ERROR_
+#define SINGULARITY_OPAC_BASE_OPAC_ERROR_
+
+namespace singularity {
 
 #ifdef SINGULARITY_ENABLE_EXCEPTIONS
 #include <stdexcept>
 #define OPAC_ERROR(x) (throw std::runtime_error(x))
 #else
-#define OPAC_ERROR(x) printf("%s", x)
+#include <cstdlib>
+#define OPAC_ERROR(x) printf("%s", x); std::exit(1)
 #endif
 #define UNDEFINED_ERROR OPAC_ERROR("DEFINE ME\n")
 
-namespace singularity {
-
-enum class RadiationType { NU_ELECTRON, NU_ANTI, NU_HEAVY, PHOTON };
-
-class ThinFlat {
-public:
-  ThinFlat(const RadiationType &type) : type_(type) { }
-private:
-  RadiationType type_;
-};
-
 } // namespace singularity
 
-#endif // OPACITIES_OPAC_
+#endif // SINGULARITY_OPAC_BASE_OPAC_ERROR_
