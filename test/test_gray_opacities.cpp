@@ -20,6 +20,7 @@
 #include <ports-of-call/portability.hpp>
 #include <ports-of-call/portable_arrays.hpp>
 
+#include <singularity-opac/base/indexers.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
 #include <singularity-opac/constants/constants.hpp>
 #include <singularity-opac/neutrinos/opac_neutrinos.hpp>
@@ -102,6 +103,59 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
       Kokkos::deep_copy(n_wrong_h, n_wrong_d);
 #endif
       REQUIRE(n_wrong_h == 0);
+    }
+    THEN("We can fill an indexer allocated in a cell") {
+      int n_wrong_h = 0;
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+      Kokkos::View<int, atomic_view> n_wrong_d("wrong");
+#else
+      PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
+#endif
+      int nbins = 10;
+      int ntemps = 100;
+
+      Real lnu_min = 8;
+      Real lnu_max = 10;
+      Real nu_min = std::pow(10, lnu_min);
+      Real nu_max = std::pow(10, lnu_max);
+      Real dnu = (lnu_max - lnu_min) / (Real)(nbins - 1);
+
+      Real lt_min = 2;
+      Real lt_max = 4;
+      Real dt = (lt_max - lt_min) / (Real)(ntemps - 1);
+
+      Real *nu_bins = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
+      Real *temp_bins = (Real *)PORTABLE_MALLOC(ntemps * sizeof(Real));
+      portableFor(
+          "set nu bins", 0, nbins, PORTABLE_LAMBDA(const int &i) {
+            nu_bins[i] = std::pow(10, lnu_min + dnu * i);
+          });
+      portableFor(
+          "set temp bins", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
+            temp_bins[i] = std::pow(10, lt_min + dt * i);
+          });
+
+      portableFor(
+          "Fill the indexers", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
+            Real temp = temp_bins[i];
+            indexers::Linear alpha_lin(nu_min, nu_max, nbins);
+            indexers::LogLinear alpha_log(nu_min, nu_max, nbins);
+            opac.AbsorptionCoefficientPerNuBin(nu_bins, alpha_lin, nbins, rho,
+                                               temp);
+            opac.AbsorptionCoefficientPerNuBin(nu_bins, alpha_log, nbins, rho,
+                                               temp);
+            if (FractionalDifference(alpha_lin(nu), alpha_log(nu)) > EPS_TEST) {
+              n_wrong_d() += 1;
+            }
+          });
+
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+      Kokkos::deep_copy(n_wrong_h, n_wrong_d);
+#endif
+      REQUIRE(n_wrong_h == 0);
+
+      PORTABLE_FREE(nu_bins);
+      PORTABLE_FREE(temp_bins);
     }
     opac.Finalize();
   }

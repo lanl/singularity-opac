@@ -37,13 +37,26 @@ class GrayOpacity {
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return 0; }
   PORTABLE_INLINE_FUNCTION
-  void PrintParams() const noexcept { printf("Gray opacity. kappa = %g\n", kappa_); }
+  void PrintParams() const noexcept {
+    printf("Gray opacity. kappa = %g\n", kappa_);
+  }
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION
-  Real AbsorptionCoefficientPerNu(const Real rho, const Real temp, const Real nu,
-                                  Real *lambda = nullptr) const {
-    return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, nu, lambda);
+  Real AbsorptionCoefficientPerNu(const Real rho, const Real temp,
+                                  const Real nu, Real *lambda = nullptr) const {
+    return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, nu,
+                                                   lambda);
+  }
+
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void
+  AbsorptionCoefficientPerNuBin(const FrequencyIndexer &nu_bins,
+                                DataIndexer &coeffs, int nbins, const Real rho,
+                                const Real temp, Real *lambda = nullptr) const {
+    for (int i = 0; i < nbins; ++i) {
+      coeffs[i] = AbsorptionCoefficientPerNu(rho, temp, nu_bins[i], lambda);
+    }
   }
 
   PORTABLE_INLINE_FUNCTION
@@ -60,13 +73,15 @@ class GrayOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real Emissivity(const Real rho, const Real temp, Real *lambda = nullptr) const {
+  Real Emissivity(const Real rho, const Real temp,
+                  Real *lambda = nullptr) const {
     Real B = dist_.ThermalDistributionOfT(temp, lambda);
     return rho * kappa_ * B;
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real NumberEmissivity(const Real rho, const Real temp, Real *lambda = nullptr) const {
+  Real NumberEmissivity(const Real rho, const Real temp,
+                        Real *lambda = nullptr) const {
     return kappa_ * dist_.ThermalNumberDistribution(temp, lambda);
   }
 
