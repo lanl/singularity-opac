@@ -23,7 +23,9 @@ namespace singularity {
 #define OPAC_ERROR(x) (throw std::runtime_error(x))
 #else
 #include <cstdlib>
-#define OPAC_ERROR(x) printf("%s", x); std::exit(1)
+#define OPAC_ERROR(x)                                                          \
+  printf("%s", x);                                                             \
+  std::exit(1)
 #endif
 #define UNDEFINED_ERROR OPAC_ERROR("DEFINE ME\n")
 

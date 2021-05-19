@@ -32,7 +32,8 @@ struct PlanckDistribution {
   Real ThermalDistributionOfTNu(const Real temp, const Real nu,
                                 Real *lambda = nullptr) const {
     Real x = pc::h * nu / (pc::kb * temp);
-    Real Bnu = (2. * pc::h * nu * nu * nu / (pc::c * pc::c)) * 1. / (std::exp(x) - 1.);
+    Real Bnu =
+        (2. * pc::h * nu * nu * nu / (pc::c * pc::c)) * 1. / (std::exp(x) - 1.);
     return Bnu;
   }
   PORTABLE_INLINE_FUNCTION
@@ -41,15 +42,16 @@ struct PlanckDistribution {
            (15. * std::pow(pc::c, 2) * std::pow(pc::h, 3));
   }
   PORTABLE_INLINE_FUNCTION
-  Real ThermalNumberDistribution(const Real temp, Real *lambda = nullptr) const {
+  Real ThermalNumberDistribution(const Real temp,
+                                 Real *lambda = nullptr) const {
     constexpr Real zeta3 = 1.20206;
     return 16. * pow(pc::kb, 3) * M_PI * pow(temp, 3) * zeta3 /
            (pow(pc::c, 2) * pow(pc::h, 3));
   }
   template <typename Emissivity>
-  PORTABLE_INLINE_FUNCTION Real
-  AbsorptionCoefficientFromKirkhoff(const Emissivity &J, const Real rho, const Real temp,
-                                    const Real nu, Real *lambda = nullptr) const {
+  PORTABLE_INLINE_FUNCTION Real AbsorptionCoefficientFromKirkhoff(
+      const Emissivity &J, const Real rho, const Real temp, const Real nu,
+      Real *lambda = nullptr) const {
     Real Bnu = ThermalDistributionOfTNu(temp, nu, lambda);
     Real jnu = J.EmissivityPerNuOmega(rho, temp, nu, lambda);
     return jnu / Bnu;
