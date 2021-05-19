@@ -16,8 +16,8 @@
 #ifndef SINGULARITY_OPAC_NEUTRINOS_OPAC_NEUTRINOS_
 #define SINGULARITY_OPAC_NEUTRINOS_OPAC_NEUTRINOS_
 
-#include <variant/include/mpark/variant.hpp>
 #include <singularity-opac/base/opac_variant.hpp>
+#include <variant/include/mpark/variant.hpp>
 
 #include <singularity-opac/neutrinos/gray_opacity_neutrinos.hpp>
 #include <singularity-opac/neutrinos/thermal_distributions_neutrinos.hpp>

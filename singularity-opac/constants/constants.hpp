@@ -110,7 +110,8 @@ class PhysicalConstants {
   static constexpr double g_newt = gravitational_constant;
 
   // Standard acceleration of gravity (CODATA 2010 value)
-  static constexpr double acceleration_from_gravity = 9.80665 * length / (time * time);
+  static constexpr double acceleration_from_gravity =
+      9.80665 * length / (time * time);
   static constexpr double g_accel = acceleration_from_gravity;
 
   // Electron rest mass (CODATA 2010 value)
@@ -122,8 +123,9 @@ class PhysicalConstants {
   static constexpr double mp = proton_mass;
 
   // Stefan-Boltzmann constant
-  static constexpr double stefan_boltzmann = 2.0 * M_PI * M_PI * M_PI * M_PI * M_PI * kb *
-                                             kb * kb * kb / (15.0 * h * h * h * c * c);
+  static constexpr double stefan_boltzmann = 2.0 * M_PI * M_PI * M_PI * M_PI *
+                                             M_PI * kb * kb * kb * kb /
+                                             (15.0 * h * h * h * c * c);
   static constexpr double sb = stefan_boltzmann;
 
   // Faraday constant
@@ -136,7 +138,8 @@ class PhysicalConstants {
   static constexpr double mu0 = vacuum_permeability;
 
   // Permittivity of free space
-  static constexpr double vacuum_permittivity = 8.85418782e-12 * capacitance / length;
+  static constexpr double vacuum_permittivity =
+      8.85418782e-12 * capacitance / length;
   static constexpr double eps0 = vacuum_permittivity;
 
   // Classical electron radius
