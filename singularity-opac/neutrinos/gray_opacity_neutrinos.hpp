@@ -38,15 +38,17 @@ class GrayOpacity {
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return 0; }
   PORTABLE_INLINE_FUNCTION
-  void PrintParams() const noexcept { printf("Gray opacity. kappa = %g\n", kappa_); }
+  void PrintParams() const noexcept {
+    printf("Gray opacity. kappa = %g\n", kappa_);
+  }
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION
-  Real AbsorptionCoefficientPerNu(const Real rho, const Real temp, const Real Ye,
-                                  const RadiationType type, const Real nu,
-                                  Real *lambda = nullptr) const {
-    return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, Ye, type, nu,
-                                                   lambda);
+  Real AbsorptionCoefficientPerNu(const Real rho, const Real temp,
+                                  const Real Ye, const RadiationType type,
+                                  const Real nu, Real *lambda = nullptr) const {
+    return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, Ye, type,
+                                                   nu, lambda);
   }
 
   PORTABLE_INLINE_FUNCTION
@@ -72,8 +74,8 @@ class GrayOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real NumberEmissivity(const Real rho, const Real temp, Real Ye, RadiationType type,
-                        Real *lambda = nullptr) const {
+  Real NumberEmissivity(const Real rho, const Real temp, Real Ye,
+                        RadiationType type, Real *lambda = nullptr) const {
     return kappa_ * dist_.ThermalNumberDistribution(temp, Ye, type, lambda);
   }
 

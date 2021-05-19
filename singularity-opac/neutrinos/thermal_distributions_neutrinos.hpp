@@ -30,21 +30,24 @@ using pc = PhysicalConstants<CGS>;
 template <int NSPECIES>
 struct FermiDiracDistributionNoMu {
   PORTABLE_INLINE_FUNCTION
-  Real ThermalDistributionOfTNu(const Real temp, const Real Ye, const RadiationType type,
-                                const Real nu, Real *lambda = nullptr) const {
+  Real ThermalDistributionOfTNu(const Real temp, const Real Ye,
+                                const RadiationType type, const Real nu,
+                                Real *lambda = nullptr) const {
     Real x = pc::h * nu / (pc::kb * temp);
     Real Bnu = NSPECIES * (2. * pc::h * nu * nu * nu / (pc::c * pc::c)) * 1. /
                (std::exp(x) + 1.);
     return Bnu;
   }
   PORTABLE_INLINE_FUNCTION
-  Real ThermalDistributionOfT(const Real temp, const Real Ye, const RadiationType type,
+  Real ThermalDistributionOfT(const Real temp, const Real Ye,
+                              const RadiationType type,
                               Real *lambda = nullptr) const {
-    return 7. * std::pow(M_PI, 5) * std::pow(pc::kb, 4) * NSPECIES * std::pow(temp, 4) /
-           (15. * std::pow(pc::c, 2) * std::pow(pc::h, 3));
+    return 7. * std::pow(M_PI, 5) * std::pow(pc::kb, 4) * NSPECIES *
+           std::pow(temp, 4) / (15. * std::pow(pc::c, 2) * std::pow(pc::h, 3));
   }
   PORTABLE_INLINE_FUNCTION
-  Real ThermalNumberDistribution(const Real temp, const Real Ye, const RadiationType type,
+  Real ThermalNumberDistribution(const Real temp, const Real Ye,
+                                 const RadiationType type,
                                  Real *lambda = nullptr) const {
     constexpr Real zeta3 = 1.20206;
     return 12. * pow(pc::kb, 3) * M_PI * NSPECIES * pow(temp, 3) * zeta3 /

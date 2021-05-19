@@ -18,16 +18,14 @@
 #define CATCH_CONFIG_RUNNER
 #include <catch2/catch.hpp>
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
 
-#ifdef PORTABILITY_STRATEGY_KOKKOS  
+#ifdef PORTABILITY_STRATEGY_KOKKOS
   Kokkos::initialize();
 #endif
   int result;
-  {
-    result = Catch::Session().run( argc, argv );
-  }
-#ifdef PORTABILITY_STRATEGY_KOKKOS  
+  { result = Catch::Session().run(argc, argv); }
+#ifdef PORTABILITY_STRATEGY_KOKKOS
   Kokkos::finalize();
 #endif
   return result;

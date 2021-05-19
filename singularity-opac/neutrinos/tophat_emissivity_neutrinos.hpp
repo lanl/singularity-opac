@@ -36,25 +36,26 @@ class TophatEmissivity {
  public:
   TophatEmissivity(const Real C, const Real numin, const Real numax)
       : C_(C), numin_(numin), numax_(numax) {}
-  TophatEmissivity(const ThermalDistribution &dist, const Real C, const Real numin,
-                   const Real numax)
+  TophatEmissivity(const ThermalDistribution &dist, const Real C,
+                   const Real numin, const Real numax)
       : dist_(dist), C_(C), numin_(numin), numax_(numax) {}
   TophatEmissivity GetOnDevice() { return *this; }
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return 0; }
   PORTABLE_INLINE_FUNCTION
   void PrintParams() const noexcept {
-    printf("Tophat emissivity. C, numin, numax = %g, %g, %g\n", C_, numin_, numax_);
+    printf("Tophat emissivity. C, numin, numax = %g, %g, %g\n", C_, numin_,
+           numax_);
   }
   inline void Finalize() noexcept {}
 
   // TODO(JMM): Does this make sense for the tophat?
   PORTABLE_INLINE_FUNCTION
-  Real AbsorptionCoefficientPerNu(const Real rho, const Real temp, const Real Ye,
-                                  const RadiationType type, const Real nu,
-                                  Real *lambda = nullptr) const {
-    return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, Ye, type, nu,
-                                                   lambda);
+  Real AbsorptionCoefficientPerNu(const Real rho, const Real temp,
+                                  const Real Ye, const RadiationType type,
+                                  const Real nu, Real *lambda = nullptr) const {
+    return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, Ye, type,
+                                                   nu, lambda);
   }
 
   PORTABLE_INLINE_FUNCTION
@@ -85,7 +86,8 @@ class TophatEmissivity {
 
   PORTABLE_INLINE_FUNCTION
   Real NumberEmissivity(const Real rho, const Real temp, const Real Ye,
-                        const RadiationType type, Real *lambda = nullptr) const {
+                        const RadiationType type,
+                        Real *lambda = nullptr) const {
     Real Ac = 1 / (pc::h * rho) * C_ * log(numax_ / numin_);
     return rho * Ac * GetYeF(Ye, type);
   }

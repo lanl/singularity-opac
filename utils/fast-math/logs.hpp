@@ -34,18 +34,18 @@
 
 namespace BDMath {
 
-  PORTABLE_INLINE_FUNCTION
-  float log10(const float x) {
-    // const double ILOG10 = 1./std::log(10.0);
-    constexpr double ILOG10 = 0.43429448190325176;
-    #if BD_USE_FMATH
-    return fmath::log(x)*ILOG10;
-    #else
-    return logf(x)*ILOG10;
-    #endif
-  }
+PORTABLE_INLINE_FUNCTION
+float log10(const float x) {
+  // const double ILOG10 = 1./std::log(10.0);
+  constexpr double ILOG10 = 0.43429448190325176;
+#if BD_USE_FMATH
+  return fmath::log(x) * ILOG10;
+#else
+  return logf(x) * ILOG10;
+#endif
+}
 
-} // BDMath
+} // namespace BDMath
 
 #undef BD_USE_FMATH
 #endif //  _FAST_MATH_LOGS_
