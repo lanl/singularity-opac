@@ -20,6 +20,8 @@
 #include <spiner/databox.hpp>
 #include <variant/include/mpark/variant.hpp>
 
+#include <singularity-opac/chebyshev/chebyshev.hpp>
+
 // Indexers are filled by by the the opacity functions as a way to
 // fill multiple frequency bins/groups at once. All an indexer *must*
 // have is an operator[] method that works on device. However, here we
@@ -105,6 +107,38 @@ class LogLinear {
     data_.setRange(0, BDMath::log10(numin), BDMath::log10(numax), N);
   }
   Spiner::DataBox data_;
+};
+
+template <int N, typename Data_t>
+class LogCheb {
+ public:
+  LogCheb() = default;
+  PORTABLE_INLINE_FUNCTION
+  LogCheb(Data_t data, Data_t coeffs, Real numin, Real numax)
+      : data_(data), coeffs_(coeffs), numin_(numin), numax_(numax),
+        lnumin_(BDMath::log10(numin)), lnumax_(BDMath::log10(numax)) {}
+
+  PORTABLE_INLINE_FUNCTION
+  Real &operator[](const int i) { return data_[i]; }
+  PORTABLE_INLINE_FUNCTION
+  Real &operator[](const int i) const { return data_[i]; }
+
+  template<typename Vandermonde_t>
+  PORTABLE_INLINE_FUNCTION
+  void SetInterpCoeffs(const Vandermonde_t &v) {
+    chebyshev::MatMultiply(v, data_, coeffs_, N);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real operator()(const Real nu) {
+    Real lnu = BDMath::log10(nu);
+    return chebyshev::InterpFromCoeffs(lnu, lnumin_, lnumax_, coeffs_, N);
+  }
+
+ private:
+  const Real numin_, numax_;
+  const Real lnumin_, lnumax_;
+  Data_t data_, coeffs_;
 };
 
 } // namespace indexers

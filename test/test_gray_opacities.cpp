@@ -14,6 +14,7 @@
 // ======================================================================
 
 #include <cmath>
+#include <iostream>
 
 #include <catch2/catch.hpp>
 
@@ -22,6 +23,7 @@
 
 #include <singularity-opac/base/indexers.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
+#include <singularity-opac/chebyshev/chebyshev.hpp>
 #include <singularity-opac/constants/constants.hpp>
 #include <singularity-opac/neutrinos/opac_neutrinos.hpp>
 #include <singularity-opac/photons/opac_photons.hpp>
@@ -48,7 +50,7 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
     constexpr Real temp = 10 * MeV2K; // 10 MeV
     constexpr Real Ye = 0.1;
     constexpr RadiationType type = RadiationType::NU_ELECTRON;
-    constexpr Real nu = 1 * MeV2Hz; // 1 MeV
+    constexpr Real nu = 1. * MeV2Hz; // 1 MeV
 
     neutrinos::Opacity opac_host = neutrinos::Gray(1);
     neutrinos::Opacity opac = opac_host.GetOnDevice();
@@ -107,16 +109,21 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
             temp_bins[i] = std::pow(10, lt_min + dt * i) * MeV2K;
           });
 
+      constexpr int Nspec = 3;
+      Real *nu_data = (Real *)PORTABLE_MALLOC(Nspec * sizeof(Real));
+      Real *nu_coeffs = (Real *)PORTABLE_MALLOC(Nspec * sizeof(Real));
       portableFor(
           "Fill the indexers", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
             Real temp = temp_bins[i];
-            indexers::Linear alpha_lin(nu_min, nu_max, nbins);
             indexers::LogLinear alpha_log(nu_min, nu_max, nbins);
-            opac.AbsorptionCoefficientPerNu(type, rho, temp, Ye, nu_bins,
-                                            alpha_lin, nbins);
+            indexers::LogCheb<Nspec, Real*> alpha_cheb(
+                nu_data, nu_coeffs, nu_min, nu_max);
             opac.AbsorptionCoefficientPerNu(type, rho, temp, Ye, nu_bins,
                                             alpha_log, nbins);
-            if (FractionalDifference(alpha_lin(nu), alpha_log(nu)) > EPS_TEST) {
+            opac.AbsorptionCoefficientPerNu(type, rho, temp, Ye, nu_bins,
+                                            alpha_cheb, Nspec);
+            alpha_cheb.SetInterpCoeffs(chebyshev::Vandermonde3);
+            if (FractionalDifference(alpha_cheb(nu), alpha_log(nu)) > EPS_TEST) {
               n_wrong_d() += 1;
             }
           });
@@ -126,6 +133,8 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
 #endif
       REQUIRE(n_wrong_h == 0);
 
+      PORTABLE_FREE(nu_data);
+      PORTABLE_FREE(nu_coeffs);
       PORTABLE_FREE(nu_bins);
       PORTABLE_FREE(temp_bins);
     }
