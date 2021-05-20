@@ -50,10 +50,9 @@ class GrayOpacity {
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION void
-  AbsorptionCoefficientPerNuBin(const FrequencyIndexer &nu_bins,
-                                DataIndexer &coeffs, int nbins, const Real rho,
-                                const Real temp, Real *lambda = nullptr) const {
+  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficientPerNu(
+      const Real rho, const Real temp, const FrequencyIndexer &nu_bins,
+      DataIndexer &coeffs, int nbins, Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
       coeffs[i] = AbsorptionCoefficientPerNu(rho, temp, nu_bins[i], lambda);
     }

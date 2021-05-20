@@ -42,14 +42,17 @@ constexpr Real EPS_TEST = 1e-5;
 
 TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
   WHEN("We initialize a gray neutrino opacity") {
-    constexpr Real rho = 1e8;                         // g/cc
-    constexpr Real temp = 10 * 1e6 * pc::eV / pc::kb; // 10 MeV
+    constexpr Real MeV2K = 1e6 * pc::eV / pc::kb;
+    constexpr Real MeV2Hz = 1e6 * pc::eV / pc::h;
+    constexpr Real rho = 1e8;         // g/cc
+    constexpr Real temp = 10 * MeV2K; // 10 MeV
     constexpr Real Ye = 0.1;
     constexpr RadiationType type = RadiationType::NU_ELECTRON;
-    constexpr Real nu = 1 * 1e6 * pc::eV / pc::h; // 1 MeV
+    constexpr Real nu = 1 * MeV2Hz; // 1 MeV
 
     neutrinos::Opacity opac_host = neutrinos::Gray(1);
     neutrinos::Opacity opac = opac_host.GetOnDevice();
+
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
       int n_wrong_h = 0;
 #ifdef PORTABILITY_STRATEGY_KOKKOS
@@ -60,8 +63,8 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
 
       portableFor(
           "calc emissivities", 0, 100, PORTABLE_LAMBDA(const int &i) {
-            Real jnu = opac.EmissivityPerNuOmega(rho, temp, Ye, type, nu);
-            Real Jnu = opac.EmissivityPerNu(rho, temp, Ye, type, nu);
+            Real jnu = opac.EmissivityPerNuOmega(type, rho, temp, Ye, nu);
+            Real Jnu = opac.EmissivityPerNu(type, rho, temp, Ye, nu);
             if (FractionalDifference(Jnu, 4 * M_PI * jnu) > EPS_TEST) {
               n_wrong_d() += 1;
             }
@@ -72,6 +75,61 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
 #endif
       REQUIRE(n_wrong_h == 0);
     }
+
+    THEN("We can fill an indexer allocated in a cell") {
+      int n_wrong_h = 0;
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+      Kokkos::View<int, atomic_view> n_wrong_d("wrong");
+#else
+      PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
+#endif
+      constexpr int nbins = 10;
+      constexpr int ntemps = 100;
+
+      constexpr Real lnu_min = -1;
+      constexpr Real lnu_max = 2;
+      Real nu_min = std::pow(10, lnu_min) * MeV2Hz;
+      Real nu_max = std::pow(10, lnu_max) * MeV2Hz;
+      Real dnu = (lnu_max - lnu_min) / (Real)(nbins - 1);
+
+      constexpr Real lt_min = -2;
+      constexpr Real lt_max = 2;
+      Real dt = (lt_max - lt_min) / (Real)(ntemps - 1);
+
+      Real *nu_bins = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
+      Real *temp_bins = (Real *)PORTABLE_MALLOC(ntemps * sizeof(Real));
+      portableFor(
+          "set nu bins", 0, nbins, PORTABLE_LAMBDA(const int &i) {
+            nu_bins[i] = std::pow(10, lnu_min + dnu * i) * MeV2Hz;
+          });
+      portableFor(
+          "set temp bins", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
+            temp_bins[i] = std::pow(10, lt_min + dt * i) * MeV2K;
+          });
+
+      portableFor(
+          "Fill the indexers", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
+            Real temp = temp_bins[i];
+            indexers::Linear alpha_lin(nu_min, nu_max, nbins);
+            indexers::LogLinear alpha_log(nu_min, nu_max, nbins);
+            opac.AbsorptionCoefficientPerNu(type, rho, temp, Ye, nu_bins,
+                                            alpha_lin, nbins);
+            opac.AbsorptionCoefficientPerNu(type, rho, temp, Ye, nu_bins,
+                                            alpha_log, nbins);
+            if (FractionalDifference(alpha_lin(nu), alpha_log(nu)) > EPS_TEST) {
+              n_wrong_d() += 1;
+            }
+          });
+
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+      Kokkos::deep_copy(n_wrong_h, n_wrong_d);
+#endif
+      REQUIRE(n_wrong_h == 0);
+
+      PORTABLE_FREE(nu_bins);
+      PORTABLE_FREE(temp_bins);
+    }
+
     opac.Finalize();
   }
 }
@@ -111,17 +169,17 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
 #else
       PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
 #endif
-      int nbins = 10;
-      int ntemps = 100;
+      constexpr int nbins = 10;
+      constexpr int ntemps = 100;
 
-      Real lnu_min = 8;
-      Real lnu_max = 10;
+      constexpr Real lnu_min = 8;
+      constexpr Real lnu_max = 10;
       Real nu_min = std::pow(10, lnu_min);
       Real nu_max = std::pow(10, lnu_max);
       Real dnu = (lnu_max - lnu_min) / (Real)(nbins - 1);
 
-      Real lt_min = 2;
-      Real lt_max = 4;
+      constexpr Real lt_min = 2;
+      constexpr Real lt_max = 4;
       Real dt = (lt_max - lt_min) / (Real)(ntemps - 1);
 
       Real *nu_bins = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
@@ -140,10 +198,10 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
             Real temp = temp_bins[i];
             indexers::Linear alpha_lin(nu_min, nu_max, nbins);
             indexers::LogLinear alpha_log(nu_min, nu_max, nbins);
-            opac.AbsorptionCoefficientPerNuBin(nu_bins, alpha_lin, nbins, rho,
-                                               temp);
-            opac.AbsorptionCoefficientPerNuBin(nu_bins, alpha_log, nbins, rho,
-                                               temp);
+            opac.AbsorptionCoefficientPerNu(rho, temp, nu_bins, alpha_lin,
+                                            nbins);
+            opac.AbsorptionCoefficientPerNu(rho, temp, nu_bins, alpha_log,
+                                            nbins);
             if (FractionalDifference(alpha_lin(nu), alpha_log(nu)) > EPS_TEST) {
               n_wrong_d() += 1;
             }
@@ -157,6 +215,7 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
       PORTABLE_FREE(nu_bins);
       PORTABLE_FREE(temp_bins);
     }
+
     opac.Finalize();
   }
 }

@@ -13,8 +13,8 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef SINGULARITY_OPAC_BASE_OPAC_VARIANT_
-#define SINGULARITY_OPAC_BASE_OPAC_VARIANT_
+#ifndef SINGULARITY_OPAC_PHOTONS_PHOTON_VARIANT_
+#define SINGULARITY_OPAC_PHOTONS_PHOTON_VARIANT_
 
 #include <utility>
 
@@ -24,8 +24,8 @@
 #include <variant/include/mpark/variant.hpp>
 
 namespace singularity {
-
-namespace opac_impl {
+namespace photons {
+namespace impl {
 
 template <typename... Ts>
 using opac_variant = mpark::variant<Ts...>;
@@ -72,72 +72,69 @@ class Variant {
         opac_);
   }
 
-  // TODO(JMM): Is this variatic magic too much? Would it be better to be more
-  // explicit? This is pretty gross.
-
   // opacity
   // Signature should be at least
   // rho, temp, nu, lambda
-  template <typename... Args>
-  PORTABLE_INLINE_FUNCTION auto
-  AbsorptionCoefficientPerNu(Args &&...args) const {
+  PORTABLE_INLINE_FUNCTION Real
+  AbsorptionCoefficientPerNu(const Real rho, const Real temp, const Real nu,
+                             Real *lambda = nullptr) const {
     return mpark::visit(
         [=](const auto &opac) {
-          return opac.AbsorptionCoefficientPerNu(std::forward<Args>(args)...);
+          return opac.AbsorptionCoefficientPerNu(rho, temp, nu, lambda);
         },
         opac_);
   }
 
-  template <typename FrequencyIndexer, typename DataIndexer, typename... Args>
-  PORTABLE_INLINE_FUNCTION void
-  AbsorptionCoefficientPerNuBin(const FrequencyIndexer &nu_bins,
-                                DataIndexer &coeffs, int nbins,
-                                const Real rho, const Real temp, Args&&...args) const {
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficientPerNu(
+      const Real rho, const Real temp, const FrequencyIndexer &nu_bins,
+      DataIndexer &coeffs, const int nbins, Real *lambda = nullptr) const {
     mpark::visit(
         [=](const auto &opac) {
-          opac.AbsorptionCoefficientPerNuBin(nu_bins, coeffs, nbins,
-                                             rho, temp, std::forward<Args>(args)...);
+          opac.AbsorptionCoefficientPerNu(rho, temp, nu_bins, coeffs, nbins,
+                                          lambda);
         },
         opac_);
   }
 
   // emissivity with units of energy/time/frequency/volume/angle
   // signature should be at least rho, temp, nu, lambda
-  template <typename... Args>
-  PORTABLE_INLINE_FUNCTION auto EmissivityPerNuOmega(Args &&...args) const {
+  PORTABLE_INLINE_FUNCTION Real
+  EmissivityPerNuOmega(const Real rho, const Real temp, const Real nu,
+                       Real *lambda = nullptr) const {
     return mpark::visit(
         [=](const auto &opac) {
-          return opac.EmissivityPerNuOmega(std::forward<Args>(args)...);
+          return opac.EmissivityPerNuOmega(rho, temp, nu, lambda);
         },
         opac_);
   }
 
   // emissivity integrated over angle
-  template <typename... Args>
-  PORTABLE_INLINE_FUNCTION auto EmissivityPerNu(Args &&...args) const {
+  PORTABLE_INLINE_FUNCTION Real EmissivityPerNu(const Real rho, const Real temp,
+                                                const Real nu,
+                                                Real *lambda = nullptr) const {
     return mpark::visit(
         [=](const auto &opac) {
-          return opac.EmissivityPerNu(std::forward<Args>(args)...);
+          return opac.EmissivityPerNu(rho, temp, nu, lambda);
         },
         opac_);
   }
 
   // emissivity integrated over angle and frequency
-  template <typename... Args>
-  PORTABLE_INLINE_FUNCTION auto Emissivity(Args &&...args) const {
+  PORTABLE_INLINE_FUNCTION Real Emissivity(const Real rho, const Real temp,
+                                           Real *lambda = nullptr) const {
     return mpark::visit(
-        [=](const auto &opac) {
-          return opac.Emissivity(std::forward<Args>(args)...);
-        },
+        [=](const auto &opac) { return opac.Emissivity(rho, temp, lambda); },
         opac_);
   }
 
   // Emissivity of packet
-  template <typename... Args>
-  PORTABLE_INLINE_FUNCTION auto NumberEmissivity(Args &&...args) const {
+  PORTABLE_INLINE_FUNCTION auto NumberEmissivity(const Real rho,
+                                                 const Real temp,
+                                                 Real *lambda = nullptr) const {
     return mpark::visit(
         [=](const auto &opac) {
-          return opac.NumberEmissivity(std::forward<Args>(args)...);
+          return opac.NumberEmissivity(rho, temp, lambda);
         },
         opac_);
   }
@@ -163,7 +160,8 @@ class Variant {
   }
 };
 
-} // namespace opac_impl
+} // namespace impl
+} // namespace photons
 } // namespace singularity
 
-#endif // SINGULARITY_OPAC_BASE_OPAC_VARIANT_
+#endif // SINGULARITY_OPAC_PHOTONS_PHOTON_VARIANT_
