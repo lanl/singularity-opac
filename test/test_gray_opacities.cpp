@@ -40,7 +40,7 @@ template <typename T>
 PORTABLE_INLINE_FUNCTION T FractionalDifference(const T &a, const T &b) {
   return 2 * std::abs(b - a) / (std::abs(a) + std::abs(b) + 1e-20);
 }
-constexpr Real EPS_TEST = 1e-5;
+constexpr Real EPS_TEST = 1e-3;
 
 TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
   WHEN("We initialize a gray neutrino opacity") {
@@ -116,14 +116,15 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
           "Fill the indexers", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
             Real temp = temp_bins[i];
             indexers::LogLinear alpha_log(nu_min, nu_max, nbins);
-            indexers::LogCheb<Nspec, Real*> alpha_cheb(
-                nu_data, nu_coeffs, nu_min, nu_max);
+            indexers::LogCheb<Nspec, Real *> alpha_cheb(nu_data, nu_coeffs,
+                                                        nu_min, nu_max);
             opac.AbsorptionCoefficientPerNu(type, rho, temp, Ye, nu_bins,
                                             alpha_log, nbins);
             opac.AbsorptionCoefficientPerNu(type, rho, temp, Ye, nu_bins,
                                             alpha_cheb, Nspec);
             alpha_cheb.SetInterpCoeffs(chebyshev::Vandermonde3);
-            if (FractionalDifference(alpha_cheb(nu), alpha_log(nu)) > EPS_TEST) {
+            if (FractionalDifference(alpha_cheb(nu), alpha_log(nu)) >
+                EPS_TEST) {
               n_wrong_d() += 1;
             }
           });
@@ -145,8 +146,8 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
 
 TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
   WHEN("We initialize a gray photon opacity") {
-    constexpr Real rho = 1e2;  // g/cc.
-    constexpr Real temp = 300; // Kelvin. Room temperature.
+    constexpr Real rho = 1e3;  // g/cc.
+    constexpr Real temp = 1e5; // Kelvin.
     constexpr Real nu = 3e9;   // Hz. UHF microwave
 
     photons::Opacity opac_host = photons::Gray(1);
@@ -178,7 +179,7 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
 #else
       PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
 #endif
-      constexpr int nbins = 10;
+      constexpr int nbins = 100;
       constexpr int ntemps = 100;
 
       constexpr Real lnu_min = 8;
@@ -205,13 +206,10 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
       portableFor(
           "Fill the indexers", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
             Real temp = temp_bins[i];
-            indexers::Linear alpha_lin(nu_min, nu_max, nbins);
-            indexers::LogLinear alpha_log(nu_min, nu_max, nbins);
-            opac.AbsorptionCoefficientPerNu(rho, temp, nu_bins, alpha_lin,
-                                            nbins);
-            opac.AbsorptionCoefficientPerNu(rho, temp, nu_bins, alpha_log,
-                                            nbins);
-            if (FractionalDifference(alpha_lin(nu), alpha_log(nu)) > EPS_TEST) {
+            indexers::LogLinear J_log(nu_min, nu_max, nbins);
+            opac.EmissivityPerNu(rho, temp, nu_bins, J_log, nbins);
+	    Real Jtrue = opac.EmissivityPerNu(rho, temp, nu);
+            if (FractionalDifference(Jtrue, J_log(nu)) > EPS_TEST) {
               n_wrong_d() += 1;
             }
           });
