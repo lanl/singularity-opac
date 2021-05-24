@@ -111,6 +111,20 @@ class Variant {
         opac_);
   }
 
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void
+  EmissivityPerNuOmega(const RadiationType type, const Real rho,
+                       const Real temp, const Real Ye,
+                       const FrequencyIndexer &nu_bins, DataIndexer &coeffs,
+                       const int nbins, Real *lambda = nullptr) const {
+    mpark::visit(
+        [=](const auto &opac) {
+          return opac.EmissivityPerNuOmega(type, rho, temp, Ye, nu_bins, coeffs,
+                                           nbins, lambda);
+        },
+        opac_);
+  }
+
   // emissivity integrated over angle
   PORTABLE_INLINE_FUNCTION Real EmissivityPerNu(const RadiationType type,
                                                 const Real rho, const Real temp,
@@ -119,6 +133,20 @@ class Variant {
     return mpark::visit(
         [=](const auto &opac) {
           return opac.EmissivityPerNu(type, rho, temp, Ye, nu, lambda);
+        },
+        opac_);
+  }
+
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void
+  EmissivityPerNu(const RadiationType type, const Real rho, const Real temp,
+                  const Real Ye, const FrequencyIndexer &nu_bins,
+                  DataIndexer &coeffs, const int nbins,
+                  Real *lambda = nullptr) const {
+    mpark::visit(
+        [=](const auto &opac) {
+          return opac.EmissivityPerNu(type, rho, temp, Ye, nu_bins, coeffs,
+                                      nbins, lambda);
         },
         opac_);
   }

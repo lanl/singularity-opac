@@ -70,11 +70,33 @@ class GrayOpacity {
     return rho * kappa_ * Bnu;
   }
 
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void
+  EmissivityPerNuOmega(const RadiationType type, const Real rho,
+                       const Real temp, const Real Ye,
+                       const FrequencyIndexer &nu_bins, DataIndexer &coeffs,
+                       const int nbins, Real *lambda = nullptr) const {
+    for (int i = 0; i < nbins; ++i) {
+      coeffs[i] = EmissivityPerNuOmega(type, rho, temp, Ye, nu_bins[i], lambda);
+    }
+  }
+
   PORTABLE_INLINE_FUNCTION
   Real EmissivityPerNu(const RadiationType type, const Real rho,
                        const Real temp, const Real Ye, const Real nu,
                        Real *lambda = nullptr) const {
     return 4 * M_PI * EmissivityPerNuOmega(type, rho, temp, Ye, nu, lambda);
+  }
+
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void
+  EmissivityPerNu(const RadiationType type, const Real rho, const Real temp,
+                  const Real Ye, const FrequencyIndexer &nu_bins,
+                  DataIndexer &coeffs, const int nbins,
+                  Real *lambda = nullptr) const {
+    for (int i = 0; i < nbins; ++i) {
+      coeffs[i] = EmissivityPerNu(type, rho, temp, Ye, nu_bins[i], lambda);
+    }
   }
 
   PORTABLE_INLINE_FUNCTION
