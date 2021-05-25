@@ -85,24 +85,27 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
 #else
       PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
 #endif
-      constexpr int nbins = 9;
+      constexpr int nbins = 21;
       constexpr int ntemps = 100;
 
-      constexpr Real lnu_min = -1;
-      constexpr Real lnu_max = 2;
-      Real nu_min = std::pow(10, lnu_min) * MeV2Hz;
-      Real nu_max = std::pow(10, lnu_max) * MeV2Hz;
-      Real dnu = (lnu_max - lnu_min) / (Real)(nbins - 1);
+      Real lnu_min = -1 + std::log10(MeV2Hz);
+      Real lnu_max = 1 + std::log10(MeV2Hz);
+      Real nu_min = std::pow(10, lnu_min);
+      Real nu_max = std::pow(10, lnu_max);
 
-      constexpr Real lt_min = -2;
-      constexpr Real lt_max = 2;
+      constexpr Real lt_min = 2;
+      constexpr Real lt_max = 3;
       Real dt = (lt_max - lt_min) / (Real)(ntemps - 1);
 
       Real *nu_bins = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
+      Real *lnu_bins = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
       Real *temp_bins = (Real *)PORTABLE_MALLOC(ntemps * sizeof(Real));
       portableFor(
-          "set nu bins", 0, nbins, PORTABLE_LAMBDA(const int &i) {
-            nu_bins[i] = std::pow(10, lnu_min + dnu * i) * MeV2Hz;
+          "set nu bins", 0, 1, PORTABLE_LAMBDA(const int &i) {
+            chebyshev::GetPoints(lnu_min, lnu_max, nbins, lnu_bins);
+            for (int j = 0; j < nbins; ++j) {
+              nu_bins[j] = std::pow(10, lnu_bins[j]);
+            }
           });
       portableFor(
           "set temp bins", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
@@ -119,8 +122,10 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
                                                     nu_coeffs, nu_min, nu_max);
             opac.EmissivityPerNu(type, rho, temp, Ye, nu_bins, J_cheb, nbins);
             Real Jtrue = opac.EmissivityPerNu(type, rho, temp, Ye, nu);
-            J_cheb.SetInterpCoeffs(chebyshev::Vandermonde9);
-            if (FractionalDifference(J_cheb(nu), Jtrue) > EPS_TEST) {
+            J_cheb.SetInterpCoeffs(chebyshev::Vandermonde21);
+            if (std::isnan(J_cheb(nu)) ||
+                ((std::abs(Jtrue) >= 1e-14 || J_cheb(nu) >= 1e-14) &&
+                 FractionalDifference(J_cheb(nu), Jtrue) > EPS_TEST)) {
               std::cout << "J_true = " << Jtrue << ", J_cheb = " << J_cheb(nu)
                         << ", diff = "
                         << FractionalDifference(J_cheb(nu), Jtrue) << std::endl;
@@ -137,6 +142,7 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
       PORTABLE_FREE(lnu_data);
       PORTABLE_FREE(nu_coeffs);
       PORTABLE_FREE(nu_bins);
+      PORTABLE_FREE(lnu_bins);
       PORTABLE_FREE(temp_bins);
     }
 

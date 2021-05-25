@@ -127,7 +127,7 @@ class LogCheb {
   template <typename Vandermonde_t>
   PORTABLE_INLINE_FUNCTION void SetInterpCoeffs(const Vandermonde_t &v) {
     for (int i = 0; i < N; ++i) {
-      logdata_[i] = BDMath::log10(data_[i]);
+      logdata_[i] = BDMath::log10(std::abs(data_[i]) + 1e-20);
     }
     chebyshev::MatMultiply(v, logdata_, coeffs_, N);
   }
