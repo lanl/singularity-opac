@@ -16,16 +16,16 @@
 #ifndef SINGULARITY_OPAC_PHOTONS_OPAC_PHOTONS_
 #define SINGULARITY_OPAC_PHOTONS_OPAC_PHOTONS_
 
-#include <singularity-opac/base/opac_variant.hpp>
 
 #include <singularity-opac/photons/gray_opacity_photons.hpp>
+#include <singularity-opac/photons/photon_variant.hpp>
 #include <singularity-opac/photons/thermal_distributions_photons.hpp>
 
 namespace singularity {
 namespace photons {
 
 using Gray = GrayOpacity;
-using Opacity = opac_impl::Variant<Gray>;
+using Opacity = impl::Variant<Gray>;
 
 } // namespace photons
 } // namespace singularity

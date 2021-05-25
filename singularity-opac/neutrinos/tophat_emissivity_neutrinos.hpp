@@ -51,50 +51,83 @@ class TophatEmissivity {
 
   // TODO(JMM): Does this make sense for the tophat?
   PORTABLE_INLINE_FUNCTION
-  Real AbsorptionCoefficientPerNu(const Real rho, const Real temp,
-                                  const Real Ye, const RadiationType type,
-                                  const Real nu, Real *lambda = nullptr) const {
-    return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, Ye, type,
+  Real AbsorptionCoefficientPerNu(const RadiationType type, const Real rho,
+                                  const Real temp, const Real Ye, const Real nu,
+                                  Real *lambda = nullptr) const {
+    return dist_.AbsorptionCoefficientFromKirkhoff(*this, type, rho, temp, Ye,
                                                    nu, lambda);
   }
 
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficientPerNu(
+      const RadiationType type, const Real rho, const Real temp, const Real Ye,
+      const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
+      Real *lambda = nullptr) const {
+    for (int i = 0; i < nbins; ++i) {
+      coeffs[i] =
+          AbsorptionCoefficientPerNu(type, rho, temp, Ye, nu_bins[i], lambda);
+    }
+  }
+
   PORTABLE_INLINE_FUNCTION
-  Real EmissivityPerNuOmega(const Real rho, const Real temp, const Real Ye,
-                            const RadiationType type, const Real nu,
+  Real EmissivityPerNuOmega(const RadiationType type, const Real rho,
+                            const Real temp, const Real Ye, const Real nu,
                             Real *lambda = nullptr) const {
     if (nu > numin_ && nu < numax_) {
-      return C_ * GetYeF(Ye, type) / (4. * M_PI);
+      return C_ * GetYeF(type, Ye) / (4. * M_PI);
     } else {
       return 0.;
     }
   }
 
-  PORTABLE_INLINE_FUNCTION
-  Real EmissivityPerNu(const Real rho, const Real temp, const Real Ye,
-                       const RadiationType type, const Real nu,
-                       Real *lambda = nullptr) const {
-    return 4 * M_PI * EmissivityPerNuOmega(rho, temp, Ye, type, nu, lambda);
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void
+  EmissivityPerNuOmega(const RadiationType type, const Real rho,
+                       const Real temp, const Real Ye,
+                       const FrequencyIndexer &nu_bins, DataIndexer &coeffs,
+                       const int nbins, Real *lambda = nullptr) const {
+    for (int i = 0; i < nbins; ++i) {
+      coeffs[i] = EmissivityPerNuOmega(type, rho, temp, Ye, nu_bins[i], lambda);
+    }
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real Emissivity(const Real rho, const Real temp, const Real Ye,
-                  const RadiationType type, Real *lambda = nullptr) const {
+  Real EmissivityPerNu(const RadiationType type, const Real rho,
+                       const Real temp, const Real Ye, const Real nu,
+                       Real *lambda = nullptr) const {
+    return 4 * M_PI * EmissivityPerNuOmega(type, rho, temp, Ye, nu, lambda);
+  }
+
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void
+  EmissivityPerNu(const RadiationType type, const Real rho, const Real temp,
+                  const Real Ye, const FrequencyIndexer &nu_bins,
+                  DataIndexer &coeffs, const int nbins,
+                  Real *lambda = nullptr) const {
+    for (int i = 0; i < nbins; ++i) {
+      coeffs[i] = EmissivityPerNu(type, rho, temp, Ye, nu_bins[i], lambda);
+    }
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real Emissivity(const RadiationType type, const Real rho, const Real temp,
+                  const Real Ye, Real *lambda = nullptr) const {
     Real Bc = C_ * (numax_ - numin_);
-    Real J = Bc * GetYeF(Ye, type);
+    Real J = Bc * GetYeF(type, Ye);
     return J;
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real NumberEmissivity(const Real rho, const Real temp, const Real Ye,
-                        const RadiationType type,
+  Real NumberEmissivity(const RadiationType type, const Real rho,
+                        const Real temp, const Real Ye,
                         Real *lambda = nullptr) const {
     Real Ac = 1 / (pc::h * rho) * C_ * log(numax_ / numin_);
-    return rho * Ac * GetYeF(Ye, type);
+    return rho * Ac * GetYeF(type, Ye);
   }
 
  private:
   PORTABLE_INLINE_FUNCTION
-  Real GetYeF(Real Ye, RadiationType type) const {
+  Real GetYeF(RadiationType type, Real Ye) const {
     if (type == RadiationType::NU_ELECTRON) {
       return 2. * Ye;
     } else if (type == RadiationType::NU_ELECTRON_ANTI) {

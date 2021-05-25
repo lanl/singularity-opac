@@ -49,6 +49,15 @@ class GrayOpacity {
                                                    lambda);
   }
 
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficientPerNu(
+      const Real rho, const Real temp, const FrequencyIndexer &nu_bins,
+      DataIndexer &coeffs, const int nbins, Real *lambda = nullptr) const {
+    for (int i = 0; i < nbins; ++i) {
+      coeffs[i] = AbsorptionCoefficientPerNu(rho, temp, nu_bins[i], lambda);
+    }
+  }
+
   PORTABLE_INLINE_FUNCTION
   Real EmissivityPerNuOmega(const Real rho, const Real temp, const Real nu,
                             Real *lambda = nullptr) const {
@@ -56,10 +65,30 @@ class GrayOpacity {
     return rho * kappa_ * Bnu;
   }
 
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void
+  EmissivityPerNuOmega(const Real rho, const Real temp,
+                       const FrequencyIndexer &nu_bins, DataIndexer &coeffs,
+                       const int nbins, Real *lambda = nullptr) const {
+    for (int i = 0; i < nbins; ++i) {
+      coeffs[i] = EmissivityPerNuOmega(rho, temp, nu_bins[i], lambda);
+    }
+  }
+
   PORTABLE_INLINE_FUNCTION
   Real EmissivityPerNu(const Real rho, const Real temp, const Real nu,
                        Real *lambda = nullptr) const {
     return 4 * M_PI * EmissivityPerNuOmega(rho, temp, nu, lambda);
+  }
+
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void
+  EmissivityPerNu(const Real rho, const Real temp,
+                  const FrequencyIndexer &nu_bins, DataIndexer &coeffs,
+                  const int nbins, Real *lambda = nullptr) const {
+    for (int i = 0; i < nbins; ++i) {
+      coeffs[i] = EmissivityPerNu(rho, temp, nu_bins[i], lambda);
+    }
   }
 
   PORTABLE_INLINE_FUNCTION

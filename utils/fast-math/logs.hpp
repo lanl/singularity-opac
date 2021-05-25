@@ -20,7 +20,7 @@
 #define _FAST_MATH_LOGS_
 
 #include <cmath>
-#include <portability.hpp>
+#include <ports-of-call/portability.hpp>
 
 // herumi-fmath does not work on device
 // On CPUS it provides another 10% or so speedup
