@@ -28,6 +28,11 @@ namespace singularity {
 namespace chebyshev {
 
 // Inverse Vandermonde matrices computed via Mathematica
+// Mathematica code:
+// GetChebNodes[n_] := -Table[Cos[(2*k - 1)/(2*n) \[Pi]], {k, 1, n}]
+// GetS2C[n_] := Transpose[Table[ChebyshevT[k, #] & /@ GetChebNodes[n],
+//                               {k, 0, n - 1}]]
+// GetS2C[21] // N // Inverse // Chop (* for 21 modes *)
 constexpr Real Vandermonde3[3][3] = {
     {0.33333333333333, 0.33333333333333, 0.33333333333333},
     {-0.57735026918963, 0, 0.57735026918963},
