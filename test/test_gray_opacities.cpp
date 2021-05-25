@@ -85,7 +85,7 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
 #else
       PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
 #endif
-      constexpr int nbins = 10;
+      constexpr int nbins = 9;
       constexpr int ntemps = 100;
 
       constexpr Real lnu_min = -1;
@@ -109,22 +109,21 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
             temp_bins[i] = std::pow(10, lt_min + dt * i) * MeV2K;
           });
 
-      constexpr int Nspec = 3;
-      Real *nu_data = (Real *)PORTABLE_MALLOC(Nspec * sizeof(Real));
-      Real *nu_coeffs = (Real *)PORTABLE_MALLOC(Nspec * sizeof(Real));
+      Real *nu_data = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
+      Real *lnu_data = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
+      Real *nu_coeffs = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
       portableFor(
           "Fill the indexers", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
             Real temp = temp_bins[i];
-            indexers::LogLinear alpha_log(nu_min, nu_max, nbins);
-            indexers::LogCheb<Nspec, Real *> alpha_cheb(nu_data, nu_coeffs,
-                                                        nu_min, nu_max);
-            opac.AbsorptionCoefficientPerNu(type, rho, temp, Ye, nu_bins,
-                                            alpha_log, nbins);
-            opac.AbsorptionCoefficientPerNu(type, rho, temp, Ye, nu_bins,
-                                            alpha_cheb, Nspec);
-            alpha_cheb.SetInterpCoeffs(chebyshev::Vandermonde3);
-            if (FractionalDifference(alpha_cheb(nu), alpha_log(nu)) >
-                EPS_TEST) {
+            indexers::LogCheb<nbins, Real *> J_cheb(nu_data, lnu_data,
+                                                    nu_coeffs, nu_min, nu_max);
+            opac.EmissivityPerNu(type, rho, temp, Ye, nu_bins, J_cheb, nbins);
+            Real Jtrue = opac.EmissivityPerNu(type, rho, temp, Ye, nu);
+            J_cheb.SetInterpCoeffs(chebyshev::Vandermonde9);
+            if (FractionalDifference(J_cheb(nu), Jtrue) > EPS_TEST) {
+              std::cout << "J_true = " << Jtrue << ", J_cheb = " << J_cheb(nu)
+                        << ", diff = "
+                        << FractionalDifference(J_cheb(nu), Jtrue) << std::endl;
               n_wrong_d() += 1;
             }
           });
@@ -135,6 +134,7 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
       REQUIRE(n_wrong_h == 0);
 
       PORTABLE_FREE(nu_data);
+      PORTABLE_FREE(lnu_data);
       PORTABLE_FREE(nu_coeffs);
       PORTABLE_FREE(nu_bins);
       PORTABLE_FREE(temp_bins);
@@ -208,7 +208,7 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
             Real temp = temp_bins[i];
             indexers::LogLinear J_log(nu_min, nu_max, nbins);
             opac.EmissivityPerNu(rho, temp, nu_bins, J_log, nbins);
-	    Real Jtrue = opac.EmissivityPerNu(rho, temp, nu);
+            Real Jtrue = opac.EmissivityPerNu(rho, temp, nu);
             if (FractionalDifference(Jtrue, J_log(nu)) > EPS_TEST) {
               n_wrong_d() += 1;
             }

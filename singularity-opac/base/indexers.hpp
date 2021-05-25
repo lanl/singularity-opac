@@ -114,31 +114,35 @@ class LogCheb {
  public:
   LogCheb() = default;
   PORTABLE_INLINE_FUNCTION
-  LogCheb(Data_t data, Data_t coeffs, Real numin, Real numax)
-      : data_(data), coeffs_(coeffs), numin_(numin), numax_(numax),
-        lnumin_(BDMath::log10(numin)), lnumax_(BDMath::log10(numax)) {}
+  LogCheb(Data_t data, Data_t logdata, Data_t coeffs, Real numin, Real numax)
+      : data_(data), logdata_(logdata), coeffs_(coeffs), numin_(numin),
+        numax_(numax), lnumin_(BDMath::log10(numin)),
+        lnumax_(BDMath::log10(numax)) {}
 
   PORTABLE_INLINE_FUNCTION
   Real &operator[](const int i) { return data_[i]; }
   PORTABLE_INLINE_FUNCTION
   Real &operator[](const int i) const { return data_[i]; }
 
-  template<typename Vandermonde_t>
-  PORTABLE_INLINE_FUNCTION
-  void SetInterpCoeffs(const Vandermonde_t &v) {
-    chebyshev::MatMultiply(v, data_, coeffs_, N);
+  template <typename Vandermonde_t>
+  PORTABLE_INLINE_FUNCTION void SetInterpCoeffs(const Vandermonde_t &v) {
+    for (int i = 0; i < N; ++i) {
+      logdata_[i] = BDMath::log10(data_[i]);
+    }
+    chebyshev::MatMultiply(v, logdata_, coeffs_, N);
   }
 
   PORTABLE_INLINE_FUNCTION
   Real operator()(const Real nu) {
     Real lnu = BDMath::log10(nu);
-    return chebyshev::InterpFromCoeffs(lnu, lnumin_, lnumax_, coeffs_, N);
+    return std::pow(
+        10, chebyshev::InterpFromCoeffs(lnu, lnumin_, lnumax_, coeffs_, N));
   }
 
  private:
   const Real numin_, numax_;
   const Real lnumin_, lnumax_;
-  Data_t data_, coeffs_;
+  Data_t data_, logdata_, coeffs_;
 };
 
 } // namespace indexers
