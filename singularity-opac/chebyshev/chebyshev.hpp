@@ -18,6 +18,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <iostream>
 
 #include <ports-of-call/portability.hpp>
 
@@ -211,18 +212,17 @@ PORTABLE_INLINE_FUNCTION void GetPoints(const Real xmin, const Real xmax,
 // T_i(x) = 2*x*T_{i-1}(x) - T_{i-2}(x)
 PORTABLE_INLINE_FUNCTION
 Real T(const int i, const Real x) {
-  if (i == 0) return 1;
-  if (i == 1) return x;
-  Real Tm2 = 1;
-  Real Tm1 = x;
-  Real Ti = 2 * x * Tm1 - Tm2;
-  for (int ii = 2; ii <= i; ++ii) {
-    Real temp = Ti;
-    Ti = 2 * x * Tm1 - Tm2;
-    Tm2 = Tm1;
-    Tm1 = temp;
+  Real Ti[3];
+  Ti[0] = 1;
+  Ti[1] = x;
+  Ti[2] = 2*x*Ti[1] - Ti[0];
+  if (i < 3) return Ti[i];
+  for (int ii = 3; ii <= i; ++ii) {
+    Ti[0] = Ti[1];
+    Ti[1] = Ti[2];
+    Ti[2] = 2*x*Ti[1] - Ti[0];
   }
-  return Ti;
+  return Ti[2];
 }
 
 // Chebyshev interpolation from coefficients

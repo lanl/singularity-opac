@@ -15,4 +15,4 @@
 
 #include <catch2/catch.hpp>
 
-TEST_CASE("Something trivial", "[trivial") { REQUIRE(true); }
+TEST_CASE("Something trivial", "[trivial]") { REQUIRE(true); }

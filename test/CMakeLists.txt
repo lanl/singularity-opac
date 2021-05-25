@@ -18,6 +18,7 @@ target_link_libraries(catch2_define PUBLIC
 list(APPEND unit_tests_SOURCES
   test_trivial.cpp
   test_gray_opacities.cpp
+  test_chebyshev.cpp
 )
 
 add_executable(unit_tests "${unit_tests_SOURCES}")

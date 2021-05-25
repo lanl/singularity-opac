@@ -46,11 +46,11 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
   WHEN("We initialize a gray neutrino opacity") {
     constexpr Real MeV2K = 1e6 * pc::eV / pc::kb;
     constexpr Real MeV2Hz = 1e6 * pc::eV / pc::h;
-    constexpr Real rho = 1e8;         // g/cc
+    constexpr Real rho = 1e11;         // g/cc
     constexpr Real temp = 10 * MeV2K; // 10 MeV
     constexpr Real Ye = 0.1;
     constexpr RadiationType type = RadiationType::NU_ELECTRON;
-    constexpr Real nu = 1. * MeV2Hz; // 1 MeV
+    constexpr Real nu = 1.25 * MeV2Hz; // 1 MeV
 
     neutrinos::Opacity opac_host = neutrinos::Gray(1);
     neutrinos::Opacity opac = opac_host.GetOnDevice();
@@ -85,16 +85,16 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
 #else
       PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
 #endif
-      constexpr int nbins = 21;
+      constexpr int nbins = 9;
       constexpr int ntemps = 100;
 
-      Real lnu_min = -1 + std::log10(MeV2Hz);
+      Real lnu_min = 0 + std::log10(MeV2Hz);
       Real lnu_max = 1 + std::log10(MeV2Hz);
       Real nu_min = std::pow(10, lnu_min);
       Real nu_max = std::pow(10, lnu_max);
 
-      constexpr Real lt_min = 2;
-      constexpr Real lt_max = 3;
+      constexpr Real lt_min = -1;
+      constexpr Real lt_max = 2;
       Real dt = (lt_max - lt_min) / (Real)(ntemps - 1);
 
       Real *nu_bins = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
@@ -122,13 +122,10 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
                                                     nu_coeffs, nu_min, nu_max);
             opac.EmissivityPerNu(type, rho, temp, Ye, nu_bins, J_cheb, nbins);
             Real Jtrue = opac.EmissivityPerNu(type, rho, temp, Ye, nu);
-            J_cheb.SetInterpCoeffs(chebyshev::Vandermonde21);
+            J_cheb.SetInterpCoeffs(chebyshev::Vandermonde9);
             if (std::isnan(J_cheb(nu)) ||
                 ((std::abs(Jtrue) >= 1e-14 || J_cheb(nu) >= 1e-14) &&
                  FractionalDifference(J_cheb(nu), Jtrue) > EPS_TEST)) {
-              std::cout << "J_true = " << Jtrue << ", J_cheb = " << J_cheb(nu)
-                        << ", diff = "
-                        << FractionalDifference(J_cheb(nu), Jtrue) << std::endl;
               n_wrong_d() += 1;
             }
           });
