@@ -74,29 +74,3 @@ INTERFACE
         singularity-opac::hdf5
     >
 )
-
-if (SINGULARITY_USE_HDF5)
-  target_compile_definitions(singularity-opac::flags INTERFACE
-                             SPINER_USE_HDF)
-  if(SINGULARITY_HDF5_INSTALL_DIR)
-    list(APPEND CMAKE_PREFIX_PATH "${SINGULARITY_HDF5_INSTALL_DIR}")
-  endif()
-  if(HDF5_FOUND)
-    set_target_properties(singularity-opac::hdf5 PROPERTIES
-      INTERFACE_LINK_LIBRARIES "${HDF5_LIBRARIES};${HDF5_HL_LIBRARIES}"
-      INTERFACE_COMPILE_DEFINITIONS "SINGULARITY_USE_HDF5"
-      INTERFACE_INCLUDE_DIRECTORIES "${HDF5_INCLUDE_DIRS}")
-    if(HDF5_IS_PARALLEL)
-      if(SINGULARITY_MPI_INSTALL_DIR)
-        list(APPEND CMAKE_PREFIX_PATH "${SINGULARITY_MPI_INSTALL_DIR}")
-      endif()
-      find_package(MPI COMPONENTS CXX)
-      if(MPI_FOUND)
-        target_include_directories(singularity-opac::libs INTERFACE "${MPI_CXX_INCLUDE_DIRS}")
-      endif()
-    endif()
-  else()
-    message(FATAL_ERROR "HDF5 was requested but not found. Can be disabled with -DSINGULARITY_USE_HDF5=OFF")
-  endif()
-  target_link_libraries(singularity-opac::libs INTERFACE singularity-opac::hdf5)
-endif()
