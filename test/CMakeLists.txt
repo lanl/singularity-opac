@@ -10,21 +10,43 @@
 # prepare derivative works, distribute copies to the public, perform
 # publicly and display publicly, and to permit others to do so.
 
-add_library(catch2_define catch2_define.cpp)
-target_link_libraries(catch2_define PUBLIC
-                      Catch2::Catch2
-                      singularity-opac::libs singularity-opac::flags)
+if(NOT CATCH2_found)
+  # Get catch2
+  message(STATUS "Fetching Catch2 as needed")
+  Include(FetchContent)
+  FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG        v2.13.1)
+  FetchContent_MakeAvailable(Catch2)
+  list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/contrib)
+endif()
 
-list(APPEND unit_tests_SOURCES
+# Build tests
+message(STATUS "Configuring unit tests")
+#find_package(${PROJECT_NAME} CONFIG REQUIRED)
+
+add_library(catch2_define)
+target_sources(catch2_define PUBLIC catch2_define.cpp)
+target_link_libraries(catch2_define PUBLIC
+                      Catch2::Catch2)
+
+message("on? ${SINGULARITY_USE_KOKKOS}")
+set(output "${CMAKE_CURRENT_BINARY_DIR}/FINDOUT.dat" )
+message("${output}")
+file(GENERATE OUTPUT ${output} CONTENT "$<BOOL:${SINGULARITY_USE_KOKKOS}>")
+add_executable(${PROJECT_NAME}_unit_tests)
+target_sources(${PROJECT_NAME}_unit_tests
+PRIVATE
   test_trivial.cpp
   test_gray_opacities.cpp
   test_chebyshev.cpp
 )
 
-add_executable(unit_tests "${unit_tests_SOURCES}")
-target_link_libraries(unit_tests PRIVATE catch2_define
-                      Catch2::Catch2
-                      singularity-opac::libs singularity-opac::flags)
+target_link_libraries(${PROJECT_NAME}_unit_tests
+PRIVATE
+  catch2_define
+  ${PROJECT_NAME})
 
 include(Catch)
-catch_discover_tests(unit_tests)
+catch_discover_tests(${PROJECT_NAME}_unit_tests)
