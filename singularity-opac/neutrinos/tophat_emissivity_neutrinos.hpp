@@ -39,6 +39,7 @@ class TophatEmissivity {
   TophatEmissivity(const ThermalDistribution &dist, const Real C,
                    const Real numin, const Real numax)
       : dist_(dist), C_(C), numin_(numin), numax_(numax) {}
+  TophatEmissivity() = default;
   TophatEmissivity GetOnDevice() { return *this; }
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return 0; }

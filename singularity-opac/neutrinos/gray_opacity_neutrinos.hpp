@@ -30,6 +30,7 @@ namespace neutrinos {
 template <typename ThermalDistribution>
 class GrayOpacity {
  public:
+  GrayOpacity() = default;
   GrayOpacity(const Real kappa) : kappa_(kappa) {}
   GrayOpacity(const ThermalDistribution &dist, const Real kappa)
       : dist_(dist), kappa_(kappa) {}
