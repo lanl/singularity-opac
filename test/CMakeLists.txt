@@ -31,10 +31,6 @@ target_sources(catch2_define PUBLIC catch2_define.cpp)
 target_link_libraries(catch2_define PUBLIC
                       Catch2::Catch2)
 
-message("on? ${SINGULARITY_USE_KOKKOS}")
-set(output "${CMAKE_CURRENT_BINARY_DIR}/FINDOUT.dat" )
-message("${output}")
-file(GENERATE OUTPUT ${output} CONTENT "$<BOOL:${SINGULARITY_USE_KOKKOS}>")
 add_executable(${PROJECT_NAME}_unit_tests)
 target_sources(${PROJECT_NAME}_unit_tests
 PRIVATE

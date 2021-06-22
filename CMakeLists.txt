@@ -39,9 +39,16 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+
 add_library(${PROJECT_NAME} INTERFACE IMPORTED GLOBAL)
 # so we can use with add_subdirectory
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+
+include (SetupDeps)
+include (SetupOptions)
+include (SetupCompilers)
+include (SetupFlags)
 
 include(GNUInstallDirs)
 include(CTest)
@@ -53,7 +60,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 endif()
 
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 set(CMAKE_EXPORT_COMPILE_COMMANDS On)
 
 
@@ -69,11 +75,6 @@ execute_process(COMMAND patch -N -s -V never
 
 
 # Invoke CMake scripts for setup
-include (SetupOptions)
-include (SetupDeps)
-include (SetupCompilers)
-include (SetupFlags)
-
 if(SINGULARITY_INSTALL_LIBRARY)
   include (SetupInstall)
 endif()

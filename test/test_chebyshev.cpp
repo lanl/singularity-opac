@@ -56,7 +56,7 @@ TEST_CASE("Chebyshev Polynomials", "[Chebyshev]") {
         Real *ycoeffs = (Real *)PORTABLE_MALLOC(sizeof(Real) * N);
         portableFor(
             "Compute Cheb polynomial", 0, 1, PORTABLE_LAMBDA(const int &i) {
-              MatMultiply(Vandermonde9, y, ycoeffs, N);
+              MatMultiply(Vandermonde9(), y, ycoeffs, N);
             });
         AND_THEN("The chebyshev polynomials fit") {
           int n_wrong_h = 0;

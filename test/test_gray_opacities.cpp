@@ -122,7 +122,7 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
                                                     nu_coeffs, nu_min, nu_max);
             opac.EmissivityPerNu(type, rho, temp, Ye, nu_bins, J_cheb, nbins);
             Real Jtrue = opac.EmissivityPerNu(type, rho, temp, Ye, nu);
-            J_cheb.SetInterpCoeffs(chebyshev::Vandermonde9);
+            J_cheb.SetInterpCoeffs(chebyshev::Vandermonde9());
             if (std::isnan(J_cheb(nu)) ||
                 ((std::abs(Jtrue) >= 1e-14 || J_cheb(nu) >= 1e-14) &&
                  FractionalDifference(J_cheb(nu), Jtrue) > EPS_TEST)) {

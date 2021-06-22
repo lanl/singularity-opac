@@ -30,7 +30,7 @@ target_link_options(${PROJECT_NAME} INTERFACE
 target_include_directories(${PROJECT_NAME}
   INTERFACE
     $<${without_kokkos}:
-        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/utils/herumi-fmath>
+      $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/utils/herumi-fmath>
     >
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/utils>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
@@ -61,12 +61,19 @@ INTERFACE
     > # with_kokkos
 )
 
+target_compile_definitions(${PROJECT_NAME}
+INTERFACE
+  $<${with_kokkos}:
+    PORTABILITY_STRATEGY_KOKKOS
+  >
+)
+
 # target_link_libraries brings in compile flags, compile defs, link flags.
 target_link_libraries(${PROJECT_NAME}
 INTERFACE
     MPI::MPI_CXX
     $<${with_kokkos}:
-        Kokkos::Kokkos
+        Kokkos::kokkos
     >
     $<${with_hdf5}:
         ${PROJECT_NAME}::hdf5
