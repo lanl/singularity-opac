@@ -69,8 +69,8 @@ execute_process(COMMAND patch -N -s -V never
 
 
 # Invoke CMake scripts for setup
-include (SetupDeps)
 include (SetupOptions)
+include (SetupDeps)
 include (SetupCompilers)
 include (SetupFlags)
 
