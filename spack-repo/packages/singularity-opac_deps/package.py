@@ -13,7 +13,7 @@ class SingularityOpacDeps(BundlePackage):
 
     depends_on("cmake", type="build")
     depends_on("hdf5~mpi+cxx+hl", type=("build", "run"))
-    depends_on("kokkos@3:", when="+cuda", type=("build", "run"))
+    depends_on("kokkos@3:~shared+cuda+wrapper+serial+cuda_lambda+cuda_relocatable_device_code cuda_arch=70", when="+cuda", type=("build", "run"))
 
     phases=["install"]
 
