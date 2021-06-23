@@ -16,12 +16,7 @@
 #ifndef SINGULARITY_OPAC_BASE_INDEXERS_
 #define SINGULARITY_OPAC_BASE_INDEXERS_
 
-#ifndef PORTABILITY_STRATEGY_KOKKOS
-  #include <fast-math/logs.hpp>
-  using log10 = BDMath::log10;
-#else
-  #include <cmath>
-#endif
+#include <cmath>
 #include <spiner/databox.hpp>
 #include <variant/include/mpark/variant.hpp>
 
@@ -103,13 +98,13 @@ class LogLinear {
 
   PORTABLE_INLINE_FUNCTION
   Real operator()(const Real nu) {
-    return data_.interpToReal(log10(nu));
+    return data_.interpToReal(std::log10(nu));
   }
 
  private:
   PORTABLE_INLINE_FUNCTION
   void SetRange_(Real numin, Real numax, int N) {
-    data_.setRange(0, log10(numin), log10(numax), N);
+    data_.setRange(0, std::log10(numin), std::log10(numax), N);
   }
   Spiner::DataBox data_;
 };
@@ -121,8 +116,8 @@ class LogCheb {
   PORTABLE_INLINE_FUNCTION
   LogCheb(Data_t data, Data_t logdata, Data_t coeffs, Real numin, Real numax)
       : data_(data), logdata_(logdata), coeffs_(coeffs), numin_(numin),
-        numax_(numax), lnumin_(log10(numin)),
-        lnumax_(log10(numax)) {}
+        numax_(numax), lnumin_(std::log10(numin)),
+        lnumax_(std::log10(numax)) {}
 
   PORTABLE_INLINE_FUNCTION
   Real &operator[](const int i) { return data_[i]; }
@@ -132,14 +127,14 @@ class LogCheb {
   template <typename Vandermonde_t>
   PORTABLE_INLINE_FUNCTION void SetInterpCoeffs(const Vandermonde_t &v) {
     for (int i = 0; i < N; ++i) {
-      logdata_[i] = log10(std::abs(data_[i]) + 1e-20);
+      logdata_[i] = std::log10(std::abs(data_[i]) + 1e-20);
     }
     chebyshev::MatMultiply(v, logdata_, coeffs_, N);
   }
 
   PORTABLE_INLINE_FUNCTION
   Real operator()(const Real nu) {
-    Real lnu = log10(nu);
+    Real lnu = std::log10(nu);
     return std::pow(
         10, chebyshev::InterpFromCoeffs(lnu, lnumin_, lnumax_, coeffs_, N));
   }

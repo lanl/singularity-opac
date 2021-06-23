@@ -14,6 +14,7 @@ class SingularityOpacDeps(BundlePackage):
     depends_on("cmake", type="build")
     depends_on("hdf5~mpi+cxx+hl", type=("build", "run"))
     depends_on("kokkos@3:~shared+cuda+wrapper+serial+cuda_lambda+cuda_relocatable_device_code cuda_arch=70", when="+cuda", type=("build", "run"))
+    depends_on("catch2", type=("build", "run"))
 
     phases=["install"]
 
@@ -24,7 +25,7 @@ class SingularityOpacDeps(BundlePackage):
 
     def install(self, spec, prefix):
         mod_script = os.path.join(spec.prefix, f"load_env-{spec.full_hash(length=4)}.sh")
-       
+
         with open(os.path.join(mod_script), "w") as f:
             f.write(f"# load env {spec.short_spec}")
             f.write("")

@@ -1,12 +1,20 @@
-
+include(FeatureSummary)
+#=======================================
+# Setup CUDAToolkit
+# - provideds CUDA::toolkit
+#=======================================
+find_package(CUDAToolkit QUIET)
 
 #=======================================
 # Setup Kokkos
+# - provides Kokkos::kokkos
 #=======================================
 find_package(Kokkos QUIET)
 
 #=======================================
 # Find HDF5
+# - cmake@3.20+ provides HDF5::HDF5, but
+#   prior versions do not
 #=======================================
 find_package(HDF5 COMPONENTS C HL QUIET)
 
@@ -21,14 +29,17 @@ if (HDF5_FOUND)
         INTERFACE_INCLUDE_DIRECTORIES "${HDF5_INCLUDE_DIRS}"
     )
 
+    # if HDF5 is parallel, also get MPI libraries
+    if (HDF5_IS_PARALELL)
+        find_package(MPI COMPONENTS CXX REQUIRED)
+    endif()
 endif()
 
 #=======================================
-# Find Catch2
+# Setup Catch2
+# - provides Catch2::Catch2
 #=======================================
 find_package(Catch2 QUIET)
 
-#=======================================
-# Find MPI
-#=======================================
-find_package(MPI COMPONENTS CXX QUIET)
+
+

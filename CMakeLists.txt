@@ -87,3 +87,9 @@ set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 
 include(CPack)
 
+include(FeatureSummary)
+feature_summary(WHAT ALL
+                INCLUDE_QUIET_PACKAGES
+                DESCRIPTION "Enabled Features:"
+                VAR enabledFeaturesText)
+message(STATUS "${enabledFeaturesText}")

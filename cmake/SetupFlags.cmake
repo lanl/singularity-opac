@@ -7,6 +7,7 @@ set(build_release "$<CONFIG:Release>")
 set(cxx_lang "$<COMPILE_LANGUAGE:CXX>")
 set(cxx_xl "$<COMPILE_LANG_AND_ID:CXX,XL>")
 set(with_hdf5 "$<BOOL:${SINGULARITY_USE_HDF5}>")
+set(with_mpi "$<BOOL:${SINGULARITY_USE_MPI}>")
 set(with_kokkos "$<BOOL:${SINGULARITY_USE_KOKKOS}>")
 set(without_kokkos "$<NOT:${with_kokkos}>")
 set(with_cuda "$<BOOL:${SINGULARITY_USE_CUDA}>")
@@ -71,11 +72,13 @@ INTERFACE
 # target_link_libraries brings in compile flags, compile defs, link flags.
 target_link_libraries(${PROJECT_NAME}
 INTERFACE
-    MPI::MPI_CXX
     $<${with_kokkos}:
         Kokkos::kokkos
     >
     $<${with_hdf5}:
         ${PROJECT_NAME}::hdf5
+        $<${with_mpi}:
+            MPI::MPI_CXX
+        >
     >
 )

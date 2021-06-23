@@ -10,7 +10,7 @@
 # prepare derivative works, distribute copies to the public, perform
 # publicly and display publicly, and to permit others to do so.
 
-if(NOT CATCH2_found)
+if(NOT Catch2_FOUND)
   # Get catch2
   message(STATUS "Fetching Catch2 as needed")
   Include(FetchContent)
