@@ -111,8 +111,6 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
       portableFor(
           "set temp bins", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
             temp_bins[i] = std::pow(10, lt_min + dt * i) * MeV2K;
-          });
-  
       
      
       Real *vm9 = (Real*) PORTABLE_MALLOC(9 * 9 * sizeof(Real));
@@ -126,7 +124,6 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
             Real *nu_data = (Real *)malloc(nbins * sizeof(Real));
             Real *lnu_data = (Real *)malloc(nbins * sizeof(Real));
             Real *nu_coeffs = (Real *)malloc(nbins * sizeof(Real));
- 
             indexers::LogCheb<nbins, Real *> J_cheb(nu_data, lnu_data,
                                                     nu_coeffs, nu_min, nu_max);
             opac.EmissivityPerNu(type, rho, temp, Ye, nu_bins, J_cheb, nbins);
@@ -137,9 +134,9 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
                  FractionalDifference(J_cheb(nu), Jtrue) > EPS_TEST)) {
               n_wrong_d() += 1;
             }
-            free(nu_data);
-            free(lnu_data);
-            free(nu_coeffs);
+	    free(nu_data);
+	    free(lnu_data);
+	    free(nu_coeffs);
           });
 
 #ifdef PORTABILITY_STRATEGY_KOKKOS
@@ -209,7 +206,8 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
 
       Real *nu_bins = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
       Real *temp_bins = (Real *)PORTABLE_MALLOC(ntemps * sizeof(Real));
-      Spiner::DataBox loglin_bins(Spiner::AllocationTarget::Device, ntemps, nbins);
+      Spiner::DataBox loglin_bins(Spiner::AllocationTarget::Device, ntemps,
+                                  nbins);
 
       portableFor(
           "set nu bins", 0, nbins, PORTABLE_LAMBDA(const int &i) {
@@ -223,7 +221,7 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
       portableFor(
           "Fill the indexers", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
             Real temp = temp_bins[i];
-            auto bins = loglin_bins.slice(i);
+	    auto bins = loglin_bins.slice(i);
             indexers::LogLinear J_log(bins, nu_min, nu_max, nbins);
             opac.EmissivityPerNu(rho, temp, nu_bins, J_log, nbins);
             Real Jtrue = opac.EmissivityPerNu(rho, temp, nu);
