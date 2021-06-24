@@ -111,6 +111,7 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
       portableFor(
           "set temp bins", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
             temp_bins[i] = std::pow(10, lt_min + dt * i) * MeV2K;
+          });
       
      
       Real *vm9 = (Real*) PORTABLE_MALLOC(9 * 9 * sizeof(Real));
