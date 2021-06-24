@@ -197,6 +197,7 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
 
       Real *nu_bins = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
       Real *temp_bins = (Real *)PORTABLE_MALLOC(ntemps * sizeof(Real));
+      Real *loglin_bins = (Real *)PORTABLE_MALLOC(nbins *sizeof(Real));
       portableFor(
           "set nu bins", 0, nbins, PORTABLE_LAMBDA(const int &i) {
             nu_bins[i] = std::pow(10, lnu_min + dnu * i);
@@ -209,7 +210,7 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
       portableFor(
           "Fill the indexers", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
             Real temp = temp_bins[i];
-            indexers::LogLinear J_log(nu_min, nu_max, nbins);
+            indexers::LogLinear J_log(loglin_bins, nu_min, nu_max, nbins);
             opac.EmissivityPerNu(rho, temp, nu_bins, J_log, nbins);
             Real Jtrue = opac.EmissivityPerNu(rho, temp, nu);
             if (FractionalDifference(Jtrue, J_log(nu)) > EPS_TEST) {
@@ -224,6 +225,7 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
 
       PORTABLE_FREE(nu_bins);
       PORTABLE_FREE(temp_bins);
+      PORTABLE_FREE(loglin_bins);
     }
 
     opac.Finalize();
