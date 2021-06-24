@@ -110,14 +110,14 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
       portableFor(
           "set temp bins", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
             temp_bins[i] = std::pow(10, lt_min + dt * i) * MeV2K;
-          });
-
-      Real *nu_data = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
-      Real *lnu_data = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
-      Real *nu_coeffs = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
+          });      
       portableFor(
           "Fill the indexers", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
             Real temp = temp_bins[i];
+	    // Don't do this in real code. It's slow.
+	    Real *nu_data = (Real *)malloc(nbins * sizeof(Real));
+	    Real *lnu_data = (Real *)malloc(nbins * sizeof(Real));
+	    Real *nu_coeffs = (Real *)malloc(nbins * sizeof(Real));
             indexers::LogCheb<nbins, Real *> J_cheb(nu_data, lnu_data,
                                                     nu_coeffs, nu_min, nu_max);
             opac.EmissivityPerNu(type, rho, temp, Ye, nu_bins, J_cheb, nbins);
@@ -128,6 +128,9 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
                  FractionalDifference(J_cheb(nu), Jtrue) > EPS_TEST)) {
               n_wrong_d() += 1;
             }
+	    free(nu_data);
+	    free(lnu_data);
+	    free(nu_coeffs);
           });
 
 #ifdef PORTABILITY_STRATEGY_KOKKOS
@@ -135,9 +138,6 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
 #endif
       REQUIRE(n_wrong_h == 0);
 
-      PORTABLE_FREE(nu_data);
-      PORTABLE_FREE(lnu_data);
-      PORTABLE_FREE(nu_coeffs);
       PORTABLE_FREE(nu_bins);
       PORTABLE_FREE(lnu_bins);
       PORTABLE_FREE(temp_bins);
@@ -197,6 +197,10 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
 
       Real *nu_bins = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
       Real *temp_bins = (Real *)PORTABLE_MALLOC(ntemps * sizeof(Real));
+
+      Spiner::DataBox loglin_bins(Spiner::AllocationTarget::Device, ntemps,
+                                  nbins);
+
       portableFor(
           "set nu bins", 0, nbins, PORTABLE_LAMBDA(const int &i) {
             nu_bins[i] = std::pow(10, lnu_min + dnu * i);
@@ -209,7 +213,8 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
       portableFor(
           "Fill the indexers", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
             Real temp = temp_bins[i];
-            indexers::LogLinear J_log(nu_min, nu_max, nbins);
+	    auto bins = loglin_bins.slice(i);
+            indexers::LogLinear J_log(bins, nu_min, nu_max, nbins);
             opac.EmissivityPerNu(rho, temp, nu_bins, J_log, nbins);
             Real Jtrue = opac.EmissivityPerNu(rho, temp, nu);
             if (FractionalDifference(Jtrue, J_log(nu)) > EPS_TEST) {
@@ -224,6 +229,7 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
 
       PORTABLE_FREE(nu_bins);
       PORTABLE_FREE(temp_bins);
+      free(loglin_bins);
     }
 
     opac.Finalize();
