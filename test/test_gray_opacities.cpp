@@ -18,6 +18,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <spiner/databox.hpp>
 #include <ports-of-call/portability.hpp>
 #include <ports-of-call/portable_arrays.hpp>
 
@@ -115,6 +116,11 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
       Real *nu_data = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
       Real *lnu_data = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
       Real *nu_coeffs = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
+      
+      Real *vm9 = (Real*) PORTABLE_MALLOC(9 * 9 * sizeof(Real));
+      portableFor(
+          "Fill vm", 0, 1, PORTABLE_LAMBDA(const int& i){ chebyshev::get_vmbox(vm9); });
+
       portableFor(
           "Fill the indexers", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
             Real temp = temp_bins[i];
@@ -122,7 +128,7 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
                                                     nu_coeffs, nu_min, nu_max);
             opac.EmissivityPerNu(type, rho, temp, Ye, nu_bins, J_cheb, nbins);
             Real Jtrue = opac.EmissivityPerNu(type, rho, temp, Ye, nu);
-            J_cheb.SetInterpCoeffs(chebyshev::Vandermonde9());
+            J_cheb.SetInterpCoeffs(Spiner::DataBox(vm9, 9, 9));
             if (std::isnan(J_cheb(nu)) ||
                 ((std::abs(Jtrue) >= 1e-14 || J_cheb(nu) >= 1e-14) &&
                  FractionalDifference(J_cheb(nu), Jtrue) > EPS_TEST)) {
@@ -133,14 +139,17 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
 #ifdef PORTABILITY_STRATEGY_KOKKOS
       Kokkos::deep_copy(n_wrong_h, n_wrong_d);
 #endif
+
       REQUIRE(n_wrong_h == 0);
 
+      PORTABLE_FREE(vm9);
       PORTABLE_FREE(nu_data);
       PORTABLE_FREE(lnu_data);
       PORTABLE_FREE(nu_coeffs);
       PORTABLE_FREE(nu_bins);
       PORTABLE_FREE(lnu_bins);
       PORTABLE_FREE(temp_bins);
+      
     }
 
     opac.Finalize();
@@ -197,6 +206,7 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
 
       Real *nu_bins = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
       Real *temp_bins = (Real *)PORTABLE_MALLOC(ntemps * sizeof(Real));
+      Real *loglin_bins = (Real *)PORTABLE_MALLOC(ntemps * sizeof(Real));
       portableFor(
           "set nu bins", 0, nbins, PORTABLE_LAMBDA(const int &i) {
             nu_bins[i] = std::pow(10, lnu_min + dnu * i);
@@ -209,7 +219,7 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
       portableFor(
           "Fill the indexers", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
             Real temp = temp_bins[i];
-            indexers::LogLinear J_log(nu_min, nu_max, nbins);
+            indexers::LogLinear J_log(loglin_bins, nu_min, nu_max, nbins);
             opac.EmissivityPerNu(rho, temp, nu_bins, J_log, nbins);
             Real Jtrue = opac.EmissivityPerNu(rho, temp, nu);
             if (FractionalDifference(Jtrue, J_log(nu)) > EPS_TEST) {
@@ -224,6 +234,7 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
 
       PORTABLE_FREE(nu_bins);
       PORTABLE_FREE(temp_bins);
+      PORTABLE_FREE(loglin_bins);
     }
 
     opac.Finalize();

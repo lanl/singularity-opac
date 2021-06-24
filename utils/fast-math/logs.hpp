@@ -27,9 +27,9 @@
 // for negligible cost in accuracy
 #ifdef PORTABILITY_STRATEGY_KOKKOS
 #define BD_USE_FMATH 0
-#else
-#include <fmath.hpp>
+#elif SINGULARITY_USE_FMATH
 #define BD_USE_FMATH 1
+#include <fmath.hpp>
 #endif
 
 namespace BDMath {

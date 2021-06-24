@@ -6,6 +6,7 @@ set(build_debug "$<CONFIG:Debug>")
 set(build_release "$<CONFIG:Release>")
 set(cxx_lang "$<COMPILE_LANGUAGE:CXX>")
 set(cxx_xl "$<COMPILE_LANG_AND_ID:CXX,XL>")
+set(with_fmath "$<BOOL:${SINGULARITY_USE_FMATH}>")
 set(with_hdf5 "$<BOOL:${SINGULARITY_USE_HDF5}>")
 set(with_mpi "$<BOOL:${SINGULARITY_USE_MPI}>")
 set(with_kokkos "$<BOOL:${SINGULARITY_USE_KOKKOS}>")
@@ -66,6 +67,11 @@ target_compile_definitions(${PROJECT_NAME}
 INTERFACE
   $<${with_kokkos}:
     PORTABILITY_STRATEGY_KOKKOS
+  >
+  $<${without_kokkos}:
+    $<${with_fmath}:
+      SINGULARITY_USE_FMATH
+    >
   >
 )
 
