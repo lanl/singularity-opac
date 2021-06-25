@@ -25,11 +25,11 @@
 // herumi-fmath does not work on device
 // On CPUS it provides another 10% or so speedup
 // for negligible cost in accuracy
-#ifdef PORTABILITY_STRATEGY_KOKKOS
-#define BD_USE_FMATH 0
-#elif SINGULARITY_USE_FMATH
-#define BD_USE_FMATH 1
-#include <fmath.hpp>
+#define BD_USE_FMATH
+#if defined(PORTABILITY_STRATEGY_KOKKOS) || defined(SINGULARITY_USE_FMATH)
+  #undef BD_USE_FMATH
+#else
+  #include <fmath.hpp>
 #endif
 
 namespace BDMath {
@@ -38,7 +38,7 @@ PORTABLE_INLINE_FUNCTION
 float log10(const float x) {
   // const double ILOG10 = 1./std::log(10.0);
   constexpr double ILOG10 = 0.43429448190325176;
-#if BD_USE_FMATH
+#ifdef BD_USE_FMATH
   return fmath::log(x) * ILOG10;
 #else
   return logf(x) * ILOG10;
