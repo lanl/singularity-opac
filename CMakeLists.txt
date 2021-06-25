@@ -41,6 +41,9 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
+# simplier interface, but note it may make things more convoluted
+# as the project grows in size. For now, this is fine, but may
+# want to split flags if more source is added.
 add_library(${PROJECT_NAME} INTERFACE IMPORTED GLOBAL)
 # so we can use with add_subdirectory
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
@@ -69,9 +72,6 @@ message(STATUS "Patching mpark::variant to support GPUs")
 execute_process(COMMAND patch -N -s -V never
                 ${CMAKE_CURRENT_SOURCE_DIR}/utils/variant/include/mpark/variant.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/utils/cuda_compatibility.patch)
-
-# Flags and libraries for building, see cmake/SetupFlags.cmake
-#add_library (singularity-opac::flags INTERFACE IMPORTED)
 
 
 # Invoke CMake scripts for setup
