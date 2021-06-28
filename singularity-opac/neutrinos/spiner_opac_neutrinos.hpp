@@ -51,8 +51,7 @@ class SpinerOpacity {
   int nlambda() const noexcept { return 0; }
   PORTABLE_INLINE_FUNCTION
   void PrintParams() const noexcept {
-    printf("Spiner opacity\n"
-	   "\t); // TODO(JMM): Params
+    printf("Spiner opacity\n"); // TODO(JMM): Params
   }
 
   SpinerOpacity GetOnDevice() {

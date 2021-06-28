@@ -45,72 +45,72 @@ class GrayOpacity {
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION
-  Real AbsorptionCoefficientPerNu(const RadiationType type, const Real rho,
-                                  const Real temp, const Real Ye, const Real nu,
-                                  Real *lambda = nullptr) const {
-    return dist_.AbsorptionCoefficientFromKirkhoff(*this, type, rho, temp, Ye,
+  Real AbsorptionCoefficientPerNu(const Real rho, const Real temp,
+                                  const Real Ye, const RadiationType type,
+                                  const Real nu, Real *lambda = nullptr) const {
+    return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, Ye, type,
                                                    nu, lambda);
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void AbsorptionCoefficientPerNu(
-      const RadiationType type, const Real rho, const Real temp, const Real Ye,
+      const Real rho, const Real temp, const Real Ye, const RadiationType type,
       const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
       Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
       coeffs[i] =
-          AbsorptionCoefficientPerNu(type, rho, temp, Ye, nu_bins[i], lambda);
+          AbsorptionCoefficientPerNu(rho, temp, Ye, type, nu_bins[i], lambda);
     }
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real EmissivityPerNuOmega(const RadiationType type, const Real rho,
-                            const Real temp, const Real Ye, const Real nu,
+  Real EmissivityPerNuOmega(const Real rho, const Real temp, const Real Ye,
+                            const RadiationType type, const Real nu,
                             Real *lambda = nullptr) const {
-    Real Bnu = dist_.ThermalDistributionOfTNu(type, temp, nu, lambda);
+    Real Bnu = dist_.ThermalDistributionOfTNu(temp, type, nu, lambda);
     return rho * kappa_ * Bnu;
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void
-  EmissivityPerNuOmega(const RadiationType type, const Real rho,
-                       const Real temp, const Real Ye,
+  EmissivityPerNuOmega(const Real rho, const Real temp, const Real Ye,
+                       const RadiationType type,
                        const FrequencyIndexer &nu_bins, DataIndexer &coeffs,
                        const int nbins, Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
-      coeffs[i] = EmissivityPerNuOmega(type, rho, temp, Ye, nu_bins[i], lambda);
+      coeffs[i] = EmissivityPerNuOmega(rho, temp, Ye, type, nu_bins[i], lambda);
     }
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real EmissivityPerNu(const RadiationType type, const Real rho,
-                       const Real temp, const Real Ye, const Real nu,
+  Real EmissivityPerNu(const Real rho, const Real temp, const Real Ye,
+                       const RadiationType type, const Real nu,
                        Real *lambda = nullptr) const {
-    return 4 * M_PI * EmissivityPerNuOmega(type, rho, temp, Ye, nu, lambda);
+    return 4 * M_PI * EmissivityPerNuOmega(rho, temp, Ye, type, nu, lambda);
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void
-  EmissivityPerNu(const RadiationType type, const Real rho, const Real temp,
-                  const Real Ye, const FrequencyIndexer &nu_bins,
+  EmissivityPerNu(const Real rho, const Real temp, const Real Ye,
+                  const RadiationType type, const FrequencyIndexer &nu_bins,
                   DataIndexer &coeffs, const int nbins,
                   Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
-      coeffs[i] = EmissivityPerNu(type, rho, temp, Ye, nu_bins[i], lambda);
+      coeffs[i] = EmissivityPerNu(rho, temp, Ye, type, nu_bins[i], lambda);
     }
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real Emissivity(const RadiationType type, const Real rho, const Real temp,
-                  const Real Ye, Real *lambda = nullptr) const {
-    Real B = dist_.ThermalDistributionOfT(type, temp, lambda);
+  Real Emissivity(const Real rho, const Real temp, const Real Ye,
+                  const RadiationType type, Real *lambda = nullptr) const {
+    Real B = dist_.ThermalDistributionOfT(temp, type, lambda);
     return rho * kappa_ * B;
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real NumberEmissivity(RadiationType type, const Real rho, const Real temp,
-                        Real Ye, Real *lambda = nullptr) const {
-    return kappa_ * dist_.ThermalNumberDistribution(type, temp, lambda);
+  Real NumberEmissivity(const Real rho, const Real temp, Real Ye,
+                        RadiationType type, Real *lambda = nullptr) const {
+    return kappa_ * dist_.ThermalNumberDistribution(temp, type, lambda);
   }
 
  private:

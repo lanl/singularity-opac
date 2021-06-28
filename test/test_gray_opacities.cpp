@@ -66,8 +66,8 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
 
       portableFor(
           "calc emissivities", 0, 100, PORTABLE_LAMBDA(const int &i) {
-            Real jnu = opac.EmissivityPerNuOmega(type, rho, temp, Ye, nu);
-            Real Jnu = opac.EmissivityPerNu(type, rho, temp, Ye, nu);
+            Real jnu = opac.EmissivityPerNuOmega(rho, temp, Ye, type, nu);
+            Real Jnu = opac.EmissivityPerNu(rho, temp, Ye, type, nu);
             if (FractionalDifference(Jnu, 4 * M_PI * jnu) > EPS_TEST) {
               n_wrong_d() += 1;
             }
@@ -127,8 +127,8 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
             Real *nu_coeffs = (Real *)malloc(nbins * sizeof(Real));
             indexers::LogCheb<nbins, Real *> J_cheb(nu_data, lnu_data,
                                                     nu_coeffs, nu_min, nu_max);
-            opac.EmissivityPerNu(type, rho, temp, Ye, nu_bins, J_cheb, nbins);
-            Real Jtrue = opac.EmissivityPerNu(type, rho, temp, Ye, nu);
+            opac.EmissivityPerNu(rho, temp, Ye, type, nu_bins, J_cheb, nbins);
+            Real Jtrue = opac.EmissivityPerNu(rho, temp, Ye, type, nu);
             J_cheb.SetInterpCoeffs(Spiner::DataBox(vm9, 9, 9));
             if (std::isnan(J_cheb(nu)) ||
                 ((std::abs(Jtrue) >= 1e-14 || J_cheb(nu) >= 1e-14) &&
