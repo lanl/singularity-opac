@@ -36,7 +36,7 @@ PORTABLE_INLINE_FUNCTION void MatMultiply(const Matrix &a, const VecIn &x,
   for (int i = 0; i < npoints; ++i) {
     y[i] = 0;
     for (int j = 0; j < npoints; ++j) {
-      y[i] += a[i][j] * x[j];
+      y[i] += a(i, j) * x[j];
     }
   }
 }
