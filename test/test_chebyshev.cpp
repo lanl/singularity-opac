@@ -17,6 +17,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <spiner/databox.hpp>
 #include <ports-of-call/portability.hpp>
 #include <ports-of-call/portable_arrays.hpp>
 #include <singularity-opac/chebyshev/chebyshev.hpp>
@@ -44,6 +45,11 @@ TEST_CASE("Chebyshev Polynomials", "[Chebyshev]") {
     constexpr Real mu = (xmax + xmin) / 2;
     constexpr Real sigma = 1;
     Real *x = (Real *)PORTABLE_MALLOC(sizeof(Real) * N);
+    Real *vm9 = (Real*)PORTABLE_MALLOC(9 * 9 * sizeof(Real));
+      
+    portableFor(
+        "Set vm", 0, 1, PORTABLE_LAMBDA(const int &i) { get_vmbox(vm9); });
+
     portableFor(
         "Set x", 0, 1,
         PORTABLE_LAMBDA(const int &i) { GetPoints(xmin, xmax, N, x); });
@@ -56,7 +62,7 @@ TEST_CASE("Chebyshev Polynomials", "[Chebyshev]") {
         Real *ycoeffs = (Real *)PORTABLE_MALLOC(sizeof(Real) * N);
         portableFor(
             "Compute Cheb polynomial", 0, 1, PORTABLE_LAMBDA(const int &i) {
-              MatMultiply(Vandermonde9, y, ycoeffs, N);
+              MatMultiply(Spiner::DataBox(vm9, 9, 9), y, ycoeffs, N);
             });
         AND_THEN("The chebyshev polynomials fit") {
           int n_wrong_h = 0;
@@ -89,5 +95,6 @@ TEST_CASE("Chebyshev Polynomials", "[Chebyshev]") {
       PORTABLE_FREE(y);
     }
     PORTABLE_FREE(x);
+    PORTABLE_FREE(vm9);
   }
 }
