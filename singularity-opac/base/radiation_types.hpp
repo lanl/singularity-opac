@@ -20,6 +20,7 @@
 
 namespace singularity {
 
+constexpr int NEUTRINO_NTYPES = 3;
 enum class RadiationType {
   TRACER = -1,
   NU_ELECTRON = 0,
