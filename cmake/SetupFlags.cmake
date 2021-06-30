@@ -83,8 +83,8 @@ INTERFACE
     >
     $<${with_hdf5}:
         ${PROJECT_NAME}::hdf5
-        $<${with_mpi}:
-            MPI::MPI_CXX
-        >
+        # $<${with_mpi}:
+        #     MPI::MPI_CXX
+        # >
     >
 )
