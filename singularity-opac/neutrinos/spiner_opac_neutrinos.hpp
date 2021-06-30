@@ -25,6 +25,7 @@
 #include <ports-of-call/portability.hpp>
 #include <spiner/databox.hpp>
 #include <spiner/interpolation.hpp>
+#include <spiner/spiner_types.hpp>
 
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
@@ -132,11 +133,11 @@ class SpinerOpacity {
     }
   }
 
-  void Save(const std::string &filename) {
-    herr_t status = H5_success;
+  void Save(const std::string &filename) const {
+    herr_t status = H5_SUCCESS;
     hid_t file =
-        H5Fopen(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    status += lalphanu_.saveHDF(file, SP5::Opac::AborptionCoefficientPerNu);
+        H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    status += lalphanu_.saveHDF(file, SP5::Opac::AbsorptionCoefficientPerNu);
     status += ljnu_.saveHDF(file, SP5::Opac::EmissivityPerNu);
     status += lJ_.saveHDF(file, SP5::Opac::TotalEmissivity);
     status += lJYe_.saveHDF(file, SP5::Opac::NumberEmissivity);
