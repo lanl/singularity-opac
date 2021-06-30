@@ -16,6 +16,8 @@
 #include <cmath>
 #include <iostream>
 
+#include <string>
+
 #include <catch2/catch.hpp>
 
 #include <ports-of-call/portability.hpp>
@@ -46,10 +48,10 @@ TEST_CASE("Spiner opacities, filled with gray data",
   constexpr Real MeV2K = 1e6 * pc::eV / pc::kb;
   constexpr Real lRhoMin = 8;
   constexpr Real lRhoMax = 12;
-  constexpr int NRho = 128;
+  constexpr int NRho = 64;
   constexpr Real lTMin = -2 * MeV2K;
   constexpr Real lTMax = 2 * MeV2K;
-  constexpr int NT = 128;
+  constexpr int NT = 64;
   constexpr Real YeMin = 0.1;
   constexpr Real YeMax = 0.5;
   constexpr int NYe = 64;
@@ -57,10 +59,17 @@ TEST_CASE("Spiner opacities, filled with gray data",
   constexpr Real leMax = 1e2;
   constexpr int Ne = 64;
   constexpr Real kappa = 1.0;
+  const std::string grayname = "gray.sp5";
 
   WHEN("We initialize a gray neutrino opacity and tabulate it") {
     neutrinos::Opacity gray = neutrinos::Gray(kappa);
     neutrinos::SpinerOpacity filled(gray, lRhoMin, lRhoMax, NRho, lTMin, lTMax,
                                     NT, YeMin, YeMax, NYe, leMin, leMax, Ne);
+#ifdef SPINER_USE_HDF
+    THEN("We can save to disk and reload") {
+      filled.Save(grayname);
+      neutrinos::Opacity opac_host = neutrinos::SpinerOpacity(grayname);
+    }
+#endif
   }
 }
