@@ -36,7 +36,6 @@
 #include "hdf5_hl.h"
 #endif
 
-
 // JMM: Doing everything in log-log, because everything should be
 // positive and should roughly follow a power law actually.
 
@@ -117,11 +116,9 @@ class SpinerOpacity {
 
 #ifdef SPINER_USE_HDF
   SpinerOpacity(const std::string &filename)
-    : filename_(filename.c_str()), memoryStatus_(DataStatus::OnHost) {
-    hid_t file;
+      : filename_(filename.c_str()), memoryStatus_(DataStatus::OnHost) {
     herr_t status = H5_SUCCESS;
-
-    file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
     status += lalphanu_.loadHDF(file, SP5::Opac::AbsorptionCoefficientPerNu);
     status += ljnu_.loadHDF(file, SP5::Opac::EmissivityPerNu);
     status += lJ_.loadHDF(file, SP5::Opac::TotalEmissivity);
@@ -130,7 +127,22 @@ class SpinerOpacity {
 
     if (status != H5_SUCCESS) {
       OPAC_ERROR("neutrinos::SpinerOpacity: HDF5 error\n");
-    }    
+    }
+  }
+
+  void Save(const std::string &filename) {
+    herr_t status = H5_success;
+    hid_t file =
+        H5Fopen(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    status += lalphanu_.saveHDF(file, SP5::Opac::AborptionCoefficientPerNu);
+    status += ljnu_.saveHDF(file, SP5::Opac::EmissivityPerNu);
+    status += lJ_.saveHDF(file, SP5::Opac::TotalEmissivity);
+    status += lJYe_.saveHDF(file, SP5::Opac::NumberEmissivity);
+    status += H5Fclose(file);
+
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("neutrinos::SpinerOpacity: HDF5 error\n");
+    }
   }
 #endif
 
