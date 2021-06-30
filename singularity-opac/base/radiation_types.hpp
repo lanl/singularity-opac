@@ -16,6 +16,7 @@
 #ifndef SINGULARITY_OPAC_BASE_RADIATION_TYPES_
 #define SINGULARITY_OPAC_BASE_RADIATION_TYPES_
 
+#include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 
 namespace singularity {
@@ -29,7 +30,10 @@ enum class RadiationType {
   PHOTON = 3
 };
 
+PORTABLE_INLINE_FUNCTION
 int RadType2Idx(RadiationType type) { return static_cast<int>(type); }
+
+PORTABLE_INLINE_FUNCTION
 RadiationType Idx2RadType(int i) {
   switch (i) {
   case -1:

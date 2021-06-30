@@ -47,8 +47,8 @@ TEST_CASE("Spiner opacities, filled with gray data",
   constexpr Real lRhoMin = 8;
   constexpr Real lRhoMax = 12;
   constexpr int NRho = 128;
-  constexpr Real lTMin = -2*MeV2K;
-  constexpr Real lTMax = 2*MeV2K;
+  constexpr Real lTMin = -2 * MeV2K;
+  constexpr Real lTMax = 2 * MeV2K;
   constexpr int NT = 128;
   constexpr Real YeMin = 0.1;
   constexpr Real YeMax = 0.5;
@@ -56,4 +56,11 @@ TEST_CASE("Spiner opacities, filled with gray data",
   constexpr Real leMin = 1e-1;
   constexpr Real leMax = 1e2;
   constexpr int Ne = 64;
+  constexpr Real kappa = 1.0;
+
+  WHEN("We initialize a gray neutrino opacity and tabulate it") {
+    neutrinos::Opacity gray = neutrinos::Gray(kappa);
+    neutrinos::SpinerOpacity filled(gray, lRhoMin, lRhoMax, NRho, lTMin, lTMax,
+                                    NT, YeMin, YeMax, NYe, leMin, leMax, Ne);
+  }
 }

@@ -59,9 +59,9 @@ enum class DataStatus { Deallocated, OnDevice, OnHost };
 class SpinerOpacity {
  public:
   static constexpr Real EPS = 10.0 * std::numeric_limits<Real>::epsilon();
-  constexpr PhysicalConstants<CGS> pc;
-  constexpr Real Hz2MeV = pc.h / (1e6 * pc.eV);
-  constexpr Real MeV2Hz = 1 / Hz2Mev;
+  using pc = PhysicalConstants<CGS>;
+  static constexpr Real Hz2MeV = pc::h / (1e6 * pc::eV);
+  static constexpr Real MeV2Hz = 1 / Hz2MeV;
 
   SpinerOpacity() = default;
 
@@ -70,7 +70,7 @@ class SpinerOpacity {
   SpinerOpacity(Opacity &opac, Real lRhoMin, Real lRhoMax, int NRho, Real lTMin,
                 Real lTMax, int NT, Real YeMin, Real YeMax, int NYe, Real leMin,
                 Real leMax, int Ne)
-      : filename_("none"), memoryStatus_(DataStatus::OnHost) {
+      : filename_("none"), memoryStatus_(impl::DataStatus::OnHost) {
     // Set metadata for lalphanu and ljnu
     lalphanu_.resize(NRho, NT, NYe, NEUTRINO_NTYPES, Ne);
     lalphanu_.setRange(0, leMin, leMax, Ne);
@@ -85,7 +85,7 @@ class SpinerOpacity {
     lJ_.setRange(1, YeMin, YeMax, NYe);
     lJ_.setRange(2, lTMin, lTMax, NT);
     lJ_.setRange(3, lRhoMin, lRhoMax, NRho);
-    lJYe.copyMetadata(lJ_);
+    lJYe_.copyMetadata(lJ_);
 
     // Fill tables
     for (int iRho = 0; iRho < NRho; ++iRho) {
@@ -96,18 +96,18 @@ class SpinerOpacity {
         Real T = fromLog_(lT);
         for (int iYe = 0; iYe < NYe; ++iYe) {
           Real Ye = lalphanu_.range(2).x(iYe);
-          for (int type = 0; type < NEUTRINO_NTYPES; ++type) {
-            lJ_.(iRho, iT, iYe, type) =
-                toLog_(opac.Emissivity(rho, T, Ye, type));
-            lJYe_.(iRho, iT, iYe, type) =
+          for (int idx = 0; idx < NEUTRINO_NTYPES; ++idx) {
+            RadiationType type = Idx2RadType(idx);
+            lJ_(iRho, iT, iYe, idx) = toLog_(opac.Emissivity(rho, T, Ye, type));
+            lJYe_(iRho, iT, iYe, idx) =
                 toLog_(opac.Emissivity(rho, T, Ye, type));
             for (int ie = 0; ie < Ne; ++ie) {
               Real lE = lalphanu_.range(0).x(ie);
               Real E = fromLog_(lE);
               Real nu = MeV2Hz * E;
-              lalphanu_(iRho, iT, iYe, type, ie) =
+              lalphanu_(iRho, iT, iYe, idx, ie) =
                   toLog_(opac.AbsorptionCoefficientPerNu(rho, T, Ye, type, nu));
-              ljnu_(iRho, iT, iYe, type, ie) =
+              ljnu_(iRho, iT, iYe, idx, ie) =
                   toLog_(opac.EmissivityPerNuOmega(rho, T, Ye, type, nu));
             }
           }
@@ -118,7 +118,7 @@ class SpinerOpacity {
 
 #ifdef SPINER_USE_HDF
   SpinerOpacity(const std::string &filename)
-      : filename_(filename.c_str()), memoryStatus_(DataStatus::OnHost) {
+      : filename_(filename.c_str()), memoryStatus_(impl::DataStatus::OnHost) {
     herr_t status = H5_SUCCESS;
     hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
     status += lalphanu_.loadHDF(file, SP5::Opac::AbsorptionCoefficientPerNu);
@@ -173,10 +173,11 @@ class SpinerOpacity {
 
   PORTABLE_INLINE_FUNCTION
   Real AbsorptionCoefficientPerNu(const Real rho, const Real temp,
-                                  const Rela Ye, const RadiationType type,
+                                  const Real Ye, const RadiationType type,
                                   const Real nu, Real *lambda = nullptr) const {
-    Real lRho, lT, idx;
-    toLogs(rho, temp, type, lRho, lT, idx);
+    int idx;
+    Real lRho, lT;
+    toLogs_(rho, temp, type, lRho, lT, idx);
     const Real le = toLog_(Hz2MeV * nu);
     return fromLog_(lalphanu_.interpToReal(lRho, lT, Ye, idx, le));
   }
@@ -188,7 +189,8 @@ class SpinerOpacity {
       const Real rho, const Real temp, const Real Ye, const RadiationType type,
       const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
       Real *lambda = nullptr) const {
-    Real lRho, lT, idx;
+    int idx;
+    Real lRho, lT;
     toLogs_(rho, temp, type, lRho, lT, idx);
     for (int i = 0; i < nbins; ++i) {
       const Real le = toLog_(Hz2MeV * nu_bins[i]);
@@ -199,8 +201,9 @@ class SpinerOpacity {
   PORTABLE_INLINE_FUNCTION
   Real EmissivityPerNuOmega(const Real rho, const Real temp, const Real Ye,
                             const RadiationType type, const Real nu,
-                            Real *lambda = nullptr) {
-    Real lRho, lT, idx;
+                            Real *lambda = nullptr) const {
+    int idx;
+    Real lRho, lT;
     toLogs_(rho, temp, type, lRho, lT, idx);
     const Real le = toLog_(Hz2MeV * nu);
     return fromLog_(ljnu_.interpToReal(lRho, lT, le, idx));
@@ -212,7 +215,8 @@ class SpinerOpacity {
                        const RadiationType type,
                        const FrequencyIndexer &nu_bins, DataIndexer &coeffs,
                        const int nbins, Real *lambda = nullptr) const {
-    Real lRho, lT, idx;
+    int idx;
+    Real lRho, lT;
     toLogs_(rho, temp, type, lRho, lT, idx);
     for (int i = 0; i < nbins; ++i) {
       const Real le = toLog_(Hz2MeV * nu_bins[i]);
@@ -233,7 +237,8 @@ class SpinerOpacity {
                   const RadiationType type, const FrequencyIndexer &nu_bins,
                   DataIndexer &coeffs, const int nbins,
                   Real *lambda = nullptr) const {
-    Real lRho, lT, idx;
+    int idx;
+    Real lRho, lT;
     toLogs_(rho, temp, type, lRho, lT, idx);
     for (int i = 0; i < nbins; ++i) {
       const Real le = toLog_(Hz2MeV * nu_bins[i]);
@@ -245,7 +250,8 @@ class SpinerOpacity {
   PORTABLE_INLINE_FUNCTION
   Real Emissivity(const Real rho, const Real temp, const Real Ye,
                   const RadiationType type, Real *lambda = nullptr) const {
-    Real lRho, lT, idx;
+    int idx;
+    Real lRho, lT;
     toLogs_(rho, temp, type, lRho, lT, idx);
     return fromLog_(lJ_.interpToReal(lRho, lT, Ye, idx));
   }
@@ -253,7 +259,8 @@ class SpinerOpacity {
   PORTABLE_INLINE_FUNCTION
   Real NumberEmissivity(const Real rho, const Real temp, Real Ye,
                         RadiationType type, Real *lambda = nullptr) const {
-    Real lRho, lT, idx;
+    int idx;
+    Real lRho, lT;
     toLogs_(rho, temp, type, lRho, lT, idx);
     return fromLog_(lJYe_.interpToReal(lRho, lT, Ye, idx));
   }
@@ -275,16 +282,16 @@ class SpinerOpacity {
   }
   PORTABLE_INLINE_FUNCTION void toLogs_(const Real rho, const Real temp,
                                         RadiationType type, Real &lRho,
-                                        Real &lT, int &idx) {
+                                        Real &lT, int &idx) const {
     lRho = toLog_(rho);
     lT = toLog_(temp);
     idx = RadType2Idx(type);
   }
-  const char *filename;
-  impl::DataStatus memoryStatus_ = DataStatus::Deallocated;
+  const char *filename_;
+  impl::DataStatus memoryStatus_ = impl::DataStatus::Deallocated;
   // TODO(JMM): Integrating J and JYe seems wise.
   // We can add more things here as needed.
-  Spiner::DataBox lalphanu_, ljnu_, lJ_, lJYe;
+  Spiner::DataBox lalphanu_, ljnu_, lJ_, lJYe_;
   // TODO(JMM): Should we add table bounds? Given they're recorded in
   // each spiner table, I lean towards no, but could be convinced
   // otherwise if we need to do extrapolation, etc.
