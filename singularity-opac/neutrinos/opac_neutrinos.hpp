@@ -20,6 +20,7 @@
 
 #include <singularity-opac/neutrinos/gray_opacity_neutrinos.hpp>
 #include <singularity-opac/neutrinos/neutrino_variant.hpp>
+#include <singularity-opac/neutrinos/spiner_opac_neutrinos.hpp>
 #include <singularity-opac/neutrinos/thermal_distributions_neutrinos.hpp>
 #include <singularity-opac/neutrinos/tophat_emissivity_neutrinos.hpp>
 
@@ -30,7 +31,7 @@ namespace neutrinos {
 using Gray = GrayOpacity<FermiDiracDistributionNoMu<3>>;
 using Tophat = TophatEmissivity<FermiDiracDistributionNoMu<3>>;
 
-using Opacity = impl::Variant<Gray, Tophat>;
+using Opacity = impl::Variant<Gray, Tophat, SpinerOpacity>;
 
 } // namespace neutrinos
 } // namespace singularity

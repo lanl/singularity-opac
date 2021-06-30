@@ -37,6 +37,7 @@ PRIVATE
   test_trivial.cpp
   test_gray_opacities.cpp
   test_chebyshev.cpp
+  test_spiner_opac_neutrinos.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_unit_tests

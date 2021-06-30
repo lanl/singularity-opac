@@ -42,6 +42,8 @@
 // TODO(JMM): Should the table be tabulated in frequencies or MeV?
 // MeV probably makes more sense, even if the host code uses
 // frequencies.
+// Same goes for temperatures: Kelvin or MeV? I lean towards Kelvin
+// fairly arbitrarily.
 
 namespace singularity {
 namespace neutrinos {
