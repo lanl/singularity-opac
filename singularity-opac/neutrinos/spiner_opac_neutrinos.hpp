@@ -19,6 +19,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdio>
+#include <string>
 
 #include <fast-math/logs.hpp>
 #include <ports-of-call/portability.hpp>
@@ -27,27 +28,33 @@
 
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
+#include <singularity-opac/base/sp5.hpp>
 #include <singularity-opac/constants/constants.hpp>
+
+#ifdef SPINER_USE_HDF
+#include "hdf5.h"
+#include "hdf5_hl.h"
+#endif
+
 
 // JMM: Doing everything in log-log, because everything should be
 // positive and should roughly follow a power law actually.
+
+// TODO(JMM): Should the table be tabulated in frequencies or MeV?
+// MeV probably makes more sense, even if the host code uses
+// frequencies.
 
 namespace singularity {
 namespace neutrinos {
 
 namespace impl {
-struct TableBounds {
-  TableBounds(const Real &min_, const Real &max_, const int &N_)
-      : min_(min), max_(max), N_(N);
-  Real min, max;
-  int N;
-};
 enum class DataStatus { Deallocated, OnDevice, OnHost };
 } // namespace impl
 
 // TODO(JMM): Bottom of the table and top of the table handled by
 // DataBox. Bottom of the table is a floor. Top of the table is
 // power law extrapolation.
+// TODO(JMM): Should lJ be stored on disk or computed at start up?
 class SpinerOpacity {
  public:
   static constexpr Real EPS = 10.0 * std::numeric_limits<Real>::epsilon();
@@ -62,8 +69,7 @@ class SpinerOpacity {
   SpinerOpacity(Opacity &opac, Real lRhoMin, Real lRhoMax, int NRho, Real lTMin,
                 Real lTMax, int NT, Real YeMin, Real YeMax, int NYe, Real leMin,
                 Real leMax, int Ne)
-      : lRhoBounds_(lRhoMin, lRhoMax, NRho), lTBounds_(lTMin, lTMax, NT),
-        YeBounds(YeMin, YeMax, NYe), leBounds_(leMin, leMax, Ne) {
+      : filename_("none"), memoryStatus_(DataStatus::OnHost) {
     // Set metadata for lalphanu and ljnu
     lalphanu_.resize(NRho, NT, NYe, NEUTRINO_NTYPES, Ne);
     lalphanu_.setRange(0, leMin, leMax, Ne);
@@ -109,8 +115,24 @@ class SpinerOpacity {
     }
   }
 
-  // TODO(JMM): Constructor from file
-  // TODO(JMM): Should lJ be stored on disk or computed at start up?
+#ifdef SPINER_USE_HDF
+  SpinerOpacity(const std::string &filename)
+    : filename_(filename.c_str()), memoryStatus_(DataStatus::OnHost) {
+    hid_t file;
+    herr_t status = H5_SUCCESS;
+
+    file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    status += lalphanu_.loadHDF(file, SP5::Opac::AbsorptionCoefficientPerNu);
+    status += ljnu_.loadHDF(file, SP5::Opac::EmissivityPerNu);
+    status += lJ_.loadHDF(file, SP5::Opac::TotalEmissivity);
+    status += lJYe_.loadHDF(file, SP5::Opac::NumberEmissivity);
+    status += H5Fclose(file);
+
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("neutrinos::SpinerOpacity: HDF5 error\n");
+    }    
+  }
+#endif
 
   PORTABLE_INLINE_FUNCTION int nlambda() const noexcept { return 0; }
   PORTABLE_INLINE_FUNCTION
@@ -124,10 +146,6 @@ class SpinerOpacity {
     other.ljnu_ = Spiner::getOnDeviceDataBox(ljnu_);
     other.lJ_ = Spiner::getOnDeviceDataBox(lJ_);
     other.lJYe_ = Spiner::getOnDeviceDataBox(lJYe_);
-    other.lRhoBounds_ = lRhoBounds_;
-    other.lTBounds_ = lTBounds_;
-    other.YeBounds_ = YeBounds_;
-    other.lnuBounds_ = lnuBounds_;
     other.memoryStatus_ = impl::DataStatus::OnDevice;
     return other;
   }
@@ -248,15 +266,14 @@ class SpinerOpacity {
     lT = toLog_(temp);
     idx = RadType2Idx(type);
   }
-  const char *filename_;
-  impl::DataStatus memoryStatus_;
-  // TODO(JMM): Should the table be tabulated in frequencies or MeV?
-  // MeV probably makes more sense, even if the host code uses
-  // frequencies.
-  impl::TableBounds lRhoBounds_, lTBounds_, YeBounds_, leBounds_;
+  const char *filename;
+  impl::DataStatus memoryStatus_ = DataStatus::Deallocated;
   // TODO(JMM): Integrating J and JYe seems wise.
   // We can add more things here as needed.
   Spiner::DataBox lalphanu_, ljnu_, lJ_, lJYe;
+  // TODO(JMM): Should we add table bounds? Given they're recorded in
+  // each spiner table, I lean towards no, but could be convinced
+  // otherwise if we need to do extrapolation, etc.
 };
 
 } // namespace neutrinos
