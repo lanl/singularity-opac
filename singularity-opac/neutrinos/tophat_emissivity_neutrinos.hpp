@@ -114,7 +114,7 @@ class TophatEmissivity {
   Real Emissivity(const Real rho, const Real temp, const Real Ye,
                   const RadiationType type, Real *lambda = nullptr) const {
     Real Bc = C_ * (numax_ - numin_);
-    Real J = Bc * GetYeF(type, Ye);
+    Real J = 4 * M_PI * Bc * GetYeF(type, Ye);
     return J;
   }
 
@@ -123,7 +123,7 @@ class TophatEmissivity {
                         const RadiationType type,
                         Real *lambda = nullptr) const {
     Real Ac = 1 / (pc::h * rho) * C_ * log(numax_ / numin_);
-    return rho * Ac * GetYeF(type, Ye);
+    return 4 * M_PI * rho * Ac * GetYeF(type, Ye);
   }
 
  private:

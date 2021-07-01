@@ -102,13 +102,13 @@ class GrayOpacity {
   Real Emissivity(const Real rho, const Real temp, const Real Ye,
                   const RadiationType type, Real *lambda = nullptr) const {
     Real B = dist_.ThermalDistributionOfT(temp, type, lambda);
-    return rho * kappa_ * B;
+    return 4*M_PI*rho * kappa_ * B;
   }
 
   PORTABLE_INLINE_FUNCTION
   Real NumberEmissivity(const Real rho, const Real temp, Real Ye,
                         RadiationType type, Real *lambda = nullptr) const {
-    return kappa_ * dist_.ThermalNumberDistribution(temp, type, lambda);
+    return 4*M_PI*kappa_ * dist_.ThermalNumberDistribution(temp, type, lambda);
   }
 
  private:
