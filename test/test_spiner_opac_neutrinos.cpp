@@ -87,7 +87,8 @@ TEST_CASE("Spiner opacities, filled with gray data",
       neutrinos::SpinerOpacity opac = filled.GetOnDevice();
       int n_wrong = 0;
       portableReduce(
-          "table vs gray", 0, NRho, 0, NT, 0, NYe, 0, NEUTRINO_NTYPES, 0, Ne,
+          "table vs gray depends nu", 0, NRho, 0, NT, 0, NYe, 0,
+          NEUTRINO_NTYPES, 0, Ne,
           PORTABLE_LAMBDA(const int iRho, const int iT, const int iYe,
                           const int itp, const int ie, int &accumulate) {
             const Real lRho = lRhoGrid.x(iRho);
@@ -115,11 +116,39 @@ TEST_CASE("Spiner opacities, filled with gray data",
             if (IsWrong(jgray, jtable)) {
               accumulate += 1;
             }
-
-            //
           },
           n_wrong);
       REQUIRE(n_wrong == 0);
+
+      n_wrong = 0;
+      portableReduce(
+          "table vs gray totals", 0, NRho, 0, NT, 0, NYe, 0, NEUTRINO_NTYPES,
+          PORTABLE_LAMBDA(const int iRho, const int iT, const int iYe,
+                          const int itp, int &accumulate) {
+            const Real lRho = lRhoGrid.x(iRho);
+            const Real rho = std::pow(10, lRho);
+            const Real lT = lTGrid.x(iT);
+            const Real T = std::pow(10, lT);
+            const Real Ye = YeGrid.x(iYe);
+            const RadiationType type = Idx2RadType(itp);
+
+            // Jnu
+            const Real Jgray = gray.Emissivity(rho, T, Ye, type);
+            const Real Jtabl = opac.Emissivity(rho, T, Ye, type);
+            if (IsWrong(Jgray, Jtabl)) {
+              accumulate += 1;
+            }
+
+            // JYe
+            const Real JYe_gray = gray.NumberEmissivity(rho, T, Ye, type);
+            const Real JYe_tabl = opac.NumberEmissivity(rho, T, Ye, type);
+            if (IsWrong(JYe_gray, JYe_tabl)) {
+              accumulate += 1;
+            }
+          },
+          n_wrong);
+      REQUIRE(n_wrong == 0);
+
       opac.Finalize();
     }
 
@@ -166,6 +195,35 @@ TEST_CASE("Spiner opacities, filled with gray data",
               const Real jtable =
                   opac.EmissivityPerNuOmega(rho, T, Ye, type, nu);
               if (IsWrong(jgray, jtable)) {
+                accumulate += 1;
+              }
+            },
+            n_wrong);
+        REQUIRE(n_wrong == 0);
+
+        n_wrong = 0;
+        portableReduce(
+            "table vs gray totals", 0, NRho, 0, NT, 0, NYe, 0, NEUTRINO_NTYPES,
+            PORTABLE_LAMBDA(const int iRho, const int iT, const int iYe,
+                            const int itp, int &accumulate) {
+              const Real lRho = lRhoGrid.x(iRho);
+              const Real rho = std::pow(10, lRho);
+              const Real lT = lTGrid.x(iT);
+              const Real T = std::pow(10, lT);
+              const Real Ye = YeGrid.x(iYe);
+              const RadiationType type = Idx2RadType(itp);
+
+              // Jnu
+              const Real Jgray = gray.Emissivity(rho, T, Ye, type);
+              const Real Jtabl = opac.Emissivity(rho, T, Ye, type);
+              if (IsWrong(Jgray, Jtabl)) {
+                accumulate += 1;
+              }
+
+              // JYe
+              const Real JYe_gray = gray.NumberEmissivity(rho, T, Ye, type);
+              const Real JYe_tabl = opac.NumberEmissivity(rho, T, Ye, type);
+              if (IsWrong(JYe_gray, JYe_tabl)) {
                 accumulate += 1;
               }
             },
