@@ -29,6 +29,7 @@ using pc = PhysicalConstants<CGS>;
 
 template <int NSPECIES>
 struct FermiDiracDistributionNoMu {
+  static constexpr Real EPS = 10.0 * std::numeric_limits<Real>::epsilon();
   PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfTNu(const Real temp, const RadiationType type,
                                 const Real nu, Real *lambda = nullptr) const {
@@ -54,8 +55,8 @@ struct FermiDiracDistributionNoMu {
   PORTABLE_INLINE_FUNCTION Real AbsorptionCoefficientFromKirkhoff(
       const Emissivity &J, const Real rho, const Real temp, const Real Ye,
       const RadiationType type, const Real nu, Real *lambda = nullptr) const {
-    Real Bnu = ThermalDistributionOfTNu(temp, type, nu, lambda);
-    Real jnu = J.EmissivityPerNuOmega(rho, temp, Ye, type, nu, lambda);
+    const Real Bnu = std::max(ThermalDistributionOfTNu(temp, type, nu, lambda), EPS);
+    const Real jnu = std::max(J.EmissivityPerNuOmega(rho, temp, Ye, type, nu, lambda), EPS);
     return jnu / Bnu;
   }
 };

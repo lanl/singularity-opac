@@ -48,8 +48,7 @@ class GrayOpacity {
   Real AbsorptionCoefficientPerNu(const Real rho, const Real temp,
                                   const Real Ye, const RadiationType type,
                                   const Real nu, Real *lambda = nullptr) const {
-    return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, Ye, type,
-                                                   nu, lambda);
+    return rho * kappa_;
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
@@ -58,8 +57,7 @@ class GrayOpacity {
       const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
       Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
-      coeffs[i] =
-          AbsorptionCoefficientPerNu(rho, temp, Ye, type, nu_bins[i], lambda);
+      coeffs[i] = rho * kappa_;
     }
   }
 
