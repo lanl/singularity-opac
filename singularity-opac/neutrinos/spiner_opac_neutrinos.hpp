@@ -46,6 +46,13 @@
 // Same goes for temperatures: Kelvin or MeV? I lean towards Kelvin
 // fairly arbitrarily.
 
+// TODO(JMM): The dynamic range in the mantissa is too large, so we
+// can't use log10 for floats and take advantage of that performance
+// enhancement, unfortunately.
+// We should experiment with logs further to see if there's some games
+// we can play, but for now, I'm switching everything in this library
+// to log10.
+
 namespace singularity {
 namespace neutrinos {
 
@@ -100,8 +107,9 @@ class SpinerOpacity {
           for (int idx = 0; idx < NEUTRINO_NTYPES; ++idx) {
             RadiationType type = Idx2RadType(idx);
             Real J = std::max(opac.Emissivity(rho, T, Ye, type), 0.0);
-            lJ_(iRho, iT, iYe, idx) = toLog_(J);
-            Real JYe = std::max(opac.Emissivity(rho, T, Ye, type), 0.0);
+	    Real lJ = toLog_(J);
+            lJ_(iRho, iT, iYe, idx) = lJ;
+            Real JYe = std::max(opac.NumberEmissivity(rho, T, Ye, type), 0.0);
             lJYe_(iRho, iT, iYe, idx) = toLog_(JYe);
             for (int ie = 0; ie < Ne; ++ie) {
               Real lE = lalphanu_.range(0).x(ie);
@@ -260,7 +268,9 @@ class SpinerOpacity {
     int idx;
     Real lRho, lT;
     toLogs_(rho, temp, type, lRho, lT, idx);
-    return fromLog_(lJ_.interpToReal(lRho, lT, Ye, idx));
+    const Real lJ = lJ_.interpToReal(lRho, lT, Ye, idx);
+    const Real J = fromLog_(lJ);
+    return J;
   }
 
   PORTABLE_INLINE_FUNCTION
@@ -275,7 +285,7 @@ class SpinerOpacity {
 private:
   // TODO(JMM): Offsets probably not necessary
   PORTABLE_INLINE_FUNCTION Real toLog_(const Real x, const Real offset) const {
-    return BDMath::log10(std::abs(std::max(x, -offset) + offset) + EPS);
+    return std::log10(std::abs(std::max(x, -offset) + offset) + EPS);
   }
   PORTABLE_INLINE_FUNCTION Real toLog_(const Real x) const {
     return toLog_(x, 0);
