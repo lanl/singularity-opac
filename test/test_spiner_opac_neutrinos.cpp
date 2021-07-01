@@ -115,6 +115,8 @@ TEST_CASE("Spiner opacities, filled with gray data",
             if (IsWrong(jgray, jtable)) {
               accumulate += 1;
             }
+
+            //
           },
           n_wrong);
       REQUIRE(n_wrong == 0);
@@ -148,13 +150,23 @@ TEST_CASE("Spiner opacities, filled with gray data",
                   gray.EmissivityPerNuOmega(rho, T, Ye, type, nu);
               const Real Jtable =
                   filled.EmissivityPerNuOmega(rho, T, Ye, type, nu);
-              if (std::isnan(Jgray) || std::isnan(Jtable)) {
+
+              // alphanu
+              const Real alpha_gray =
+                  gray.AbsorptionCoefficientPerNu(rho, T, Ye, type, nu);
+              const Real alpha_tabl =
+                  opac.AbsorptionCoefficientPerNu(rho, T, Ye, type, nu);
+              if (IsWrong(alpha_gray, alpha_tabl)) {
                 accumulate += 1;
               }
-              if (FractionalDifference(Jgray, Jtable) > EPS_TEST) {
-                if (std::abs(Jgray) > 1e-10 || std::abs(Jtable) > 1e-10) {
-                  accumulate += 1;
-                }
+
+              // jnu
+              const Real jgray =
+                  gray.EmissivityPerNuOmega(rho, T, Ye, type, nu);
+              const Real jtable =
+                  opac.EmissivityPerNuOmega(rho, T, Ye, type, nu);
+              if (IsWrong(jgray, jtable)) {
+                accumulate += 1;
               }
             },
             n_wrong);
