@@ -99,17 +99,20 @@ class SpinerOpacity {
           Real Ye = lalphanu_.range(2).x(iYe);
           for (int idx = 0; idx < NEUTRINO_NTYPES; ++idx) {
             RadiationType type = Idx2RadType(idx);
-            lJ_(iRho, iT, iYe, idx) = toLog_(opac.Emissivity(rho, T, Ye, type));
-            lJYe_(iRho, iT, iYe, idx) =
-                toLog_(opac.Emissivity(rho, T, Ye, type));
+            Real J = std::max(opac.Emissivity(rho, T, Ye, type), 0.0);
+            lJ_(iRho, iT, iYe, idx) = toLog_(J);
+            Real JYe = std::max(opac.Emissivity(rho, T, Ye, type), 0.0);
+            lJYe_(iRho, iT, iYe, idx) = toLog_(JYe);
             for (int ie = 0; ie < Ne; ++ie) {
               Real lE = lalphanu_.range(0).x(ie);
               Real E = fromLog_(lE);
               Real nu = MeV2Hz * E;
-              lalphanu_(iRho, iT, iYe, idx, ie) =
-                  toLog_(opac.AbsorptionCoefficientPerNu(rho, T, Ye, type, nu));
-              ljnu_(iRho, iT, iYe, idx, ie) =
-                  toLog_(opac.EmissivityPerNuOmega(rho, T, Ye, type, nu));
+              Real alpha = std::max(
+                  opac.AbsorptionCoefficientPerNu(rho, T, Ye, type, nu), 0.0);
+              lalphanu_(iRho, iT, iYe, idx, ie) = toLog_(alpha);
+              Real j = std::max(opac.EmissivityPerNuOmega(rho, T, Ye, type, nu),
+                                0.0);
+              ljnu_(iRho, iT, iYe, idx, ie) = toLog_(j);
             }
           }
         }
@@ -180,7 +183,9 @@ class SpinerOpacity {
     Real lRho, lT;
     toLogs_(rho, temp, type, lRho, lT, idx);
     const Real le = toLog_(Hz2MeV * nu);
-    return fromLog_(lalphanu_.interpToReal(lRho, lT, Ye, idx, le));
+    const Real lalpha = lalphanu_.interpToReal(lRho, lT, Ye, idx, le);
+    const Real alpha = fromLog_(lalpha);
+    return alpha;
   }
 
   // TODO(JMM): Should we provide a raw copy operator instead of or
@@ -207,7 +212,8 @@ class SpinerOpacity {
     Real lRho, lT;
     toLogs_(rho, temp, type, lRho, lT, idx);
     const Real le = toLog_(Hz2MeV * nu);
-    return fromLog_(ljnu_.interpToReal(lRho, lT, le, idx));
+    const Real lj = ljnu_.interpToReal(lRho, lT, Ye, idx, le);
+    return fromLog_(lj);
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
@@ -266,7 +272,7 @@ class SpinerOpacity {
     return fromLog_(lJYe_.interpToReal(lRho, lT, Ye, idx));
   }
 
- private:
+private:
   // TODO(JMM): Offsets probably not necessary
   PORTABLE_INLINE_FUNCTION Real toLog_(const Real x, const Real offset) const {
     return BDMath::log10(std::abs(std::max(x, -offset) + offset) + EPS);
