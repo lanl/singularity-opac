@@ -199,7 +199,7 @@ class SpinerOpacity {
   // TODO(JMM): Should we provide a raw copy operator instead of or
   // addition to interpolation?
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION void AbsportionCoefficientPerNu(
+  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficientPerNu(
       const Real rho, const Real temp, const Real Ye, const RadiationType type,
       const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
       Real *lambda = nullptr) const {
