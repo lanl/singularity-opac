@@ -45,7 +45,8 @@ PORTABLE_INLINE_FUNCTION T FractionalDifference(const T &a, const T &b) {
 constexpr Real EPS_TEST = 1e-3;
 template <typename T>
 PORTABLE_INLINE_FUNCTION bool IsWrong(const T &a, const T &b) {
-  constexpr Real ZERO = 10 * std::numeric_limits<Real>::epsilon() / EPS_TEST;
+  // We only care if the data is different and significantly nonzero.
+  constexpr Real ZERO = std::numeric_limits<Real>::epsilon() / (EPS_TEST*EPS_TEST);
   return ((std::isnan(a) || std::isnan(b)) ||
           ((std::abs(a) > ZERO || std::abs(b) > ZERO) &&
            FractionalDifference(a, b) > EPS_TEST));
@@ -118,6 +119,62 @@ TEST_CASE("Spiner opacities, filled with gray data",
             }
           },
           n_wrong);
+      REQUIRE(n_wrong == 0);
+
+      Real *nu_bins = (Real *)PORTABLE_MALLOC(Ne * sizeof(Real));
+      portableFor(
+          "fill nu bins", 0, Ne, PORTABLE_LAMBDA(const int ie) {
+            const Real le = leGrid.x(ie);
+            const Real e = std::pow(10, le);
+            nu_bins[ie] = e * neutrinos::SpinerOpacity::MeV2Hz;
+          });
+
+      n_wrong = 0;
+      portableReduce(
+          "table vs gray indexer API", 0, NRho, 0, NT, 0, NYe, 0,
+          NEUTRINO_NTYPES,
+          PORTABLE_LAMBDA(const int iRho, const int iT, const int iYe,
+                          const int itp, int &accumulate) {
+            const Real lRho = lRhoGrid.x(iRho);
+            const Real rho = std::pow(10, lRho);
+            const Real lT = lTGrid.x(iT);
+            const Real T = std::pow(10, lT);
+            const Real Ye = YeGrid.x(iYe);
+            const RadiationType type = Idx2RadType(itp);
+	    Real data_gray[Ne];
+	    Real data_tabl[Ne];
+
+            // alphanu
+            gray.AbsorptionCoefficientPerNu<Real*,Real[Ne]>(rho, T, Ye, type, nu_bins,
+					    data_gray, Ne);
+            opac.AbsorptionCoefficientPerNu(rho, T, Ye, type, nu_bins,
+                                            data_tabl, Ne);
+            for (int ie = 0; ie < Ne; ++ie) {
+              if (IsWrong(data_gray[ie], data_tabl[ie])) {
+                accumulate += 1;
+              }
+            }
+
+            // jnu
+            gray.EmissivityPerNuOmega(rho, T, Ye, type, nu_bins, data_gray, Ne);
+            opac.EmissivityPerNuOmega(rho, T, Ye, type, nu_bins, data_tabl, Ne);
+            for (int ie = 0; ie < Ne; ++ie) {
+              if (IsWrong(data_gray[ie], data_tabl[ie])) {
+                accumulate += 1;
+              }
+            }
+
+            // Jnu
+            gray.EmissivityPerNu(rho, T, Ye, type, nu_bins, data_gray, Ne);
+            opac.EmissivityPerNu(rho, T, Ye, type, nu_bins, data_tabl, Ne);
+            for (int ie = 0; ie < Ne; ++ie) {
+              if (IsWrong(data_gray[ie], data_tabl[ie])) {
+                accumulate += 1;
+              }
+            }
+          },
+          n_wrong);
+      PORTABLE_FREE(nu_bins);
       REQUIRE(n_wrong == 0);
 
       n_wrong = 0;
