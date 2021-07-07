@@ -23,18 +23,21 @@ option (SINGULARITY_USE_KOKKOS "Use Kokkos for portability" OFF)
 option (SINGULARITY_USE_CUDA "Enable cuda support" OFF)
 option (SINGULARITY_USE_HDF5 "Pull in hdf5" OFF)
 
-cmake_dependent_option(SINGULARITY_USE_MPI "Link to MPI" OFF "HDF5_IS_PARALLEL" ON)
+# If the conditional is TRUE, it's the first default, else it's the
+# second.
+cmake_dependent_option(SINGULARITY_USE_MPI "Link to MPI"
+  ON "${SINGULARITY_USE_MPI};${HDF5_IS_PARALLEL}" OFF)
 
 #=======================================
 # Options logic
 #=======================================
 # check for currently incompatible option
 if(SINGULARITY_USE_CUDA)
-  if(NOT CUDAToolkit_FOUND)
+  if(NOT TARGET CUDA::toolkit)
     message(FATAL_ERROR "Requested build with CUDA, but could not find in the environment.")
   endif()
   if(SINGULARITY_USE_KOKKOS)
-    if(NOT Kokkos_FOUND)
+    if(NOT TARGET Kokkos::kokkos)
       message(WARNING "Requested build with Kokkos, but could not find in the environment.")
       message(STATUS  "Configuring internal Kokkos submodule.")
       set(NVCC_WRAPPER_BIN ${CMAKE_CURRENT_SOURCE_DIR}/utils/kokkos/bin/nvcc_wrapper CACHE STRING "")
