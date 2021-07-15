@@ -10,6 +10,13 @@ else()
 endif()
 
 #=======================================
+# Setup ports of call
+# - provides PortsofCall::PortsofCall
+#=======================================
+find_package(PortsofCall REQUIRED)
+target_link_libraries(singularity-opac::flags INTERFACE PortsofCall::PortsofCall)
+
+#=======================================
 # Setup Kokkos
 # - provides Kokkos::kokkos
 #=======================================
@@ -31,6 +38,7 @@ find_package(HDF5 COMPONENTS C HL QUIET)
 # findpackage doesnt export an interface for HDF5,
 # so create one
 if (HDF5_FOUND)
+    target_compile_definitions(singularity-opac::flags INTERFACE SPINER_USE_HDF)
     add_library(${PROJECT_NAME}::hdf5 INTERFACE IMPORTED)
     set_target_properties(${PROJECT_NAME}::hdf5
     PROPERTIES
