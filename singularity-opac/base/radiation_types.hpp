@@ -28,8 +28,9 @@ enum class RadiationType {
   PHOTON = 3
 };
 
-int RadType2Idx(RadiationType type) { return static_cast<int>(type); }
-RadiationType Idx2RadType(int i) {
+inline int RadType2Idx(RadiationType type) { return static_cast<int>(type); }
+
+inline RadiationType Idx2RadType(int i) {
   switch (i) {
   case -1:
     return RadiationType::TRACER;
