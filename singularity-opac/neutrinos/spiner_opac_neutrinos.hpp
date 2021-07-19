@@ -128,6 +128,13 @@ class SpinerOpacity {
     }
   }
 
+  // DataBox constructor. Note that this constructor *shallow* copies
+  // the databoxes, so they must be managed externally.
+  SpinerOpacity(const Spiner::DataBox &lalphanu, const Spiner::DataBox ljnu,
+                const Spiner::DataBox lJ, const Spiner::DataBox lJYe)
+      : memoryStatus_(impl::DataStatus::OnHost), lalphanu_(lalphanu),
+        ljnu_(ljnu), lJ_(lJ), lJYe_(lJYe) {}
+
 #ifdef SPINER_USE_HDF
   SpinerOpacity(const std::string &filename)
       : filename_(filename.c_str()), memoryStatus_(impl::DataStatus::OnHost) {
