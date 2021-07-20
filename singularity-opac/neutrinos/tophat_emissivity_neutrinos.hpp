@@ -121,7 +121,7 @@ class TophatEmissivity {
   Real NumberEmissivity(const RadiationType type, const Real rho,
                         const Real temp, const Real Ye,
                         Real *lambda = nullptr) const {
-    Real Ac = 1 / (pc::h * rho) * C_ * log(numax_ / numin_);
+    Real Ac = pc::mp / (pc::h * rho) * C_ * log(numax_ / numin_);
     return rho * Ac * GetYeF(type, Ye);
   }
 
