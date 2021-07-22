@@ -90,7 +90,7 @@ class Variant {
       const Real rho, const Real temp, const FrequencyIndexer &nu_bins,
       DataIndexer &coeffs, const int nbins, Real *lambda = nullptr) const {
     mpark::visit(
-        [=](const auto &opac) {
+        [&](const auto &opac) {
           opac.AbsorptionCoefficientPerNu(rho, temp, nu_bins, coeffs, nbins,
                                           lambda);
         },
@@ -115,7 +115,7 @@ class Variant {
                        const FrequencyIndexer &nu_bins, DataIndexer &coeffs,
                        const int nbins, Real *lambda = nullptr) const {
     mpark::visit(
-        [=](const auto &opac) {
+        [&](const auto &opac) {
           return opac.EmissivityPerNuOmega(rho, temp, nu_bins, coeffs, nbins,
                                            lambda);
         },
@@ -139,7 +139,7 @@ class Variant {
                   const FrequencyIndexer &nu_bins, DataIndexer &coeffs,
                   const int nbins, Real *lambda = nullptr) const {
     mpark::visit(
-        [=](const auto &opac) {
+        [&](const auto &opac) {
           return opac.EmissivityPerNu(rho, temp, nu_bins, coeffs, nbins,
                                       lambda);
         },

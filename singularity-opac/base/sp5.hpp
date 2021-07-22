@@ -13,27 +13,19 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef SINGULARITY_OPAC_NEUTRINOS_OPAC_NEUTRINOS_
-#define SINGULARITY_OPAC_NEUTRINOS_OPAC_NEUTRINOS_
+#ifndef SINGULARITY_OPAC_BASE_SP5_
+#define SINGULARITY_OPAC_BASE_SP5_
 
-#include <variant/include/mpark/variant.hpp>
+namespace SP5 {
 
-#include <singularity-opac/neutrinos/gray_opacity_neutrinos.hpp>
-#include <singularity-opac/neutrinos/neutrino_variant.hpp>
-#include <singularity-opac/neutrinos/spiner_opac_neutrinos.hpp>
-#include <singularity-opac/neutrinos/thermal_distributions_neutrinos.hpp>
-#include <singularity-opac/neutrinos/tophat_emissivity_neutrinos.hpp>
+  namespace Opac {
+    constexpr char defaultFileName[] = "opac.sp5";
+    constexpr char AbsorptionCoefficientPerNu[] = "absorption coefficient per nu";
+    constexpr char EmissivityPerNu[] = "emissivity per nu";
+    constexpr char TotalEmissivity[] = "total emissivity";
+    constexpr char NumberEmissivity[] = "number emissivity";
+  }
 
-namespace singularity {
-namespace neutrinos {
+}
 
-// TODO(JMM): Include chemical potential
-using Gray = GrayOpacity<FermiDiracDistributionNoMu<3>>;
-using Tophat = TophatEmissivity<FermiDiracDistributionNoMu<3>>;
-
-using Opacity = impl::Variant<Gray, Tophat, SpinerOpacity>;
-
-} // namespace neutrinos
-} // namespace singularity
-
-#endif // SINGULARITY_OPAC_NEUTRINOS_OPAC_NEUTRINOS_
+#endif // SINGULARITY_OPAC_BASE_SP5_

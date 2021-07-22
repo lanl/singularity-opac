@@ -16,10 +16,12 @@
 #ifndef SINGULARITY_OPAC_BASE_RADIATION_TYPES_
 #define SINGULARITY_OPAC_BASE_RADIATION_TYPES_
 
+#include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 
 namespace singularity {
 
+constexpr int NEUTRINO_NTYPES = 3;
 enum class RadiationType {
   TRACER = -1,
   NU_ELECTRON = 0,
@@ -28,9 +30,11 @@ enum class RadiationType {
   PHOTON = 3
 };
 
-inline int RadType2Idx(RadiationType type) { return static_cast<int>(type); }
+PORTABLE_INLINE_FUNCTION
+int RadType2Idx(RadiationType type) { return static_cast<int>(type); }
 
-inline RadiationType Idx2RadType(int i) {
+PORTABLE_INLINE_FUNCTION
+RadiationType Idx2RadType(int i) {
   switch (i) {
   case -1:
     return RadiationType::TRACER;
