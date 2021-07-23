@@ -72,7 +72,7 @@ class Variant {
         opac_);
   }
 
-  // opacity
+  // Directional absorption coefficient with units of 1/length
   // Signature should be at least
   // rho, temp, nu, lambda
   PORTABLE_INLINE_FUNCTION Real
@@ -93,6 +93,33 @@ class Variant {
         [&](const auto &opac) {
           opac.AbsorptionCoefficientPerNu(rho, temp, nu_bins, coeffs, nbins,
                                           lambda);
+        },
+        opac_);
+  }
+
+  // Angle-averaged absorption coefficient with units of 1/length
+  // Signature should be at least
+  // rho, temp, nu, lambda
+  PORTABLE_INLINE_FUNCTION Real AngleAveragedAbsorptionCoefficientPerNu(
+      const Real rho, const Real temp,
+      const Real nu, Real *lambda = nullptr) const {
+    return mpark::visit(
+        [=](const auto &opac) {
+          return opac.AngleAveragedAbsorptionCoefficientPerNu(rho, temp, nu,
+                                                 lambda);
+        },
+        opac_);
+  }
+
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficientPerNu(
+      const Real rho, const Real temp,
+      const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
+      Real *lambda = nullptr) const {
+    mpark::visit(
+        [&](const auto &opac) {
+          opac.AngleAveragedAbsorptionCoefficientPerNu(rho, temp, nu_bins, coeffs,
+                                          nbins, lambda);
         },
         opac_);
   }

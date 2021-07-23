@@ -62,6 +62,23 @@ class GrayOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
+  Real AngleAveragedAbsorptionCoefficientPerNu(const Real rho, const Real temp,
+                                  const Real Ye, const RadiationType type,
+                                  const Real nu, Real *lambda = nullptr) const {
+    return rho * kappa_;
+  }
+
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficientPerNu(
+      const Real rho, const Real temp, const Real Ye, const RadiationType type,
+      const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
+      Real *lambda = nullptr) const {
+    for (int i = 0; i < nbins; ++i) {
+      coeffs[i] = rho * kappa_;
+    }
+  }
+
+  PORTABLE_INLINE_FUNCTION
   Real EmissivityPerNuOmega(const Real rho, const Real temp, const Real Ye,
                             const RadiationType type, const Real nu,
                             Real *lambda = nullptr) const {

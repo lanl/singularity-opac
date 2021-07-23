@@ -72,9 +72,9 @@ class Variant {
         opac_);
   }
 
-  // opacity
+  // Directional absorption coefficient with units of 1/length
   // Signature should be at least
-  // rho, temp, nu, lambda
+  // rho, temp, Ye, type, nu, lambda
   PORTABLE_INLINE_FUNCTION Real AbsorptionCoefficientPerNu(
       const Real rho, const Real temp, const Real Ye, const RadiationType type,
       const Real nu, Real *lambda = nullptr) const {
@@ -94,13 +94,40 @@ class Variant {
     mpark::visit(
         [&](const auto &opac) {
           opac.AbsorptionCoefficientPerNu(rho, temp, Ye, type, nu_bins, coeffs,
-                                          nbins);
+                                          nbins, lambda);
+        },
+        opac_);
+  }
+
+  // Angle-averaged absorption coefficient with units of 1/length
+  // Signature should be at least
+  // rho, temp, Ye, type, nu, lambda
+  PORTABLE_INLINE_FUNCTION Real AngleAveragedAbsorptionCoefficientPerNu(
+      const Real rho, const Real temp, const Real Ye, const RadiationType type,
+      const Real nu, Real *lambda = nullptr) const {
+    return mpark::visit(
+        [=](const auto &opac) {
+          return opac.AngleAveragedAbsorptionCoefficientPerNu(rho, temp, Ye, type, nu,
+                                                 lambda);
+        },
+        opac_);
+  }
+
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficientPerNu(
+      const Real rho, const Real temp, const Real Ye, const RadiationType type,
+      const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
+      Real *lambda = nullptr) const {
+    mpark::visit(
+        [&](const auto &opac) {
+          opac.AngleAveragedAbsorptionCoefficientPerNu(rho, temp, Ye, type, nu_bins, coeffs,
+                                          nbins, lambda);
         },
         opac_);
   }
 
   // emissivity with units of energy/time/frequency/volume/angle
-  // signature should be at least rho, temp, nu, lambda
+  // signature should be at least rho, temp, Ye, type, nu, lambda
   PORTABLE_INLINE_FUNCTION Real EmissivityPerNuOmega(
       const Real rho, const Real temp, const Real Ye, const RadiationType type,
       const Real nu, Real *lambda = nullptr) const {

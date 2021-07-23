@@ -50,13 +50,12 @@ class TophatEmissivity {
   }
   inline void Finalize() noexcept {}
 
-  // TODO(JMM): Does this make sense for the tophat?
   PORTABLE_INLINE_FUNCTION
   Real AbsorptionCoefficientPerNu(const Real rho, const Real temp,
                                   const Real Ye, const RadiationType type,
                                   const Real nu, Real *lambda = nullptr) const {
     return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, Ye, type,
-                                                   nu, lambda);
+                                                   nu, lambda)/(4.*M_PI);
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
@@ -67,6 +66,25 @@ class TophatEmissivity {
     for (int i = 0; i < nbins; ++i) {
       coeffs[i] =
           AbsorptionCoefficientPerNu(rho, temp, Ye, type, nu_bins[i], lambda);
+    }
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real AngleAveragedAbsorptionCoefficientPerNu(const Real rho, const Real temp,
+                                  const Real Ye, const RadiationType type,
+                                  const Real nu, Real *lambda = nullptr) const {
+    return dist_.AngleAveragedAbsorptionCoefficientFromKirkhoff(*this, rho, temp, Ye, type,
+                                                   nu, lambda);
+  }
+
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficientPerNu(
+      const Real rho, const Real temp, const Real Ye, const RadiationType type,
+      const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
+      Real *lambda = nullptr) const {
+    for (int i = 0; i < nbins; ++i) {
+      coeffs[i] =
+          AngleAveragedAbsorptionCoefficientPerNu(rho, temp, Ye, type, nu_bins[i], lambda);
     }
   }
 
