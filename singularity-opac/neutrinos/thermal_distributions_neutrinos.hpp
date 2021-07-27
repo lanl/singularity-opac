@@ -27,9 +27,10 @@ namespace neutrinos {
 
 using pc = PhysicalConstants<CGS>;
 
+#define EPS (10.0 * std::numeric_limits<Real>::epsilon())
+
 template <int NSPECIES>
 struct FermiDiracDistributionNoMu {
-  static constexpr Real EPS = 10.0 * std::numeric_limits<Real>::epsilon();
   PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfTNu(const Real temp, const RadiationType type,
                                 const Real nu, Real *lambda = nullptr) const {
@@ -60,6 +61,8 @@ struct FermiDiracDistributionNoMu {
     return jnu / Bnu;
   }
 };
+
+#undef EPS
 
 } // namespace neutrinos
 } // namespace singularity
