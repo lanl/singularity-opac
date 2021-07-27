@@ -191,7 +191,7 @@ class SpinerOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real AbsorptionCoefficientPerNu(const Real rho, const Real temp,
+  Real AbsorptionCoefficient(const Real rho, const Real temp,
                                   const Real Ye, const RadiationType type,
                                   const Real nu, Real *lambda = nullptr) const {
     int idx;
@@ -206,7 +206,7 @@ class SpinerOpacity {
   // TODO(JMM): Should we provide a raw copy operator instead of or
   // addition to interpolation?
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficientPerNu(
+  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficient(
       const Real rho, const Real temp, const Real Ye, const RadiationType type,
       const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
       Real *lambda = nullptr) const {
@@ -216,6 +216,35 @@ class SpinerOpacity {
     for (int i = 0; i < nbins; ++i) {
       const Real le = toLog_(Hz2MeV * nu_bins[i]);
       coeffs[i] = fromLog_(lalphanu_.interpToReal(lRho, lT, Ye, idx, le));
+    }
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real AngleAveragedAbsorptionCoefficient(const Real rho, const Real temp,
+                                  const Real Ye, const RadiationType type,
+                                  const Real nu, Real *lambda = nullptr) const {
+    int idx;
+    Real lRho, lT;
+    toLogs_(rho, temp, type, lRho, lT, idx);
+    const Real le = toLog_(Hz2MeV * nu);
+    const Real lavgdalpha = lavgdalphanu_.interpToReal(lRho, lT, Ye, idx, le);
+    const Real avgdalpha = fromLog_(lavgdalpha);
+    return avgdalpha;
+  }
+
+  // TODO(JMM): Should we provide a raw copy operator instead of or
+  // addition to interpolation?
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficient(
+      const Real rho, const Real temp, const Real Ye, const RadiationType type,
+      const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
+      Real *lambda = nullptr) const {
+    int idx;
+    Real lRho, lT;
+    toLogs_(rho, temp, type, lRho, lT, idx);
+    for (int i = 0; i < nbins; ++i) {
+      const Real le = toLog_(Hz2MeV * nu_bins[i]);
+      coeffs[i] = fromLog_(lavgdalphanu_.interpToReal(lRho, lT, Ye, idx, le));
     }
   }
 

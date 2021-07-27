@@ -76,22 +76,22 @@ class Variant {
   // Signature should be at least
   // rho, temp, nu, lambda
   PORTABLE_INLINE_FUNCTION Real
-  AbsorptionCoefficientPerNu(const Real rho, const Real temp, const Real nu,
+  AbsorptionCoefficient(const Real rho, const Real temp, const Real nu,
                              Real *lambda = nullptr) const {
     return mpark::visit(
         [=](const auto &opac) {
-          return opac.AbsorptionCoefficientPerNu(rho, temp, nu, lambda);
+          return opac.AbsorptionCoefficient(rho, temp, nu, lambda);
         },
         opac_);
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficientPerNu(
+  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficient(
       const Real rho, const Real temp, const FrequencyIndexer &nu_bins,
       DataIndexer &coeffs, const int nbins, Real *lambda = nullptr) const {
     mpark::visit(
         [&](const auto &opac) {
-          opac.AbsorptionCoefficientPerNu(rho, temp, nu_bins, coeffs, nbins,
+          opac.AbsorptionCoefficient(rho, temp, nu_bins, coeffs, nbins,
                                           lambda);
         },
         opac_);
@@ -100,25 +100,25 @@ class Variant {
   // Angle-averaged absorption coefficient with units of 1/length
   // Signature should be at least
   // rho, temp, nu, lambda
-  PORTABLE_INLINE_FUNCTION Real AngleAveragedAbsorptionCoefficientPerNu(
+  PORTABLE_INLINE_FUNCTION Real AngleAveragedAbsorptionCoefficient(
       const Real rho, const Real temp,
       const Real nu, Real *lambda = nullptr) const {
     return mpark::visit(
         [=](const auto &opac) {
-          return opac.AngleAveragedAbsorptionCoefficientPerNu(rho, temp, nu,
+          return opac.AngleAveragedAbsorptionCoefficient(rho, temp, nu,
                                                  lambda);
         },
         opac_);
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficientPerNu(
+  PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficient(
       const Real rho, const Real temp,
       const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
       Real *lambda = nullptr) const {
     mpark::visit(
         [&](const auto &opac) {
-          opac.AngleAveragedAbsorptionCoefficientPerNu(rho, temp, nu_bins, coeffs,
+          opac.AngleAveragedAbsorptionCoefficient(rho, temp, nu_bins, coeffs,
                                           nbins, lambda);
         },
         opac_);

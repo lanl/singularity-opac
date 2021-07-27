@@ -45,14 +45,14 @@ class GrayOpacity {
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION
-  Real AbsorptionCoefficientPerNu(const Real rho, const Real temp,
+  Real AbsorptionCoefficient(const Real rho, const Real temp,
                                   const Real Ye, const RadiationType type,
                                   const Real nu, Real *lambda = nullptr) const {
     return rho * kappa_;
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficientPerNu(
+  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficient(
       const Real rho, const Real temp, const Real Ye, const RadiationType type,
       const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
       Real *lambda = nullptr) const {
@@ -62,14 +62,14 @@ class GrayOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real AngleAveragedAbsorptionCoefficientPerNu(const Real rho, const Real temp,
+  Real AngleAveragedAbsorptionCoefficient(const Real rho, const Real temp,
                                   const Real Ye, const RadiationType type,
                                   const Real nu, Real *lambda = nullptr) const {
     return rho * kappa_;
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficientPerNu(
+  PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficient(
       const Real rho, const Real temp, const Real Ye, const RadiationType type,
       const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
       Real *lambda = nullptr) const {
