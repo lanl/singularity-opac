@@ -21,7 +21,7 @@ target_link_libraries(singularity-opac::flags INTERFACE PortsofCall::PortsofCall
 # - provides Kokkos::kokkos
 #=======================================
 if (NOT TARGET Kokkos::kokkos)
-  find_package(Kokkos QUIET)
+  find_package(Kokkos 3.3 QUIET)
 else()
   message(status "Kokkos::kokkos provided by parent package")
 endif()

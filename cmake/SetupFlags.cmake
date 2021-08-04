@@ -1,6 +1,4 @@
 
-
-
 # Easier generator expressions
 set(build_debug "$<CONFIG:Debug>")
 set(build_release "$<CONFIG:Release>")

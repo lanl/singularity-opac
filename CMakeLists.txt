@@ -48,11 +48,6 @@ add_library(${PROJECT_NAME} INTERFACE IMPORTED GLOBAL)
 # so we can use with add_subdirectory
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
-add_library (singularity-opac::flags INTERFACE IMPORTED GLOBAL)
-target_include_directories(singularity-opac::flags
-                           INTERFACE
-                           $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
-
 include (SetupDeps)
 include (SetupOptions)
 include (SetupCompilers)
@@ -70,30 +65,12 @@ endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS On)
 
-
 # Patches variant to be compatible with cuda
 # Assumes "patch" is present on system
 message(STATUS "Patching mpark::variant to support GPUs")
 execute_process(COMMAND patch -N -s -V never
                 ${CMAKE_CURRENT_SOURCE_DIR}/utils/variant/include/mpark/variant.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/utils/cuda_compatibility.patch)
-
-# xl fix
-target_compile_options(singularity-opac::flags INTERFACE
-                       $<$<COMPILE_LANG_AND_ID:CXX,XL>:-std=c++1y;-qxflag=disable__cplusplusOverride>)
-target_link_options(singularity-opac::flags INTERFACE
-                    $<$<COMPILE_LANG_AND_ID:CXX,XL>:-std=c++1y;-qxflag=disable__cplusplusOverride>)
-
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-  target_compile_options(singularity-opac::flags INTERFACE
-                         -use_fast_math)
-elseif(CMAKE_BUILD_TYPE STREQUAL "Debug" AND SINGULARITY_BETTER_DEBUG_FLAGS)
-  target_compile_options(
-    singularity-opac::flags
-    INTERFACE
-    "$<$<COMPILE_LANGUAGE:CXX>:-G;-lineinfo;>"
-    )
-endif()
 
 # Invoke CMake scripts for setup
 if(SINGULARITY_INSTALL_LIBRARY)
