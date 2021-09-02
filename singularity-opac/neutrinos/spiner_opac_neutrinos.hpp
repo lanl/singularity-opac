@@ -116,7 +116,7 @@ class SpinerOpacity {
               Real E = fromLog_(lE);
               Real nu = MeV2Hz * E;
               Real alpha = std::max(
-                  opac.AbsorptionCoefficientPerNu(rho, T, Ye, type, nu), 0.0);
+                  opac.AbsorptionCoefficient(rho, T, Ye, type, nu), 0.0);
               lalphanu_(iRho, iT, iYe, idx, ie) = toLog_(alpha);
               Real j = std::max(opac.EmissivityPerNuOmega(rho, T, Ye, type, nu),
                                 0.0);
@@ -140,7 +140,7 @@ class SpinerOpacity {
       : filename_(filename.c_str()), memoryStatus_(impl::DataStatus::OnHost) {
     herr_t status = H5_SUCCESS;
     hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-    status += lalphanu_.loadHDF(file, SP5::Opac::AbsorptionCoefficientPerNu);
+    status += lalphanu_.loadHDF(file, SP5::Opac::AbsorptionCoefficient);
     status += ljnu_.loadHDF(file, SP5::Opac::EmissivityPerNu);
     status += lJ_.loadHDF(file, SP5::Opac::TotalEmissivity);
     status += lJYe_.loadHDF(file, SP5::Opac::NumberEmissivity);
@@ -155,7 +155,7 @@ class SpinerOpacity {
     herr_t status = H5_SUCCESS;
     hid_t file =
         H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    status += lalphanu_.saveHDF(file, SP5::Opac::AbsorptionCoefficientPerNu);
+    status += lalphanu_.saveHDF(file, SP5::Opac::AbsorptionCoefficient);
     status += ljnu_.saveHDF(file, SP5::Opac::EmissivityPerNu);
     status += lJ_.saveHDF(file, SP5::Opac::TotalEmissivity);
     status += lJYe_.saveHDF(file, SP5::Opac::NumberEmissivity);
@@ -191,7 +191,7 @@ class SpinerOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real AbsorptionCoefficientPerNu(const Real rho, const Real temp,
+  Real AbsorptionCoefficient(const Real rho, const Real temp,
                                   const Real Ye, const RadiationType type,
                                   const Real nu, Real *lambda = nullptr) const {
     int idx;
@@ -206,7 +206,37 @@ class SpinerOpacity {
   // TODO(JMM): Should we provide a raw copy operator instead of or
   // addition to interpolation?
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficientPerNu(
+  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficient(
+      const Real rho, const Real temp, const Real Ye, const RadiationType type,
+      const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
+      Real *lambda = nullptr) const {
+    int idx;
+    Real lRho, lT;
+    toLogs_(rho, temp, type, lRho, lT, idx);
+    for (int i = 0; i < nbins; ++i) {
+      const Real le = toLog_(Hz2MeV * nu_bins[i]);
+      coeffs[i] = fromLog_(lalphanu_.interpToReal(lRho, lT, Ye, idx, le));
+    }
+  }
+
+  // Angle-averaged absorption coefficient assumed to be the same as absorption coefficient
+  PORTABLE_INLINE_FUNCTION
+  Real AngleAveragedAbsorptionCoefficient(const Real rho, const Real temp,
+                                  const Real Ye, const RadiationType type,
+                                  const Real nu, Real *lambda = nullptr) const {
+    int idx;
+    Real lRho, lT;
+    toLogs_(rho, temp, type, lRho, lT, idx);
+    const Real le = toLog_(Hz2MeV * nu);
+    const Real lAlpha = lalphanu_.interpToReal(lRho, lT, Ye, idx, le);
+    const Real Alpha = fromLog_(lAlpha);
+    return Alpha;
+  }
+
+  // TODO(JMM): Should we provide a raw copy operator instead of or
+  // addition to interpolation?
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficient(
       const Real rho, const Real temp, const Real Ye, const RadiationType type,
       const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
       Real *lambda = nullptr) const {

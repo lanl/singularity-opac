@@ -20,7 +20,8 @@ namespace SP5 {
 
   namespace Opac {
     constexpr char defaultFileName[] = "opac.sp5";
-    constexpr char AbsorptionCoefficientPerNu[] = "absorption coefficient per nu";
+    constexpr char AbsorptionCoefficient[] = "absorption coefficient";
+    constexpr char AngleAveragedAbsorptionCoefficient[] = "angle-averaged absorption coefficient";
     constexpr char EmissivityPerNu[] = "emissivity per nu";
     constexpr char TotalEmissivity[] = "total emissivity";
     constexpr char NumberEmissivity[] = "number emissivity";

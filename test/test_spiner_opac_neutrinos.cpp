@@ -104,10 +104,19 @@ TEST_CASE("Spiner opacities, filled with gray data",
 
             // alphanu
             const Real alpha_gray =
-                gray.AbsorptionCoefficientPerNu(rho, T, Ye, type, nu);
+                gray.AbsorptionCoefficient(rho, T, Ye, type, nu);
             const Real alpha_tabl =
-                opac.AbsorptionCoefficientPerNu(rho, T, Ye, type, nu);
+                opac.AbsorptionCoefficient(rho, T, Ye, type, nu);
             if (IsWrong(alpha_gray, alpha_tabl)) {
+              accumulate += 1;
+            }
+
+            // Alphanu
+            const Real Alpha_gray =
+                gray.AngleAveragedAbsorptionCoefficient(rho, T, Ye, type, nu);
+            const Real Alpha_tabl =
+                opac.AngleAveragedAbsorptionCoefficient(rho, T, Ye, type, nu);
+            if (IsWrong(Alpha_gray, Alpha_tabl)) {
               accumulate += 1;
             }
 
@@ -145,9 +154,20 @@ TEST_CASE("Spiner opacities, filled with gray data",
 	    Real data_tabl[Ne];
 
             // alphanu
-            gray.AbsorptionCoefficientPerNu<Real*,Real[Ne]>(rho, T, Ye, type, nu_bins,
+            gray.AbsorptionCoefficient<Real*,Real[Ne]>(rho, T, Ye, type, nu_bins,
 					    data_gray, Ne);
-            opac.AbsorptionCoefficientPerNu(rho, T, Ye, type, nu_bins,
+            opac.AbsorptionCoefficient(rho, T, Ye, type, nu_bins,
+                                            data_tabl, Ne);
+            for (int ie = 0; ie < Ne; ++ie) {
+              if (IsWrong(data_gray[ie], data_tabl[ie])) {
+                accumulate += 1;
+              }
+            }
+
+            // Alphanu
+            gray.AngleAveragedAbsorptionCoefficient<Real*,Real[Ne]>(rho, T, Ye, type, nu_bins,
+					    data_gray, Ne);
+            opac.AngleAveragedAbsorptionCoefficient(rho, T, Ye, type, nu_bins,
                                             data_tabl, Ne);
             for (int ie = 0; ie < Ne; ++ie) {
               if (IsWrong(data_gray[ie], data_tabl[ie])) {
@@ -239,10 +259,19 @@ TEST_CASE("Spiner opacities, filled with gray data",
 
               // alphanu
               const Real alpha_gray =
-                  gray.AbsorptionCoefficientPerNu(rho, T, Ye, type, nu);
+                  gray.AbsorptionCoefficient(rho, T, Ye, type, nu);
               const Real alpha_tabl =
-                  opac.AbsorptionCoefficientPerNu(rho, T, Ye, type, nu);
+                  opac.AbsorptionCoefficient(rho, T, Ye, type, nu);
               if (IsWrong(alpha_gray, alpha_tabl)) {
+                accumulate += 1;
+              }
+
+              // Alpha
+              const Real Alpha_gray =
+                  gray.AngleAveragedAbsorptionCoefficient(rho, T, Ye, type, nu);
+              const Real Alpha_tabl =
+                  opac.AngleAveragedAbsorptionCoefficient(rho, T, Ye, type, nu);
+              if (IsWrong(Alpha_gray, Alpha_tabl)) {
                 accumulate += 1;
               }
 

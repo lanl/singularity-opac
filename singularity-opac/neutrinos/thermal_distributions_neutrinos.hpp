@@ -60,6 +60,14 @@ struct FermiDiracDistributionNoMu {
     const Real jnu = std::max(J.EmissivityPerNuOmega(rho, temp, Ye, type, nu, lambda), EPS);
     return jnu / Bnu;
   }
+  template <typename Emissivity>
+  PORTABLE_INLINE_FUNCTION Real AngleAveragedAbsorptionCoefficientFromKirkhoff(
+      const Emissivity &J, const Real rho, const Real temp, const Real Ye,
+      const RadiationType type, const Real nu, Real *lambda = nullptr) const {
+    const Real Bnu = std::max(ThermalDistributionOfTNu(temp, type, nu, lambda), EPS);
+    const Real jnu = std::max(J.EmissivityPerNu(rho, temp, Ye, type, nu, lambda), EPS)/(4.*M_PI);
+    return jnu / Bnu;
+  }
 };
 
 #undef EPS

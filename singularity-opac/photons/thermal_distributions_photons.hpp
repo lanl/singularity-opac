@@ -56,6 +56,14 @@ struct PlanckDistribution {
     Real jnu = J.EmissivityPerNuOmega(rho, temp, nu, lambda);
     return jnu / Bnu;
   }
+  template <typename Emissivity>
+  PORTABLE_INLINE_FUNCTION Real AngleAveragedAbsorptionCoefficientFromKirkhoff(
+      const Emissivity &J, const Real rho, const Real temp, const Real nu,
+      Real *lambda = nullptr) const {
+    Real Bnu = ThermalDistributionOfTNu(temp, nu, lambda);
+    Real jnu = J.EmissivityPerNu(rho, temp, nu, lambda)/(4.*M_PI);
+    return jnu / Bnu;
+  }
 };
 
 } // namespace photons
