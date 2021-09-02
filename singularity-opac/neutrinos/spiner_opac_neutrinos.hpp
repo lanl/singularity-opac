@@ -86,7 +86,6 @@ class SpinerOpacity {
     lalphanu_.setRange(2, YeMin, YeMax, NYe);
     lalphanu_.setRange(3, lTMin, lTMax, NT);
     lalphanu_.setRange(4, lRhoMin, lRhoMax, NRho);
-    lAlphanu_.copyMetadata(lalphanu_);
     ljnu_.copyMetadata(lalphanu_);
 
     // set metadata for lJ and lJYe
@@ -119,7 +118,6 @@ class SpinerOpacity {
               Real alpha = std::max(
                   opac.AbsorptionCoefficient(rho, T, Ye, type, nu), 0.0);
               lalphanu_(iRho, iT, iYe, idx, ie) = toLog_(alpha);
-              lAlphanu_(iRho, iT, iYe, idx, ie) = lalphanu_(iRho, iT, iYe, idx, ie);
               Real j = std::max(opac.EmissivityPerNuOmega(rho, T, Ye, type, nu),
                                 0.0);
               ljnu_(iRho, iT, iYe, idx, ie) = toLog_(j);
@@ -132,11 +130,10 @@ class SpinerOpacity {
 
   // DataBox constructor. Note that this constructor *shallow* copies
   // the databoxes, so they must be managed externally.
-  SpinerOpacity(const Spiner::DataBox &lalphanu, const Spiner::DataBox &lAlphanu,
-                const Spiner::DataBox ljnu, const Spiner::DataBox lJ,
-                const Spiner::DataBox lJYe)
+  SpinerOpacity(const Spiner::DataBox &lalphanu, const Spiner::DataBox ljnu,
+                const Spiner::DataBox lJ, const Spiner::DataBox lJYe)
       : memoryStatus_(impl::DataStatus::OnHost), lalphanu_(lalphanu),
-        lAlphanu_(lAlphanu), ljnu_(ljnu), lJ_(lJ), lJYe_(lJYe) {}
+        ljnu_(ljnu), lJ_(lJ), lJYe_(lJYe) {}
 
 #ifdef SPINER_USE_HDF
   SpinerOpacity(const std::string &filename)
@@ -144,7 +141,6 @@ class SpinerOpacity {
     herr_t status = H5_SUCCESS;
     hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
     status += lalphanu_.loadHDF(file, SP5::Opac::AbsorptionCoefficient);
-    status += lAlphanu_.loadHDF(file, SP5::Opac::AngleAveragedAbsorptionCoefficient);
     status += ljnu_.loadHDF(file, SP5::Opac::EmissivityPerNu);
     status += lJ_.loadHDF(file, SP5::Opac::TotalEmissivity);
     status += lJYe_.loadHDF(file, SP5::Opac::NumberEmissivity);
@@ -160,7 +156,6 @@ class SpinerOpacity {
     hid_t file =
         H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     status += lalphanu_.saveHDF(file, SP5::Opac::AbsorptionCoefficient);
-    status += lAlphanu_.saveHDF(file, SP5::Opac::AngleAveragedAbsorptionCoefficient);
     status += ljnu_.saveHDF(file, SP5::Opac::EmissivityPerNu);
     status += lJ_.saveHDF(file, SP5::Opac::TotalEmissivity);
     status += lJYe_.saveHDF(file, SP5::Opac::NumberEmissivity);
@@ -181,7 +176,6 @@ class SpinerOpacity {
   SpinerOpacity GetOnDevice() {
     SpinerOpacity other;
     other.lalphanu_ = Spiner::getOnDeviceDataBox(lalphanu_);
-    other.lAlphanu_ = Spiner::getOnDeviceDataBox(lAlphanu_);
     other.ljnu_ = Spiner::getOnDeviceDataBox(ljnu_);
     other.lJ_ = Spiner::getOnDeviceDataBox(lJ_);
     other.lJYe_ = Spiner::getOnDeviceDataBox(lJYe_);
@@ -191,7 +185,6 @@ class SpinerOpacity {
 
   void Finalize() {
     lalphanu_.finalize();
-    lAlphanu_.finalize();
     ljnu_.finalize();
     lJ_.finalize();
     lJYe_.finalize();
@@ -226,6 +219,7 @@ class SpinerOpacity {
     }
   }
 
+  // Angle-averaged absorption coefficient assumed to be the same as absorption coefficient
   PORTABLE_INLINE_FUNCTION
   Real AngleAveragedAbsorptionCoefficient(const Real rho, const Real temp,
                                   const Real Ye, const RadiationType type,
@@ -234,7 +228,7 @@ class SpinerOpacity {
     Real lRho, lT;
     toLogs_(rho, temp, type, lRho, lT, idx);
     const Real le = toLog_(Hz2MeV * nu);
-    const Real lAlpha = lAlphanu_.interpToReal(lRho, lT, Ye, idx, le);
+    const Real lAlpha = lalphanu_.interpToReal(lRho, lT, Ye, idx, le);
     const Real Alpha = fromLog_(lAlpha);
     return Alpha;
   }
@@ -251,7 +245,7 @@ class SpinerOpacity {
     toLogs_(rho, temp, type, lRho, lT, idx);
     for (int i = 0; i < nbins; ++i) {
       const Real le = toLog_(Hz2MeV * nu_bins[i]);
-      coeffs[i] = fromLog_(lAlphanu_.interpToReal(lRho, lT, Ye, idx, le));
+      coeffs[i] = fromLog_(lalphanu_.interpToReal(lRho, lT, Ye, idx, le));
     }
   }
 
@@ -351,7 +345,7 @@ private:
   impl::DataStatus memoryStatus_ = impl::DataStatus::Deallocated;
   // TODO(JMM): Integrating J and JYe seems wise.
   // We can add more things here as needed.
-  Spiner::DataBox lalphanu_, lAlphanu_, ljnu_, lJ_, lJYe_;
+  Spiner::DataBox lalphanu_, ljnu_, lJ_, lJYe_;
   // TODO(JMM): Should we add table bounds? Given they're recorded in
   // each spiner table, I lean towards no, but could be convinced
   // otherwise if we need to do extrapolation, etc.
