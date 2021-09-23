@@ -61,6 +61,22 @@ class NonCGSUnits {
     return alpha * length_unit_;
   }
 
+  template <typename FrequencyIndexer, typename DataIndexer>
+  PORTABLE_INLINE_FUNCTION Real AbsorptionCoefficient(
+      const Real rho, const Real temp, const Real Ye, RadiationType type,
+      FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
+      Real *lambda = nullptr) const {
+    for (int i = 0; i < nbins; ++i) {
+      nu_bins[i] *= freq_unit_;
+    }
+    opac_.AbsorptionCoefficient(rho * rho_unit_, temp * temp_unit_, Ye, type,
+                                nu_bins, coeffs, nbins, lambda);
+    for (int i = 0; i < nbins; ++i) {
+      nu_bins[i] *= time_unit_;
+      coeffs[i] *= length_unit_;
+    }
+  }
+
   PORTABLE_INLINE_FUNCTION
   Real AngleAveragedAbsorptionCoefficient(const Real rho, const Real temp,
                                           const Real Ye,

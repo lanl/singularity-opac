@@ -31,6 +31,19 @@
 namespace singularity {
 namespace indexers {
 
+template <typename T>
+struct Identity {
+  Identity() = default;
+  Identity(T &t) : data_(std::forward<T>(t)) {}
+
+  PORTABLE_INLINE_FUNCTION
+  Real &operator[](const int i) { return data_[i]; }
+  PORTABLE_INLINE_FUNCTION
+  Real &operator[](const int i) const { return data_[i]; }
+
+  T data_;
+};
+
 class Linear {
  public:
   Linear() = default;

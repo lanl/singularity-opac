@@ -25,6 +25,7 @@
 #include <spiner/databox.hpp>
 #include <spiner/interpolation.hpp>
 
+#include <singularity-opac/base/indexers.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
 #include <singularity-opac/constants/constants.hpp>
 #include <singularity-opac/neutrinos/opac_neutrinos.hpp>
@@ -46,7 +47,8 @@ constexpr Real EPS_TEST = 1e-3;
 template <typename T>
 PORTABLE_INLINE_FUNCTION bool IsWrong(const T &a, const T &b) {
   // We only care if the data is different and significantly nonzero.
-  constexpr Real ZERO = std::numeric_limits<Real>::epsilon() / (EPS_TEST*EPS_TEST);
+  constexpr Real ZERO =
+      std::numeric_limits<Real>::epsilon() / (EPS_TEST * EPS_TEST);
   return ((std::isnan(a) || std::isnan(b)) ||
           ((std::abs(a) > ZERO || std::abs(b) > ZERO) &&
            FractionalDifference(a, b) > EPS_TEST));
@@ -138,7 +140,7 @@ TEST_CASE("Spiner opacities, filled with gray data",
             nu_bins[ie] = e * neutrinos::SpinerOpacity::MeV2Hz;
           });
 
-      n_wrong = 0;
+      n_wrong = 0;      
       portableReduce(
           "table vs gray indexer API", 0, NRho, 0, NT, 0, NYe, 0,
           NEUTRINO_NTYPES,
@@ -150,14 +152,14 @@ TEST_CASE("Spiner opacities, filled with gray data",
             const Real T = std::pow(10, lT);
             const Real Ye = YeGrid.x(iYe);
             const RadiationType type = Idx2RadType(itp);
-	    Real data_gray[Ne];
-	    Real data_tabl[Ne];
+            Real data_gray[Ne];
+            Real data_tabl[Ne];
 
             // alphanu
-            gray.AbsorptionCoefficient<Real*,Real[Ne]>(rho, T, Ye, type, nu_bins,
-					    data_gray, Ne);
-            opac.AbsorptionCoefficient(rho, T, Ye, type, nu_bins,
-                                            data_tabl, Ne);
+            gray.AbsorptionCoefficient(rho, T, Ye, type, nu_bins,
+                                       data_gray, Ne);
+            opac.AbsorptionCoefficient(rho, T, Ye, type, nu_bins, data_tabl,
+                                       Ne);
             for (int ie = 0; ie < Ne; ++ie) {
               if (IsWrong(data_gray[ie], data_tabl[ie])) {
                 accumulate += 1;
@@ -165,10 +167,10 @@ TEST_CASE("Spiner opacities, filled with gray data",
             }
 
             // Alphanu
-            gray.AngleAveragedAbsorptionCoefficient<Real*,Real[Ne]>(rho, T, Ye, type, nu_bins,
-					    data_gray, Ne);
-            opac.AngleAveragedAbsorptionCoefficient(rho, T, Ye, type, nu_bins,
-                                            data_tabl, Ne);
+            gray.AngleAveragedAbsorptionCoefficient(rho, T, Ye, type, nu_bins,
+                                                    data_gray, Ne);
+            opac.AngleAveragedAbsorptionCoefficient(
+                rho, T, Ye, type, nu_bins, data_tabl, Ne);
             for (int ie = 0; ie < Ne; ++ie) {
               if (IsWrong(data_gray[ie], data_tabl[ie])) {
                 accumulate += 1;
@@ -176,8 +178,10 @@ TEST_CASE("Spiner opacities, filled with gray data",
             }
 
             // jnu
-            gray.EmissivityPerNuOmega(rho, T, Ye, type, nu_bins, data_gray, Ne);
-            opac.EmissivityPerNuOmega(rho, T, Ye, type, nu_bins, data_tabl, Ne);
+            gray.EmissivityPerNuOmega(rho, T, Ye, type, nu_bins, data_gray,
+                                      Ne);
+            opac.EmissivityPerNuOmega(rho, T, Ye, type, nu_bins, data_tabl,
+                                      Ne);
             for (int ie = 0; ie < Ne; ++ie) {
               if (IsWrong(data_gray[ie], data_tabl[ie])) {
                 accumulate += 1;
