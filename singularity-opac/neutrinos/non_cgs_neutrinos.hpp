@@ -44,6 +44,7 @@ class NonCGSUnits {
     return NonCGSUnits<Opac>(opac_.GetOnDevice(), time_unit_, mass_unit_,
                              length_unit_, temp_unit_);
   }
+  inline void Finalize() noexcept { opac_.Finalize(); }
 
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return opac_.nlambda(); }
@@ -143,7 +144,7 @@ class NonCGSUnits {
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
-  POTABLE_INLINE_FUNCTION void
+  PORTABLE_INLINE_FUNCTION void
   EmissivityPerNu(const Real rho, const Real temp, const Real Ye,
                   const RadiationType type, FrequencyIndexer &nu_bins,
                   DataIndexer &coeffs, const int nbins,
@@ -161,7 +162,7 @@ class NonCGSUnits {
 
   PORTABLE_INLINE_FUNCTION
   Real Emissivity(const Real rho, const Real temp, const Real Ye,
-                  const RadiationType, Real *lambda = nullptr) const {
+                  const RadiationType type, Real *lambda = nullptr) const {
     const Real J =
         opac_.Emissivity(rho * rho_unit_, temp * temp_unit_, Ye, type, lambda);
     // Jnu integrated over frequency, but divide by frequency to get out of cgs
