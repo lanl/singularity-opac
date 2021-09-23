@@ -45,17 +45,18 @@ class GrayOpacity {
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION
-  Real AbsorptionCoefficient(const Real rho, const Real temp,
-                                  const Real Ye, const RadiationType type,
-                                  const Real nu, Real *lambda = nullptr) const {
+  Real AbsorptionCoefficient(const Real rho, const Real temp, const Real Ye,
+                             const RadiationType type, const Real nu,
+                             Real *lambda = nullptr) const {
     return rho * kappa_;
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficient(
-      const Real rho, const Real temp, const Real Ye, const RadiationType type,
-      const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
-      Real *lambda = nullptr) const {
+  PORTABLE_INLINE_FUNCTION void
+  AbsorptionCoefficient(const Real rho, const Real temp, const Real Ye,
+                        const RadiationType type, FrequencyIndexer &nu_bins,
+                        DataIndexer &coeffs, const int nbins,
+                        Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
       coeffs[i] = rho * kappa_;
     }
@@ -63,15 +64,17 @@ class GrayOpacity {
 
   PORTABLE_INLINE_FUNCTION
   Real AngleAveragedAbsorptionCoefficient(const Real rho, const Real temp,
-                                  const Real Ye, const RadiationType type,
-                                  const Real nu, Real *lambda = nullptr) const {
+                                          const Real Ye,
+                                          const RadiationType type,
+                                          const Real nu,
+                                          Real *lambda = nullptr) const {
     return rho * kappa_;
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficient(
       const Real rho, const Real temp, const Real Ye, const RadiationType type,
-      const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
+      FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
       Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
       coeffs[i] = rho * kappa_;
@@ -89,9 +92,9 @@ class GrayOpacity {
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void
   EmissivityPerNuOmega(const Real rho, const Real temp, const Real Ye,
-                       const RadiationType type,
-                       const FrequencyIndexer &nu_bins, DataIndexer &coeffs,
-                       const int nbins, Real *lambda = nullptr) const {
+                       const RadiationType type, FrequencyIndexer &nu_bins,
+                       DataIndexer &coeffs, const int nbins,
+                       Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
       coeffs[i] = EmissivityPerNuOmega(rho, temp, Ye, type, nu_bins[i], lambda);
     }
@@ -107,7 +110,7 @@ class GrayOpacity {
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void
   EmissivityPerNu(const Real rho, const Real temp, const Real Ye,
-                  const RadiationType type, const FrequencyIndexer &nu_bins,
+                  const RadiationType type, FrequencyIndexer &nu_bins,
                   DataIndexer &coeffs, const int nbins,
                   Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
@@ -119,13 +122,14 @@ class GrayOpacity {
   Real Emissivity(const Real rho, const Real temp, const Real Ye,
                   const RadiationType type, Real *lambda = nullptr) const {
     Real B = dist_.ThermalDistributionOfT(temp, type, lambda);
-    return 4*M_PI*rho * kappa_ * B;
+    return 4 * M_PI * rho * kappa_ * B;
   }
 
   PORTABLE_INLINE_FUNCTION
   Real NumberEmissivity(const Real rho, const Real temp, Real Ye,
                         RadiationType type, Real *lambda = nullptr) const {
-    return 4*M_PI*kappa_ * dist_.ThermalNumberDistribution(temp, type, lambda);
+    return 4 * M_PI * kappa_ *
+           dist_.ThermalNumberDistribution(temp, type, lambda);
   }
 
  private:
