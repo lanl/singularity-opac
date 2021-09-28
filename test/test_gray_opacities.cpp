@@ -86,7 +86,7 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
       constexpr Real temp_unit = 276;
       constexpr Real rho_unit =
           mass_unit / (length_unit * length_unit * length_unit);
-      constexpr Real j_unit = mass_unit / (length_unit*time_unit*time_unit);
+      constexpr Real j_unit = mass_unit / (length_unit * time_unit * time_unit);
       neutrinos::Opacity funny_units_host =
           neutrinos::NonCGSUnits<neutrinos::Gray>(
               neutrinos::Gray(1), time_unit, mass_unit, length_unit, temp_unit);
@@ -106,14 +106,14 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
               Real jnu_funny = funny_units.EmissivityPerNuOmega(
                   rho / rho_unit, temp / temp_unit, Ye, type, nu * time_unit);
               Real jnu = opac.EmissivityPerNuOmega(rho, temp, Ye, type, nu);
-	      if (FractionalDifference(jnu, jnu_funny*j_unit) > EPS_TEST) {
-		n_wrong_d() += 1;
-	      }
+              if (FractionalDifference(jnu, jnu_funny * j_unit) > EPS_TEST) {
+                n_wrong_d() += 1;
+              }
             });
 #ifdef PORTABILITY_STRATEGY_KOKKOS
-	Kokkos::deep_copy(n_wrong_h, n_wrong_d);
+        Kokkos::deep_copy(n_wrong_h, n_wrong_d);
 #endif
-	REQUIRE(n_wrong_h == 0);
+        REQUIRE(n_wrong_h == 0);
       }
     }
 
@@ -222,6 +222,44 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
 #endif
       REQUIRE(n_wrong_h == 0);
     }
+
+    WHEN("We create a gray opacity object in non-cgs units") {
+      constexpr Real time_unit = 123;
+      constexpr Real mass_unit = 456;
+      constexpr Real length_unit = 789;
+      constexpr Real temp_unit = 276;
+      constexpr Real rho_unit =
+          mass_unit / (length_unit * length_unit * length_unit);
+      constexpr Real j_unit = mass_unit / (length_unit * time_unit * time_unit);
+      photons::Opacity funny_units_host = photons::NonCGSUnits<photons::Gray>(
+          photons::Gray(1), time_unit, mass_unit, length_unit, temp_unit);
+      auto funny_units = funny_units_host.GetOnDevice();
+
+      THEN("We can convert meaningfully into and out of funny units") {
+        int n_wrong_h = 0;
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+        Kokkos::View<int, atomic_view> n_wrong_d("wrong");
+#else
+        PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
+#endif
+
+        portableFor(
+            "emissivities in funny units", 0, 100,
+            PORTABLE_LAMBDA(const int &i) {
+              Real jnu_funny = funny_units.EmissivityPerNuOmega(
+                  rho / rho_unit, temp / temp_unit, nu * time_unit);
+              Real jnu = opac.EmissivityPerNuOmega(rho, temp, nu);
+              if (FractionalDifference(jnu, jnu_funny * j_unit) > EPS_TEST) {
+                n_wrong_d() += 1;
+              }
+            });
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+        Kokkos::deep_copy(n_wrong_h, n_wrong_d);
+#endif
+        REQUIRE(n_wrong_h == 0);
+      }
+    }
+
     THEN("We can fill an indexer allocated in a cell") {
       int n_wrong_h = 0;
 #ifdef PORTABILITY_STRATEGY_KOKKOS
