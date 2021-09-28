@@ -18,9 +18,9 @@
 
 #include <catch2/catch.hpp>
 
-#include <spiner/databox.hpp>
 #include <ports-of-call/portability.hpp>
 #include <ports-of-call/portable_arrays.hpp>
+#include <spiner/databox.hpp>
 
 #include <singularity-opac/base/indexers.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
@@ -47,13 +47,13 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
   WHEN("We initialize a gray neutrino opacity") {
     constexpr Real MeV2K = 1e6 * pc::eV / pc::kb;
     constexpr Real MeV2Hz = 1e6 * pc::eV / pc::h;
-    constexpr Real rho = 1e11;         // g/cc
+    constexpr Real rho = 1e11;        // g/cc
     constexpr Real temp = 10 * MeV2K; // 10 MeV
     constexpr Real Ye = 0.1;
     constexpr RadiationType type = RadiationType::NU_ELECTRON;
     constexpr Real nu = 1.25 * MeV2Hz; // 1 MeV
 
-    neutrinos::Opacity opac_host = neutrinos::Gray(1);
+    neutrinos::Gray opac_host(1);
     neutrinos::Opacity opac = opac_host.GetOnDevice();
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
@@ -77,6 +77,44 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
       Kokkos::deep_copy(n_wrong_h, n_wrong_d);
 #endif
       REQUIRE(n_wrong_h == 0);
+    }
+
+    WHEN("We create a gray opacity object in non-cgs units") {
+      constexpr Real time_unit = 123;
+      constexpr Real mass_unit = 456;
+      constexpr Real length_unit = 789;
+      constexpr Real temp_unit = 276;
+      constexpr Real rho_unit =
+          mass_unit / (length_unit * length_unit * length_unit);
+      constexpr Real j_unit = mass_unit / (length_unit*time_unit*time_unit);
+      neutrinos::Opacity funny_units_host =
+          neutrinos::NonCGSUnits<neutrinos::Gray>(
+              neutrinos::Gray(1), time_unit, mass_unit, length_unit, temp_unit);
+      auto funny_units = funny_units_host.GetOnDevice();
+
+      THEN("We can convert meaningfully into and out of funny units") {
+        int n_wrong_h = 0;
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+        Kokkos::View<int, atomic_view> n_wrong_d("wrong");
+#else
+        PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
+#endif
+
+        portableFor(
+            "emissivities in funny units", 0, 100,
+            PORTABLE_LAMBDA(const int &i) {
+              Real jnu_funny = funny_units.EmissivityPerNuOmega(
+                  rho / rho_unit, temp / temp_unit, Ye, type, nu * time_unit);
+              Real jnu = opac.EmissivityPerNuOmega(rho, temp, Ye, type, nu);
+	      if (FractionalDifference(jnu, jnu_funny*j_unit) > EPS_TEST) {
+		n_wrong_d() += 1;
+	      }
+            });
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+	Kokkos::deep_copy(n_wrong_h, n_wrong_d);
+#endif
+	REQUIRE(n_wrong_h == 0);
+      }
     }
 
     THEN("We can fill an indexer allocated in a cell") {
@@ -112,16 +150,16 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
           "set temp bins", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
             temp_bins[i] = std::pow(10, lt_min + dt * i) * MeV2K;
           });
-      
-     
-      Real *vm9 = (Real*) PORTABLE_MALLOC(9 * 9 * sizeof(Real));
+
+      Real *vm9 = (Real *)PORTABLE_MALLOC(9 * 9 * sizeof(Real));
       portableFor(
-          "Fill vm", 0, 1, PORTABLE_LAMBDA(const int& i){ chebyshev::get_vmbox(vm9); });
+          "Fill vm", 0, 1,
+          PORTABLE_LAMBDA(const int &i) { chebyshev::get_vmbox(vm9); });
 
       portableFor(
           "Fill the indexers", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
             Real temp = temp_bins[i];
-            
+
             Real *nu_data = (Real *)malloc(nbins * sizeof(Real));
             Real *lnu_data = (Real *)malloc(nbins * sizeof(Real));
             Real *nu_coeffs = (Real *)malloc(nbins * sizeof(Real));
@@ -135,9 +173,9 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
                  FractionalDifference(J_cheb(nu), Jtrue) > EPS_TEST)) {
               n_wrong_d() += 1;
             }
-	    free(nu_data);
-	    free(lnu_data);
-	    free(nu_coeffs);
+            free(nu_data);
+            free(lnu_data);
+            free(nu_coeffs);
           });
 
 #ifdef PORTABILITY_STRATEGY_KOKKOS
@@ -150,7 +188,6 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
       PORTABLE_FREE(nu_bins);
       PORTABLE_FREE(lnu_bins);
       PORTABLE_FREE(temp_bins);
-      
     }
 
     opac.Finalize();
@@ -222,7 +259,7 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
       portableFor(
           "Fill the indexers", 0, ntemps, PORTABLE_LAMBDA(const int &i) {
             Real temp = temp_bins[i];
-	    auto bins = loglin_bins.slice(i);
+            auto bins = loglin_bins.slice(i);
             indexers::LogLinear J_log(bins, nu_min, nu_max, nbins);
             opac.EmissivityPerNu(rho, temp, nu_bins, J_log, nbins);
             Real Jtrue = opac.EmissivityPerNu(rho, temp, nu);

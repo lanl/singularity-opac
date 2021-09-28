@@ -32,8 +32,8 @@ class NonCGSUnits {
   NonCGSUnits() = default;
   NonCGSUnits(Opac &&opac, const Real time_unit, const Real mass_unit,
               const Real length_unit, const Real temp_unit)
-      : opac_(opac), time_unit_(time_unit), mass_unit_(mass_unit),
-        length_unit_(length_unit), temp_unit_(temp_unit),
+      : opac_(std::forward<Opac>(opac)), time_unit_(time_unit),
+        mass_unit_(mass_unit), length_unit_(length_unit), temp_unit_(temp_unit),
         rho_unit_(mass_unit_ / (length_unit_ * length_unit_ * length_unit_)),
         freq_unit_(1. / time_unit_),
         inv_emiss_unit_(length_unit_ * time_unit_ * time_unit_ / mass_unit_),
@@ -112,8 +112,8 @@ class NonCGSUnits {
   Real EmissivityPerNuOmega(const Real rho, const Real temp, const Real Ye,
                             const RadiationType type, const Real nu,
                             Real *lambda = nullptr) const {
-    const Real jnu = EmissivityPerNuOmega(rho * rho_unit_, temp * temp_unit_,
-                                          Ye, type, nu * freq_unit_, lambda);
+    const Real jnu = opac_.EmissivityPerNuOmega(
+        rho * rho_unit_, temp * temp_unit_, Ye, type, nu * freq_unit_, lambda);
     return jnu * inv_emiss_unit_;
   }
 
