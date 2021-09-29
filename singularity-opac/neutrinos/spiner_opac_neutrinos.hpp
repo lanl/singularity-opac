@@ -208,7 +208,7 @@ class SpinerOpacity {
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void AbsorptionCoefficient(
       const Real rho, const Real temp, const Real Ye, const RadiationType type,
-      const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
+      FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
       Real *lambda = nullptr) const {
     int idx;
     Real lRho, lT;
@@ -238,7 +238,7 @@ class SpinerOpacity {
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficient(
       const Real rho, const Real temp, const Real Ye, const RadiationType type,
-      const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
+      FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
       Real *lambda = nullptr) const {
     int idx;
     Real lRho, lT;
@@ -265,7 +265,7 @@ class SpinerOpacity {
   PORTABLE_INLINE_FUNCTION void
   EmissivityPerNuOmega(const Real rho, const Real temp, const Real Ye,
                        const RadiationType type,
-                       const FrequencyIndexer &nu_bins, DataIndexer &coeffs,
+                       FrequencyIndexer &nu_bins, DataIndexer &coeffs,
                        const int nbins, Real *lambda = nullptr) const {
     int idx;
     Real lRho, lT;
@@ -286,7 +286,7 @@ class SpinerOpacity {
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void
   EmissivityPerNu(const Real rho, const Real temp, const Real Ye,
-                  const RadiationType type, const FrequencyIndexer &nu_bins,
+                  const RadiationType type, FrequencyIndexer &nu_bins,
                   DataIndexer &coeffs, const int nbins,
                   Real *lambda = nullptr) const {
     int idx;

@@ -51,7 +51,7 @@ class GrayOpacity {
 
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void AbsorptionCoefficientPerNu(
-      const Real rho, const Real temp, const FrequencyIndexer &nu_bins,
+      const Real rho, const Real temp, FrequencyIndexer &nu_bins,
       DataIndexer &coeffs, const int nbins, Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
       coeffs[i] = AbsorptionCoefficientPerNu(rho, temp, nu_bins[i], lambda);
@@ -67,7 +67,7 @@ class GrayOpacity {
 
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficientPerNu(
-      const Real rho, const Real temp, const FrequencyIndexer &nu_bins,
+      const Real rho, const Real temp, FrequencyIndexer &nu_bins,
       DataIndexer &coeffs, const int nbins, Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
       coeffs[i] = AngleAveragedAbsorptionCoefficientPerNu(rho, temp, nu_bins[i], lambda);
@@ -84,7 +84,7 @@ class GrayOpacity {
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void
   EmissivityPerNuOmega(const Real rho, const Real temp,
-                       const FrequencyIndexer &nu_bins, DataIndexer &coeffs,
+                       FrequencyIndexer &nu_bins, DataIndexer &coeffs,
                        const int nbins, Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
       coeffs[i] = EmissivityPerNuOmega(rho, temp, nu_bins[i], lambda);
@@ -100,7 +100,7 @@ class GrayOpacity {
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void
   EmissivityPerNu(const Real rho, const Real temp,
-                  const FrequencyIndexer &nu_bins, DataIndexer &coeffs,
+                  FrequencyIndexer &nu_bins, DataIndexer &coeffs,
                   const int nbins, Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
       coeffs[i] = EmissivityPerNu(rho, temp, nu_bins[i], lambda);

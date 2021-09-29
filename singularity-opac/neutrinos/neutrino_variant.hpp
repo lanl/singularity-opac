@@ -80,21 +80,21 @@ class Variant {
       const Real nu, Real *lambda = nullptr) const {
     return mpark::visit(
         [=](const auto &opac) {
-          return opac.AbsorptionCoefficient(rho, temp, Ye, type, nu,
-                                                 lambda);
+          return opac.AbsorptionCoefficient(rho, temp, Ye, type, nu, lambda);
         },
         opac_);
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficient(
-      const Real rho, const Real temp, const Real Ye, const RadiationType type,
-      const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
-      Real *lambda = nullptr) const {
+  PORTABLE_INLINE_FUNCTION void
+  AbsorptionCoefficient(const Real rho, const Real temp, const Real Ye,
+                        const RadiationType type, FrequencyIndexer &nu_bins,
+                        DataIndexer &coeffs, const int nbins,
+                        Real *lambda = nullptr) const {
     mpark::visit(
         [&](const auto &opac) {
           opac.AbsorptionCoefficient(rho, temp, Ye, type, nu_bins, coeffs,
-                                          nbins, lambda);
+                                     nbins, lambda);
         },
         opac_);
   }
@@ -107,8 +107,8 @@ class Variant {
       const Real nu, Real *lambda = nullptr) const {
     return mpark::visit(
         [=](const auto &opac) {
-          return opac.AngleAveragedAbsorptionCoefficient(rho, temp, Ye, type, nu,
-                                                 lambda);
+          return opac.AngleAveragedAbsorptionCoefficient(rho, temp, Ye, type,
+                                                         nu, lambda);
         },
         opac_);
   }
@@ -116,12 +116,12 @@ class Variant {
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficient(
       const Real rho, const Real temp, const Real Ye, const RadiationType type,
-      const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
+      FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
       Real *lambda = nullptr) const {
     mpark::visit(
         [&](const auto &opac) {
-          opac.AngleAveragedAbsorptionCoefficient(rho, temp, Ye, type, nu_bins, coeffs,
-                                          nbins, lambda);
+          opac.AngleAveragedAbsorptionCoefficient(rho, temp, Ye, type, nu_bins,
+                                                  coeffs, nbins, lambda);
         },
         opac_);
   }
@@ -141,9 +141,9 @@ class Variant {
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void
   EmissivityPerNuOmega(const Real rho, const Real temp, const Real Ye,
-                       const RadiationType type,
-                       const FrequencyIndexer &nu_bins, DataIndexer &coeffs,
-                       const int nbins, Real *lambda = nullptr) const {
+                       const RadiationType type, FrequencyIndexer &nu_bins,
+                       DataIndexer &coeffs, const int nbins,
+                       Real *lambda = nullptr) const {
     mpark::visit(
         [&](const auto &opac) {
           return opac.EmissivityPerNuOmega(rho, temp, Ye, type, nu_bins, coeffs,
@@ -168,7 +168,7 @@ class Variant {
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void
   EmissivityPerNu(const Real rho, const Real temp, const Real Ye,
-                  const RadiationType type, const FrequencyIndexer &nu_bins,
+                  const RadiationType type, FrequencyIndexer &nu_bins,
                   DataIndexer &coeffs, const int nbins,
                   Real *lambda = nullptr) const {
     mpark::visit(

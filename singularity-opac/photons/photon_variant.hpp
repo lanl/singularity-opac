@@ -87,7 +87,7 @@ class Variant {
 
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void AbsorptionCoefficient(
-      const Real rho, const Real temp, const FrequencyIndexer &nu_bins,
+      const Real rho, const Real temp, FrequencyIndexer &nu_bins,
       DataIndexer &coeffs, const int nbins, Real *lambda = nullptr) const {
     mpark::visit(
         [&](const auto &opac) {
@@ -114,7 +114,7 @@ class Variant {
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficient(
       const Real rho, const Real temp,
-      const FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
+      FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
       Real *lambda = nullptr) const {
     mpark::visit(
         [&](const auto &opac) {
@@ -139,7 +139,7 @@ class Variant {
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void
   EmissivityPerNuOmega(const Real rho, const Real temp,
-                       const FrequencyIndexer &nu_bins, DataIndexer &coeffs,
+                       FrequencyIndexer &nu_bins, DataIndexer &coeffs,
                        const int nbins, Real *lambda = nullptr) const {
     mpark::visit(
         [&](const auto &opac) {
@@ -163,7 +163,7 @@ class Variant {
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void
   EmissivityPerNu(const Real rho, const Real temp,
-                  const FrequencyIndexer &nu_bins, DataIndexer &coeffs,
+                  FrequencyIndexer &nu_bins, DataIndexer &coeffs,
                   const int nbins, Real *lambda = nullptr) const {
     mpark::visit(
         [&](const auto &opac) {
