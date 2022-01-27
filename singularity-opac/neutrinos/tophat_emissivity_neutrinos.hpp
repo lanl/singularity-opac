@@ -93,7 +93,7 @@ class TophatEmissivity {
                             const RadiationType type, const Real nu,
                             Real *lambda = nullptr) const {
     if (nu > numin_ && nu < numax_) {
-      return C_ * GetYeF(type, Ye) / (4. * M_PI);
+      return C_ * GetYeF(type, Ye);
     } else {
       return 0.;
     }
