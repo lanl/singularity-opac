@@ -64,6 +64,7 @@ enum class DataStatus { Deallocated, OnDevice, OnHost };
 // DataBox. Bottom of the table is a floor. Top of the table is
 // power law extrapolation.
 // TODO(JMM): Should lJ be stored on disk or computed at start up?
+template <typename ThermalDistribution>
 class SpinerOpacity {
  public:
   static constexpr Real EPS = 10.0 * std::numeric_limits<Real>::epsilon();
@@ -319,6 +320,18 @@ class SpinerOpacity {
     return fromLog_(lJYe_.interpToReal(lRho, lT, Ye, idx));
   }
 
+  PORTABLE_INLINE_FUNCTION
+  Real ThermalDistributionOfTNu(const Real temp, const RadiationType type,
+    const Real nu, Real *lambda = nullptr) const {
+      return dist_.ThermalDistributionOfTNu(temp, type, nu, lambda);
+    }
+
+  PORTABLE_INLINE_FUNCTION
+  Real ThermalDistributionOfT(const Real temp, const RadiationType type,
+    Real *lambda = nullptr) const {
+      return dist_.ThermalDistributionOfT(temp, type, lambda);
+    }
+
 private:
   // TODO(JMM): Offsets probably not necessary
   PORTABLE_INLINE_FUNCTION Real toLog_(const Real x, const Real offset) const {
@@ -349,6 +362,7 @@ private:
   // TODO(JMM): Should we add table bounds? Given they're recorded in
   // each spiner table, I lean towards no, but could be convinced
   // otherwise if we need to do extrapolation, etc.
+  ThermalDistribution dist_;
 };
 
 } // namespace neutrinos

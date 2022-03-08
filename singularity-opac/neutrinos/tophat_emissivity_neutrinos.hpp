@@ -144,6 +144,18 @@ class TophatEmissivity {
     return 4 * M_PI * rho * Ac * GetYeF(type, Ye);
   }
 
+  PORTABLE_INLINE_FUNCTION
+  Real ThermalDistributionOfTNu(const Real temp, const RadiationType type,
+    const Real nu, Real *lambda = nullptr) const {
+      return dist_.ThermalDistributionOfTNu(temp, type, nu, lambda);
+    }
+
+  PORTABLE_INLINE_FUNCTION
+  Real ThermalDistributionOfT(const Real temp, const RadiationType type,
+    Real *lambda = nullptr) const {
+      return dist_.ThermalDistributionOfT(temp, type, lambda);
+    }
+
  private:
   PORTABLE_INLINE_FUNCTION
   Real GetYeF(RadiationType type, Real Ye) const {
