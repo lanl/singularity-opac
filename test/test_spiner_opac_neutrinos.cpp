@@ -83,11 +83,11 @@ TEST_CASE("Spiner opacities, filled with gray data",
     Grid_t leGrid(leMin, leMax, Ne);
 
     neutrinos::Opacity gray = neutrinos::Gray(kappa);
-    neutrinos::SpinerOpacity filled(gray, lRhoMin, lRhoMax, NRho, lTMin, lTMax,
-                                    NT, YeMin, YeMax, NYe, leMin, leMax, Ne);
+    neutrinos::SpinerOpac filled(gray, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT,
+                                 YeMin, YeMax, NYe, leMin, leMax, Ne);
 
     THEN("The table matches the gray opacities") {
-      neutrinos::SpinerOpacity opac = filled.GetOnDevice();
+      neutrinos::SpinerOpac opac = filled.GetOnDevice();
       int n_wrong = 0;
       portableReduce(
           "table vs gray depends nu", 0, NRho, 0, NT, 0, NYe, 0,
@@ -101,7 +101,7 @@ TEST_CASE("Spiner opacities, filled with gray data",
             const Real Ye = YeGrid.x(iYe);
             const Real le = leGrid.x(ie);
             const Real e = std::pow(10, le);
-            const Real nu = e * neutrinos::SpinerOpacity::MeV2Hz;
+            const Real nu = e * neutrinos::SpinerOpac::MeV2Hz;
             const RadiationType type = Idx2RadType(itp);
 
             // alphanu
@@ -137,10 +137,10 @@ TEST_CASE("Spiner opacities, filled with gray data",
           "fill nu bins", 0, Ne, PORTABLE_LAMBDA(const int ie) {
             const Real le = leGrid.x(ie);
             const Real e = std::pow(10, le);
-            nu_bins[ie] = e * neutrinos::SpinerOpacity::MeV2Hz;
+            nu_bins[ie] = e * neutrinos::SpinerOpac::MeV2Hz;
           });
 
-      n_wrong = 0;      
+      n_wrong = 0;
       portableReduce(
           "table vs gray indexer API", 0, NRho, 0, NT, 0, NYe, 0,
           NEUTRINO_NTYPES,
@@ -156,8 +156,8 @@ TEST_CASE("Spiner opacities, filled with gray data",
             Real data_tabl[Ne];
 
             // alphanu
-            gray.AbsorptionCoefficient(rho, T, Ye, type, nu_bins,
-                                       data_gray, Ne);
+            gray.AbsorptionCoefficient(rho, T, Ye, type, nu_bins, data_gray,
+                                       Ne);
             opac.AbsorptionCoefficient(rho, T, Ye, type, nu_bins, data_tabl,
                                        Ne);
             for (int ie = 0; ie < Ne; ++ie) {
@@ -169,8 +169,8 @@ TEST_CASE("Spiner opacities, filled with gray data",
             // Alphanu
             gray.AngleAveragedAbsorptionCoefficient(rho, T, Ye, type, nu_bins,
                                                     data_gray, Ne);
-            opac.AngleAveragedAbsorptionCoefficient(
-                rho, T, Ye, type, nu_bins, data_tabl, Ne);
+            opac.AngleAveragedAbsorptionCoefficient(rho, T, Ye, type, nu_bins,
+                                                    data_tabl, Ne);
             for (int ie = 0; ie < Ne; ++ie) {
               if (IsWrong(data_gray[ie], data_tabl[ie])) {
                 accumulate += 1;
@@ -178,10 +178,8 @@ TEST_CASE("Spiner opacities, filled with gray data",
             }
 
             // jnu
-            gray.EmissivityPerNuOmega(rho, T, Ye, type, nu_bins, data_gray,
-                                      Ne);
-            opac.EmissivityPerNuOmega(rho, T, Ye, type, nu_bins, data_tabl,
-                                      Ne);
+            gray.EmissivityPerNuOmega(rho, T, Ye, type, nu_bins, data_gray, Ne);
+            opac.EmissivityPerNuOmega(rho, T, Ye, type, nu_bins, data_tabl, Ne);
             for (int ie = 0; ie < Ne; ++ie) {
               if (IsWrong(data_gray[ie], data_tabl[ie])) {
                 accumulate += 1;
@@ -236,7 +234,7 @@ TEST_CASE("Spiner opacities, filled with gray data",
 #ifdef SPINER_USE_HDF
     THEN("We can save to disk and reload") {
       filled.Save(grayname);
-      neutrinos::Opacity opac_host = neutrinos::SpinerOpacity(grayname);
+      neutrinos::Opacity opac_host = neutrinos::SpinerOpac(grayname);
       AND_THEN("The reloaded table matches the gray opacities") {
 
         neutrinos::Opacity opac = opac_host.GetOnDevice();
@@ -254,7 +252,7 @@ TEST_CASE("Spiner opacities, filled with gray data",
               const Real Ye = YeGrid.x(iYe);
               const Real le = leGrid.x(ie);
               const Real e = std::pow(10, le);
-              const Real nu = e * neutrinos::SpinerOpacity::MeV2Hz;
+              const Real nu = e * neutrinos::SpinerOpac::MeV2Hz;
               const RadiationType type = Idx2RadType(itp);
               const Real Jgray =
                   gray.EmissivityPerNuOmega(rho, T, Ye, type, nu);
