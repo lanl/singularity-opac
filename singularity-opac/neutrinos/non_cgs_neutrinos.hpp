@@ -38,7 +38,10 @@ class NonCGSUnits {
         freq_unit_(1. / time_unit_),
         inv_emiss_unit_(length_unit_ * time_unit_ * time_unit_ / mass_unit_),
         inv_num_emiss_unit_(length_unit_ * length_unit_ * length_unit_ *
-                            time_unit_) {}
+                            time_unit_),
+        inv_intensity_unit_(time_unit_ * time_unit_ / mass_unit_),
+        inv_energy_dens_unit_(time_unit_ * time_unit_ * length_unit_ /
+                              mass_unit_) {}
 
   auto GetOnDevice() {
     return NonCGSUnits<Opac>(opac_.GetOnDevice(), time_unit_, mass_unit_,
@@ -177,10 +180,32 @@ class NonCGSUnits {
     return JoH * inv_num_emiss_unit_;
   }
 
+  PORTABLE_INLINE_FUNCTION
+  Real ThermalDistributionOfTNu(const Real temp, const RadiationType type,
+                                const Real nu, Real *lambda = nullptr) const {
+    Real BoH = opac_.ThermalDistributionOfTNu(temp, type, nu, lambda);
+    return BoH * inv_intensity_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real ThermalDistributionOfT(const Real temp, const RadiationType type,
+                              Real *lambda = nullptr) const {
+    Real BoH = opac_.ThermalDistributionOfT(temp, type, lambda);
+    return BoH * inv_energy_dens_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real ThermalNumberDistribution(const Real temp, const RadiationType type,
+                                 Real *lambda = nullptr) const {
+    Real NoH = opac_.ThermalNumberDistribution(temp, type, lambda);
+    return NoH * mass_unit_ / rho_unit_;
+  }
+
  private:
   Opac opac_;
   Real time_unit_, mass_unit_, length_unit_, temp_unit_;
   Real rho_unit_, freq_unit_, inv_emiss_unit_, inv_num_emiss_unit_;
+  Real inv_intensity_unit_, inv_energy_dens_unit_;
 };
 
 } // namespace neutrinos

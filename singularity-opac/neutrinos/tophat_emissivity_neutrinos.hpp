@@ -51,18 +51,20 @@ class TophatEmissivity {
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION
-  Real AbsorptionCoefficient(const Real rho, const Real temp,
-                                  const Real Ye, const RadiationType type,
-                                  const Real nu, Real *lambda = nullptr) const {
+  Real AbsorptionCoefficient(const Real rho, const Real temp, const Real Ye,
+                             const RadiationType type, const Real nu,
+                             Real *lambda = nullptr) const {
     return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, Ye, type,
-                                                   nu, lambda)/(4.*M_PI);
+                                                   nu, lambda) /
+           (4. * M_PI);
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficient(
-      const Real rho, const Real temp, const Real Ye, const RadiationType type,
-      FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
-      Real *lambda = nullptr) const {
+  PORTABLE_INLINE_FUNCTION void
+  AbsorptionCoefficient(const Real rho, const Real temp, const Real Ye,
+                        const RadiationType type, FrequencyIndexer &nu_bins,
+                        DataIndexer &coeffs, const int nbins,
+                        Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
       coeffs[i] =
           AbsorptionCoefficient(rho, temp, Ye, type, nu_bins[i], lambda);
@@ -71,10 +73,12 @@ class TophatEmissivity {
 
   PORTABLE_INLINE_FUNCTION
   Real AngleAveragedAbsorptionCoefficient(const Real rho, const Real temp,
-                                  const Real Ye, const RadiationType type,
-                                  const Real nu, Real *lambda = nullptr) const {
-    return dist_.AngleAveragedAbsorptionCoefficientFromKirkhoff(*this, rho, temp, Ye, type,
-                                                   nu, lambda);
+                                          const Real Ye,
+                                          const RadiationType type,
+                                          const Real nu,
+                                          Real *lambda = nullptr) const {
+    return dist_.AngleAveragedAbsorptionCoefficientFromKirkhoff(
+        *this, rho, temp, Ye, type, nu, lambda);
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
@@ -83,8 +87,8 @@ class TophatEmissivity {
       FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
       Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
-      coeffs[i] =
-          AngleAveragedAbsorptionCoefficient(rho, temp, Ye, type, nu_bins[i], lambda);
+      coeffs[i] = AngleAveragedAbsorptionCoefficient(rho, temp, Ye, type,
+                                                     nu_bins[i], lambda);
     }
   }
 
@@ -102,9 +106,9 @@ class TophatEmissivity {
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void
   EmissivityPerNuOmega(const Real rho, const Real temp, const Real Ye,
-                       const RadiationType type,
-                       FrequencyIndexer &nu_bins, DataIndexer &coeffs,
-                       const int nbins, Real *lambda = nullptr) const {
+                       const RadiationType type, FrequencyIndexer &nu_bins,
+                       DataIndexer &coeffs, const int nbins,
+                       Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
       coeffs[i] = EmissivityPerNuOmega(rho, temp, Ye, type, nu_bins[i], lambda);
     }
@@ -142,6 +146,23 @@ class TophatEmissivity {
                         Real *lambda = nullptr) const {
     Real Ac = 1 / (pc::h * rho) * C_ * log(numax_ / numin_);
     return 4 * M_PI * rho * Ac * GetYeF(type, Ye);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real ThermalDistributionOfTNu(const Real temp, const RadiationType type,
+                                const Real nu, Real *lambda = nullptr) const {
+    return dist_.ThermalDistributionOfTNu(temp, type, nu, lambda);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real ThermalDistributionOfT(const Real temp, const RadiationType type,
+                              Real *lambda = nullptr) const {
+    return dist_.ThermalDistributionOfT(temp, type, lambda);
+  }
+
+  PORTABLE_INLINE_FUNCTION Real ThermalNumberDistribution(
+      const Real temp, const RadiationType type, Real *lambda = nullptr) const {
+    return dist_.ThermalNumberDistribution(temp, type, lambda);
   }
 
  private:

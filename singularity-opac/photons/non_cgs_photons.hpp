@@ -166,10 +166,31 @@ class NonCGSUnits {
     return JoH * inv_num_emiss_unit_;
   }
 
+  PORTABLE_INLINE_FUNCTION
+  Real ThermalDistributionOfTNu(const Real temp, const Real nu,
+                                Real *lambda = nullptr) const {
+    Real BoH = opac_.ThermalDistributionOfTNu(temp, nu, lambda);
+    return BoH * inv_intensity_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real ThermalDistributionOfT(const Real temp, Real *lambda = nullptr) const {
+    Real BoH = opac_.ThermalDistributionOfT(temp, lambda);
+    return BoH * inv_energy_dens_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real ThermalNumberDistribution(const Real temp,
+                                 Real *lambda = nullptr) const {
+    Real NoH = opac_.ThermalNumberDistribution(temp, lambda);
+    return NoH * mass_unit_ / rho_unit_;
+  }
+
  private:
   Opac opac_;
   Real time_unit_, mass_unit_, length_unit_, temp_unit_;
   Real rho_unit_, freq_unit_, inv_emiss_unit_, inv_num_emiss_unit_;
+  Real inv_intensity_unit_, inv_energy_dens_unit_;
 };
 
 } // namespace photons
