@@ -108,7 +108,7 @@ class SpinerOpacity {
           for (int idx = 0; idx < NEUTRINO_NTYPES; ++idx) {
             RadiationType type = Idx2RadType(idx);
             Real J = std::max(opac.Emissivity(rho, T, Ye, type), 0.0);
-	    Real lJ = toLog_(J);
+            Real lJ = toLog_(J);
             lJ_(iRho, iT, iYe, idx) = lJ;
             Real JYe = std::max(opac.NumberEmissivity(rho, T, Ye, type), 0.0);
             lJYe_(iRho, iT, iYe, idx) = toLog_(JYe);
@@ -192,9 +192,9 @@ class SpinerOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real AbsorptionCoefficient(const Real rho, const Real temp,
-                                  const Real Ye, const RadiationType type,
-                                  const Real nu, Real *lambda = nullptr) const {
+  Real AbsorptionCoefficient(const Real rho, const Real temp, const Real Ye,
+                             const RadiationType type, const Real nu,
+                             Real *lambda = nullptr) const {
     int idx;
     Real lRho, lT;
     toLogs_(rho, temp, type, lRho, lT, idx);
@@ -207,10 +207,11 @@ class SpinerOpacity {
   // TODO(JMM): Should we provide a raw copy operator instead of or
   // addition to interpolation?
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficient(
-      const Real rho, const Real temp, const Real Ye, const RadiationType type,
-      FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
-      Real *lambda = nullptr) const {
+  PORTABLE_INLINE_FUNCTION void
+  AbsorptionCoefficient(const Real rho, const Real temp, const Real Ye,
+                        const RadiationType type, FrequencyIndexer &nu_bins,
+                        DataIndexer &coeffs, const int nbins,
+                        Real *lambda = nullptr) const {
     int idx;
     Real lRho, lT;
     toLogs_(rho, temp, type, lRho, lT, idx);
@@ -220,11 +221,14 @@ class SpinerOpacity {
     }
   }
 
-  // Angle-averaged absorption coefficient assumed to be the same as absorption coefficient
+  // Angle-averaged absorption coefficient assumed to be the same as absorption
+  // coefficient
   PORTABLE_INLINE_FUNCTION
   Real AngleAveragedAbsorptionCoefficient(const Real rho, const Real temp,
-                                  const Real Ye, const RadiationType type,
-                                  const Real nu, Real *lambda = nullptr) const {
+                                          const Real Ye,
+                                          const RadiationType type,
+                                          const Real nu,
+                                          Real *lambda = nullptr) const {
     int idx;
     Real lRho, lT;
     toLogs_(rho, temp, type, lRho, lT, idx);
@@ -265,9 +269,9 @@ class SpinerOpacity {
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void
   EmissivityPerNuOmega(const Real rho, const Real temp, const Real Ye,
-                       const RadiationType type,
-                       FrequencyIndexer &nu_bins, DataIndexer &coeffs,
-                       const int nbins, Real *lambda = nullptr) const {
+                       const RadiationType type, FrequencyIndexer &nu_bins,
+                       DataIndexer &coeffs, const int nbins,
+                       Real *lambda = nullptr) const {
     int idx;
     Real lRho, lT;
     toLogs_(rho, temp, type, lRho, lT, idx);
@@ -322,17 +326,22 @@ class SpinerOpacity {
 
   PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfTNu(const Real temp, const RadiationType type,
-    const Real nu, Real *lambda = nullptr) const {
-      return dist_.ThermalDistributionOfTNu(temp, type, nu, lambda);
-    }
+                                const Real nu, Real *lambda = nullptr) const {
+    return dist_.ThermalDistributionOfTNu(temp, type, nu, lambda);
+  }
 
   PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfT(const Real temp, const RadiationType type,
-    Real *lambda = nullptr) const {
-      return dist_.ThermalDistributionOfT(temp, type, lambda);
-    }
+                              Real *lambda = nullptr) const {
+    return dist_.ThermalDistributionOfT(temp, type, lambda);
+  }
 
-private:
+  PORTABLE_INLINE_FUNCTION Real ThermalNumberDistribution(
+      const Real temp, const RadiationType type, Real *lambda = nullptr) const {
+    return dist_.ThermalNumberDistribution(temp, type, lambda);
+  }
+
+ private:
   // TODO(JMM): Offsets probably not necessary
   PORTABLE_INLINE_FUNCTION Real toLog_(const Real x, const Real offset) const {
     return std::log10(std::abs(std::max(x, -offset) + offset) + EPS);

@@ -134,16 +134,20 @@ class GrayOpacity {
 
   PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfTNu(const Real temp, const RadiationType type,
-    const Real nu, Real *lambda = nullptr) const {
-      return dist_.ThermalDistributionOfTNu(temp, type, nu, lambda);
-    }
+                                const Real nu, Real *lambda = nullptr) const {
+    return dist_.ThermalDistributionOfTNu(temp, type, nu, lambda);
+  }
 
   PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfT(const Real temp, const RadiationType type,
-    Real *lambda = nullptr) const {
-      return dist_.ThermalDistributionOfT(temp, type, lambda);
-    }
+                              Real *lambda = nullptr) const {
+    return dist_.ThermalDistributionOfT(temp, type, lambda);
+  }
 
+  PORTABLE_INLINE_FUNCTION Real ThermalNumberDistribution(
+      const Real temp, const RadiationType type, Real *lambda = nullptr) const {
+    return dist_.ThermalNumberDistribution(temp, type, lambda);
+  }
 
  private:
   Real kappa_; // Opacity. Units of cm^2/g

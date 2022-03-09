@@ -192,6 +192,36 @@ class Variant {
         opac_);
   }
 
+  // Specific intensity of thermal distribution
+  PORTABLE_INLINE_FUNCTION Real ThermalDistributionOfTNu(const Real temp,
+   const Real nu, Real *lambda = nullptr) const {
+     return mpark::visit(
+       [=](const auto &opac) {
+         return opac.ThermalDistributionOfTNu(temp, nu, lambda);
+       },
+       opac_);
+   }
+
+  // Energy density of thermal distribution
+  PORTABLE_INLINE_FUNCTION Real ThermalDistributionOfT(const Real temp,
+   Real *lambda = nullptr) const {
+     return mpark::visit(
+       [=](const auto &opac) {
+         return opac.ThermalDistributionOfT(temp, lambda);
+       },
+       opac_);
+   }
+
+  // Number density of thermal distribution
+  PORTABLE_INLINE_FUNCTION Real ThermalNumberDistribution(const Real temp,
+   Real *lambda = nullptr) const {
+     return mpark::visit(
+       [=](const auto &opac) {
+         return opac.ThermalNumberDistribution(temp, lambda);
+       },
+       opac_);
+   }
+
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept {
     return mpark::visit([](const auto &opac) { return opac.nlambda(); }, opac_);

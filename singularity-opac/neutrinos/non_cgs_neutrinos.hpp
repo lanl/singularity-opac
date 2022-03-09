@@ -194,6 +194,13 @@ class NonCGSUnits {
     return BoH * inv_energy_dens_unit_;
   }
 
+  PORTABLE_INLINE_FUNCTION
+  Real ThermalNumberDistribution(const Real temp, const RadiationType type,
+                                 Real *lambda = nullptr) const {
+    Real NoH = opac_.ThermalNumberDistribution(temp, type, lambda);
+    return NoH * mass_unit_ / rho_unit_;
+  }
+
  private:
   Opac opac_;
   Real time_unit_, mass_unit_, length_unit_, temp_unit_;
