@@ -61,7 +61,7 @@ struct PlanckDistribution {
       const Emissivity &J, const Real rho, const Real temp, const Real nu,
       Real *lambda = nullptr) const {
     Real Bnu = ThermalDistributionOfTNu(temp, nu, lambda);
-    Real jnu = J.EmissivityPerNu(rho, temp, nu, lambda)/(4.*M_PI);
+    Real jnu = J.EmissivityPerNu(rho, temp, nu, lambda) / (4. * M_PI);
     return jnu / Bnu;
   }
 };
