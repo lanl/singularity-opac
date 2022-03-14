@@ -18,6 +18,7 @@
 
 #include <variant/include/mpark/variant.hpp>
 
+#include <singularity-opac/neutrinos/brt_neutrinos.hpp>
 #include <singularity-opac/neutrinos/gray_opacity_neutrinos.hpp>
 #include <singularity-opac/neutrinos/neutrino_variant.hpp>
 #include <singularity-opac/neutrinos/non_cgs_neutrinos.hpp>
@@ -29,11 +30,13 @@ namespace singularity {
 namespace neutrinos {
 
 // TODO(JMM): Include chemical potential
+using BRTOpac = BRTOpacity<FermiDiracDistributionNoMu<3>>;
 using Gray = GrayOpacity<FermiDiracDistributionNoMu<3>>;
 using Tophat = TophatEmissivity<FermiDiracDistributionNoMu<3>>;
 using SpinerOpac = SpinerOpacity<FermiDiracDistributionNoMu<3>>;
 
-using Opacity = impl::Variant<Gray, Tophat, SpinerOpac, NonCGSUnits<Gray>,
+using Opacity = impl::Variant<BRTOpac, Gray, Tophat, SpinerOpac,
+                              NonCGSUnits<BRTOpac>, NonCGSUnits<Gray>,
                               NonCGSUnits<Tophat>, NonCGSUnits<SpinerOpac>>;
 
 } // namespace neutrinos
