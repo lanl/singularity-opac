@@ -160,9 +160,9 @@ class TophatEmissivity {
     return dist_.ThermalDistributionOfT(temp, type, lambda);
   }
 
-  PORTABLE_INLINE_FUNCTION Real ThermalNumberDistribution(
+  PORTABLE_INLINE_FUNCTION Real ThermalNumberDistributionOfT(
       const Real temp, const RadiationType type, Real *lambda = nullptr) const {
-    return dist_.ThermalNumberDistribution(temp, type, lambda);
+    return dist_.ThermalNumberDistributionOfT(temp, type, lambda);
   }
 
  private:

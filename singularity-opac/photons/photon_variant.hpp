@@ -212,10 +212,10 @@ class Variant {
 
   // Number density of thermal distribution
   PORTABLE_INLINE_FUNCTION Real
-  ThermalNumberDistribution(const Real temp, Real *lambda = nullptr) const {
+  ThermalNumberDistributionOfT(const Real temp, Real *lambda = nullptr) const {
     return mpark::visit(
         [=](const auto &opac) {
-          return opac.ThermalNumberDistribution(temp, lambda);
+          return opac.ThermalNumberDistributionOfT(temp, lambda);
         },
         opac_);
   }
