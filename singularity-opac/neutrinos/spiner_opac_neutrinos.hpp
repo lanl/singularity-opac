@@ -40,12 +40,6 @@
 // JMM: Doing everything in log-log, because everything should be
 // positive and should roughly follow a power law actually.
 
-// TODO(JMM): Should the table be tabulated in frequencies or MeV?
-// MeV probably makes more sense, even if the host code uses
-// frequencies.
-// Same goes for temperatures: Kelvin or MeV? I lean towards Kelvin
-// fairly arbitrarily.
-
 // TODO(JMM): The dynamic range in the mantissa is too large, so we
 // can't use log10 for floats and take advantage of that performance
 // enhancement, unfortunately.
@@ -336,9 +330,9 @@ class SpinerOpacity {
     return dist_.ThermalDistributionOfT(temp, type, lambda);
   }
 
-  PORTABLE_INLINE_FUNCTION Real ThermalNumberDistribution(
+  PORTABLE_INLINE_FUNCTION Real ThermalNumberDistributionOfT(
       const Real temp, const RadiationType type, Real *lambda = nullptr) const {
-    return dist_.ThermalNumberDistribution(temp, type, lambda);
+    return dist_.ThermalNumberDistributionOfT(temp, type, lambda);
   }
 
  private:
