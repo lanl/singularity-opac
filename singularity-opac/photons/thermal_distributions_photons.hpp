@@ -39,14 +39,14 @@ struct PlanckDistribution {
   PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfT(const Real temp, Real *lambda = nullptr) const {
     return 8. * std::pow(M_PI, 5) * std::pow(pc::kb, 4) * std::pow(temp, 4) /
-           (15. * std::pow(pc::c, 3) * std::pow(pc::h, 3));
+           (15. * std::pow(pc::c, 2) * std::pow(pc::h, 3));
   }
   PORTABLE_INLINE_FUNCTION
-  Real ThermalNumberDistribution(const Real temp,
+  Real ThermalNumberDistributionOfT(const Real temp,
                                  Real *lambda = nullptr) const {
     constexpr Real zeta3 = 1.20206;
     return 16. * pow(pc::kb, 3) * M_PI * pow(temp, 3) * zeta3 /
-           (pow(pc::c, 3) * pow(pc::h, 3));
+           (pow(pc::c, 2) * pow(pc::h, 3));
   }
   template <typename Emissivity>
   PORTABLE_INLINE_FUNCTION Real AbsorptionCoefficientFromKirkhoff(
