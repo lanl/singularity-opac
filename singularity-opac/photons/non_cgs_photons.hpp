@@ -181,7 +181,7 @@ class NonCGSUnits {
 
   PORTABLE_INLINE_FUNCTION
   Real ThermalNumberDistributionOfT(const Real temp,
-                                 Real *lambda = nullptr) const {
+                                    Real *lambda = nullptr) const {
     Real NoH = opac_.ThermalNumberDistributionOfT(temp, lambda);
     return NoH * mass_unit_ / rho_unit_;
   }

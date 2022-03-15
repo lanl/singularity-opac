@@ -43,7 +43,7 @@ struct PlanckDistribution {
   }
   PORTABLE_INLINE_FUNCTION
   Real ThermalNumberDistributionOfT(const Real temp,
-                                 Real *lambda = nullptr) const {
+                                    Real *lambda = nullptr) const {
     constexpr Real zeta3 = 1.20206;
     return 16. * pow(pc::kb, 3) * M_PI * pow(temp, 3) * zeta3 /
            (pow(pc::c, 2) * pow(pc::h, 3));
