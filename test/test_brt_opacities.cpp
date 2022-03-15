@@ -68,7 +68,6 @@ TEST_CASE("BRT neutrino opacities", "[BRTNeutrinos]") {
           "calc emissivities", 0, 100, PORTABLE_LAMBDA(const int &i) {
             Real jnu = opac.EmissivityPerNuOmega(rho, temp, Ye, type, nu);
             Real Jnu = opac.EmissivityPerNu(rho, temp, Ye, type, nu);
-            printf("jnu: %e Jnu: %e\n", jnu, Jnu);
             if (FractionalDifference(Jnu, 4 * M_PI * jnu) > EPS_TEST) {
               n_wrong_d() += 1;
             }
@@ -134,7 +133,7 @@ TEST_CASE("BRT neutrino opacities", "[BRTNeutrinos]") {
       Real nu_min = std::pow(10, lnu_min);
       Real nu_max = std::pow(10, lnu_max);
 
-      constexpr Real lt_min = -1;
+      constexpr Real lt_min = 0;
       constexpr Real lt_max = 2;
       Real dt = (lt_max - lt_min) / (Real)(ntemps - 1);
 

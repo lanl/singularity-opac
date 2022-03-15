@@ -155,7 +155,8 @@ class BRTOpacity {
            pow((pc::h * nu + Deltanp_) / (pc::me * pc::c * pc::c), 2);
   }
 
-  Real GetAlphac(const Real rho, const Real temp, const RadiationType type) const {
+  Real GetAlphac(const Real rho, const Real temp,
+                 const RadiationType type) const {
     if (type != RadiationType::NU_ELECTRON) {
       return 0.;
     }
@@ -168,7 +169,8 @@ class BRTOpacity {
     return retval;
   }
 
-  Real GetNAlphac(const Real rho, const Real temp, const RadiationType type) const {
+  Real GetNAlphac(const Real rho, const Real temp,
+                  const RadiationType type) const {
     Real retval = (1. + 3. * gA_ * gA_) * pow(pc::kb * temp, 3) * rho * sigma0_;
     retval *= (7. * pc::kb * pow(M_PI, 4) * temp * Deltanp_ +
                90. * pow(Deltanp_, 2) * zeta3_ +
