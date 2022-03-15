@@ -80,7 +80,7 @@ TEST_CASE("BRT neutrino opacities", "[BRTNeutrinos]") {
       REQUIRE(n_wrong_h == 0);
     }
 
-    WHEN("We create a gray opacity object in non-cgs units") {
+    WHEN("We create a BRT opacity object in non-cgs units") {
       constexpr Real time_unit = 123;
       constexpr Real mass_unit = 456;
       constexpr Real length_unit = 789;
