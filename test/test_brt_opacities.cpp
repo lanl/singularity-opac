@@ -89,8 +89,9 @@ TEST_CASE("BRT neutrino opacities", "[BRTNeutrinos]") {
           mass_unit / (length_unit * length_unit * length_unit);
       constexpr Real j_unit = mass_unit / (length_unit * time_unit * time_unit);
       neutrinos::Opacity funny_units_host =
-          neutrinos::NonCGSUnits<neutrinos::BRTOpac>(
-              neutrinos::BRTOpac(), time_unit, mass_unit, length_unit, temp_unit);
+          neutrinos::NonCGSUnits<neutrinos::BRTOpac>(neutrinos::BRTOpac(),
+                                                     time_unit, mass_unit,
+                                                     length_unit, temp_unit);
       auto funny_units = funny_units_host.GetOnDevice();
 
       THEN("We can convert meaningfully into and out of funny units") {

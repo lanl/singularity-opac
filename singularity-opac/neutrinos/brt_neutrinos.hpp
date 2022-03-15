@@ -49,7 +49,7 @@ class BRTOpacity {
                              Real *lambda = nullptr) const {
     return rho / mu_ * GetSigmac(type, nu);
   }
-    template <typename FrequencyIndexer, typename DataIndexer>
+  template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void
   AbsorptionCoefficient(const Real rho, const Real temp, const Real Ye,
                         const RadiationType type, FrequencyIndexer &nu_bins,
@@ -60,7 +60,7 @@ class BRTOpacity {
     }
   }
 
-    PORTABLE_INLINE_FUNCTION
+  PORTABLE_INLINE_FUNCTION
   Real AngleAveragedAbsorptionCoefficient(const Real rho, const Real temp,
                                           const Real Ye,
                                           const RadiationType type,
@@ -69,7 +69,7 @@ class BRTOpacity {
     return rho / mu_ * GetSigmac(type, nu);
   }
 
-    template <typename FrequencyIndexer, typename DataIndexer>
+  template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficient(
       const Real rho, const Real temp, const Real Ye, const RadiationType type,
       FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
@@ -87,7 +87,7 @@ class BRTOpacity {
     return rho / mu_ * GetSigmac(type, nu) * Bnu;
   }
 
-    template <typename FrequencyIndexer, typename DataIndexer>
+  template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void
   EmissivityPerNuOmega(const Real rho, const Real temp, const Real Ye,
                        const RadiationType type, FrequencyIndexer &nu_bins,
@@ -115,18 +115,17 @@ class BRTOpacity {
       coeffs[i] = EmissivityPerNu(rho, temp, Ye, type, nu_bins[i], lambda);
     }
   }
-    PORTABLE_INLINE_FUNCTION
+  PORTABLE_INLINE_FUNCTION
   Real Emissivity(const Real rho, const Real temp, const Real Ye,
                   const RadiationType type, Real *lambda = nullptr) const {
     Real B = dist_.ThermalDistributionOfT(temp, type, lambda);
-    return 4 * M_PI * rho * 0. * B;
+    return 4 * M_PI * GetAlphac(rho, temp, type);
   }
 
   PORTABLE_INLINE_FUNCTION
   Real NumberEmissivity(const Real rho, const Real temp, Real Ye,
                         RadiationType type, Real *lambda = nullptr) const {
-    return 4 * M_PI * 0. *
-           dist_.ThermalNumberDistribution(temp, type, lambda);
+    return 4 * M_PI * GetNAlphac(rho, temp, type);
   }
 
   PORTABLE_INLINE_FUNCTION
@@ -151,17 +150,43 @@ class BRTOpacity {
     if (type != RadiationType::NU_ELECTRON) {
       return 0.;
     }
-    printf("nu: %e type: %i sigma0_: %e\n", nu, static_cast<int>(type), sigma0_);
-    printf("hbar*c: %e me*c^2: %e\n", pc::hbar*pc::c, pc::me*pc::c*pc::c);
 
-    return sigma0_;
+    return sigma0_ * ((1. + 3. * gA_ * gA_) / 4.) *
+           pow((pc::h * nu + Deltanp_) / (pc::me * pc::c * pc::c), 2);
   }
+
+  Real GetAlphac(const Real rho, const Real temp, const RadiationType type) {
+    if (type != RadiationType::NU_ELECTRON) {
+      return 0.;
+    }
+
+    Real retval = (1. + 3. * gA_ * gA_) * pow(pc::kb * temp, 4) * rho * sigma0_;
+    retval *= (310. * pow(pc::kb * temp, 2) * pow(M_PI, 6) +
+               147. * pow(M_PI, 4) * Deltanp_ * Deltanp_ +
+               113400. * pc::kb * temp * Deltanp_ * zeta5_);
+    retval /= (5040. * pow(pc::c, 6) * pow(pc::h, 3) * pow(pc::me, 2) * mu_);
+    return retval;
+  }
+
+  Real GetNAlphac(const Real rho, const Real temp, const RadiationType type) {
+    Real retval = (1. + 3. * gA_ * gA_) * pow(pc::kb * temp, 3) * rho * sigma0_;
+    retval *= (7. * pc::kb * pow(M_PI, 4) * temp * Deltanp_ +
+               90. * pow(Deltanp_, 2) * zeta3_ +
+               1350. * pow(pc::kb * temp, 2) * zeta5_);
+    retval /= (120. * pow(pc::c, 6) * pow(pc::h, 3) * pow(pc::me, 2) * mu_);
+    return retval;
+  }
+
   const Real Fc_ =
       4.543791885043567014e+00; // Fermi coupling constant. Units of erg^-2
   const Real sigma0_ = 4. * Fc_ * Fc_ * pc::c * pc::c * pc::hbar * pc::hbar *
                        pc::me * pc::me * pc::c * pc::c * pc::c * pc::c /
                        M_PI; // Fiducial weak cross section. Units of cm^2
+  const Real gA_ = -1.23;
+  const Real Deltanp_ = 2.072126995e-6; // erg
   const Real mu_ = pc::mp;
+  const Real zeta3_ = 1.2020569031595942853;
+  const Real zeta5_ = 1.0369277551433699263;
   ThermalDistribution dist_;
 };
 
