@@ -16,10 +16,16 @@ Performance Portable Opacity and Emissivity for simulation codes
 ## API
 
 singularity-opac provides a uniform API for all opacity models. The following functions are provided
-(here, $\sigma$ is the frequency- and angle-dependent cross section in units of $cm^2$):
+(here, `\sigma` is the frequency- and angle-dependent cross section in units of `cm^2`):
 | Function              | Expression | Description            | Units   |
 | --------------------- | ---------- | ---------------------  | ------- |
-| AbsorptionCoefficient | $n \sigma$ | Absorption coefficient | $cm^-1$ |
+| AbsorptionCoefficient | `n \sigma` | Absorption coefficient | `cm^{-1}` |
+| AngleAveragedAbsorptionCoefficient | `\frac{1}{4 \pi}\int d\Omega n \sigma` |Absorption coefficient averaged over solid angle | `cm^{-1}` |
+| EmissivityPerNuOmega | `j_{\nu} = \frac{dE}{d^3x dt d\Omega d\nu}` | Frequency- and angle-dependent emissivity | $erg cm^{-3} s^{-1} Sr^{-1} Hz^{-1}$ |
+| EmissivityPerNu | `\int j_{\nu} d\nu`  | Frequency-dependent emissivity | `erg cm^{-3} s^{-1} Sr^{-1}` |
+| Emissivity | `\int j_{\nu} d\nu d\Omega`  | Total emissivity | `erg cm^{-3} s^{-1}` |
+
+Note that the thermal radiation energy density `u = 1/c ThermalDistributionOfT` and the thermal radiation number density `n = 1/c ThermalNumberDistribution`.
 
 
 ## To Build
@@ -51,22 +57,7 @@ A number of options are avaialable for compiling:
 
 | Option                            | Default | Comment                                                                              |
 | --------------------------------- | ------- | ------------------------------------------------------------------------------------ |
-| SINGULARITY_USE_HDF5              | ON      | Enables HDF5. Required for SpinerEOS, StellarCollapseEOS, and sesame2spiner          |
-| SINGULARITY_USE_FORTRAN           | ON      | Enable Fortran API for equation of state                                             |
-| SINGULARITY_USE_KOKKOS            | OFF     | Uses Kokkos as the portability backend. Currently only Kokkos is supported for GPUs. |
-| SINGULARITY_USE_EOSPAC            | OFF     | Link against EOSPAC. Needed for sesame2spiner and some tests.                        |
-| SINGULARITY_USE_CUDA              | OFF     | Target nvidia GPUs via cuda. Currently requires Kokkos.                              |
-| SINGULARITY_USE_KOKKOSKERNELS     | OFF     | Use Kokkos Kernels for linear algebra. Needed for mixed cell closure models on GPU   |
-| SINGULARITY_BUILD_CLOSURE         | ON      | Builds mixed cell closure machinery for multi-material problems                      |
 | SINGULARITY_BUILD_TESTS           | OFF     | Build test infrastructure.                                                           |
-| SINGULARITY_TEST_SESAME           | OFF     | Test the Sesame table readers                                                        |
-| SINGULARITY_TEST_STELLAR_COLLAPSE | OFF     | Test the Stellar Collapse table readers                                              |
-| SINGULARITY_BUILD_SESAME2SPINER   | OFF     | Builds the conversion tool sesame2spiner which makes files readable by SpinerEOS     |
-| SINGULARITY_BUILD_STELLARCOLLAPSE2SPINER | OFF     | Builds the conversion tool stellarcollapse2spiner which optionally makes stellar collapse files faster to read |
-| SINGULARITY_INVERT_AT_SETUP       | OFF     | For tests, pre-invert eospac tables.                                                 |
-| SINGULARITY_BETTER_DEBUG_FLAGS    | ON      | Enables nicer GPU debug flags. May interfere with in-tree builds as a submodule      |
-| SINGULARITY_HIDE_MORE_WARNINGS    | OFF     | Makes warnings less verbose. May interfere with in-tree builds as a submodule        |
-| SINGULARITY_SUBMODULE_MODE        | OFF     | Sets cmake flags for in-tree builds                                                  |
 
 ## Units
 
