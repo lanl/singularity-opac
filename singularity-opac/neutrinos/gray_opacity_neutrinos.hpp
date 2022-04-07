@@ -71,6 +71,21 @@ class GrayOpacity {
     return rho * kappa_;
   }
 
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp,
+                                       const Real Ye, const RadiationType type,
+                                       Real *lambda = nullptr) const {
+    return rho * kappa_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandMeanAbsorptionCoefficient(const Real rho, const Real temp,
+                                          const Real Ye,
+                                          const RadiationType type,
+                                          Real *lambda = nullptr) const {
+    return rho * kappa_;
+  }
+
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficient(
       const Real rho, const Real temp, const Real Ye, const RadiationType type,

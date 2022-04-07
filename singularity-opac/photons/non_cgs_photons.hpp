@@ -77,6 +77,22 @@ class NonCGSUnits {
   }
 
   PORTABLE_INLINE_FUNCTION
+  Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp,
+                                       Real *lambda = nullptr) const {
+    const Real alpha = opac_.PlanckMeanAbsorptionCoefficient(
+        rho_unit_ * rho, temp_unit_ * temp, lambda);
+    return alpha * length_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandMeanAbsorptionCoefficient(const Real rho, const Real temp,
+                                          Real *lambda = nullptr) const {
+    const Real alpha = opac_.RosselandMeanAbsorptionCoefficient(
+        rho_unit_ * rho, temp_unit_ * temp, lambda);
+    return alpha * length_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
   Real AngleAveragedAbsorptionCoefficient(const Real rho, const Real temp,
                                           const Real nu,
                                           Real *lambda = nullptr) const {

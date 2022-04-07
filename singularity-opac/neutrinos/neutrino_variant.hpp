@@ -126,6 +126,34 @@ class Variant {
         opac_);
   }
 
+  // Planck mean absorption coefficient with units of 1/length
+  // Signature should be at least
+  // rho, temp, Ye, type, lambda
+  PORTABLE_INLINE_FUNCTION Real PlanckMeanAbsorptionCoefficient(
+      const Real rho, const Real temp, const Real Ye, const RadiationType type,
+      Real *lambda = nullptr) const {
+    return mpark::visit(
+        [=](const auto &opac) {
+          return opac.PlanckMeanAbsorptionCoefficient(rho, temp, Ye, type,
+                                                      lambda);
+        },
+        opac_);
+  }
+
+  // Rosseland mean absorption coefficient with units of 1/length
+  // Signature should be at least
+  // rho, temp, Ye, type, lambda
+  PORTABLE_INLINE_FUNCTION Real RosselandMeanAbsorptionCoefficient(
+      const Real rho, const Real temp, const Real Ye, const RadiationType type,
+      Real *lambda = nullptr) const {
+    return mpark::visit(
+        [=](const auto &opac) {
+          return opac.RosselandMeanAbsorptionCoefficient(rho, temp, Ye, type,
+                                                         lambda);
+        },
+        opac_);
+  }
+
   // emissivity with units of energy/time/frequency/volume/angle
   // signature should be at least rho, temp, Ye, type, nu, lambda
   PORTABLE_INLINE_FUNCTION Real EmissivityPerNuOmega(

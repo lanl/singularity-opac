@@ -43,37 +43,52 @@ class GrayOpacity {
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION
-  Real AbsorptionCoefficientPerNu(const Real rho, const Real temp,
-                                  const Real nu, Real *lambda = nullptr) const {
+  Real AbsorptionCoefficient(const Real rho, const Real temp, const Real nu,
+                             Real *lambda = nullptr) const {
     return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, nu,
                                                    lambda);
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
   PORTABLE_INLINE_FUNCTION void
-  AbsorptionCoefficientPerNu(const Real rho, const Real temp,
-                             FrequencyIndexer &nu_bins, DataIndexer &coeffs,
-                             const int nbins, Real *lambda = nullptr) const {
+  AbsorptionCoefficient(const Real rho, const Real temp,
+                        FrequencyIndexer &nu_bins, DataIndexer &coeffs,
+                        const int nbins, Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
-      coeffs[i] = AbsorptionCoefficientPerNu(rho, temp, nu_bins[i], lambda);
+      coeffs[i] = AbsorptionCoefficient(rho, temp, nu_bins[i], lambda);
     }
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real AngleAveragedAbsorptionCoefficientPerNu(const Real rho, const Real temp,
-                                               const Real nu,
-                                               Real *lambda = nullptr) const {
+  Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp,
+                                       const Real Ye, const RadiationType type,
+                                       Real *lambda = nullptr) const {
+    return rho * kappa_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandMeanAbsorptionCoefficient(const Real rho, const Real temp,
+                                          const Real Ye,
+                                          const RadiationType type,
+                                          Real *lambda = nullptr) const {
+    return rho * kappa_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real AngleAveragedAbsorptionCoefficient(const Real rho, const Real temp,
+                                          const Real nu,
+                                          Real *lambda = nullptr) const {
     return dist_.AngleAveragedAbsorptionCoefficientFromKirkhoff(
         *this, rho, temp, nu, lambda);
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficientPerNu(
+  PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficient(
       const Real rho, const Real temp, FrequencyIndexer &nu_bins,
       DataIndexer &coeffs, const int nbins, Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
-      coeffs[i] = AngleAveragedAbsorptionCoefficientPerNu(rho, temp, nu_bins[i],
-                                                          lambda);
+      coeffs[i] =
+          AngleAveragedAbsorptionCoefficient(rho, temp, nu_bins[i], lambda);
     }
   }
 

@@ -61,6 +61,21 @@ class BRTOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
+  Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp,
+                                       const Real Ye, const RadiationType type,
+                                       Real *lambda = nullptr) const {
+    OPAC_ERROR("Planck mean currently not implemented for BRT!");
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandMeanAbsorptionCoefficient(const Real rho, const Real temp,
+                                          const Real Ye,
+                                          const RadiationType type,
+                                          Real *lambda = nullptr) const {
+    OPAC_ERROR("Rosseland mean currently not implemented for BRT!");
+  }
+
+  PORTABLE_INLINE_FUNCTION
   Real AngleAveragedAbsorptionCoefficient(const Real rho, const Real temp,
                                           const Real Ye,
                                           const RadiationType type,
