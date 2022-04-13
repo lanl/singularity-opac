@@ -215,21 +215,6 @@ class SpinerOpacity {
     }
   }
 
-  PORTABLE_INLINE_FUNCTION
-  Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp,
-                                       const Real Ye, const RadiationType type,
-                                       Real *lambda = nullptr) const {
-    OPAC_ERROR("Planck mean currently not implemented for tabulated data!");
-  }
-
-  PORTABLE_INLINE_FUNCTION
-  Real RosselandMeanAbsorptionCoefficient(const Real rho, const Real temp,
-                                          const Real Ye,
-                                          const RadiationType type,
-                                          Real *lambda = nullptr) const {
-    OPAC_ERROR("Rosseland mean currently not implemented for tabulated data!");
-  }
-
   // Angle-averaged absorption coefficient assumed to be the same as absorption
   // coefficient
   PORTABLE_INLINE_FUNCTION
