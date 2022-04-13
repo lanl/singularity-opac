@@ -52,6 +52,24 @@ struct FermiDiracDistributionNoMu {
     return 12. * pow(pc::kb, 3) * M_PI * NSPECIES * pow(temp, 3) * zeta3 /
            (pow(pc::c, 2) * pow(pc::h, 3));
   }
+  PORTABLE_INLINE_FUNCTION
+  Real EnergyDensityFromTemperature(const Real temp, const RadiationType type,
+                                    Real *lambda = nullptr) const {
+    return ThermalDistributionOfT(temp, type, lambda) / pc::c;
+  }
+  PORTABLE_INLINE_FUNCTION
+  Real TemperatureFromEnergyDensity(const Real er, const RadiationType type,
+                                    Real *lambda = nullptr) const {
+    return std::pow(
+        15. * std::pow(pc::c, 3) * std::pow(pc::h, 3) * er /
+            (7. * std::pow(M_PI, 5) * std::pow(pc::kb, 4) * NSPECIES),
+        1. / 4.);
+  }
+  PORTABLE_INLINE_FUNCTION
+  Real NumberDensityFromTemperature(const Real temp, const RadiationType type,
+                                    Real *lambda = nullptr) const {
+    return ThermalNumberDistributionOfT(temp, type, lambda) / pc::c;
+  }
   template <typename Emissivity>
   PORTABLE_INLINE_FUNCTION Real AbsorptionCoefficientFromKirkhoff(
       const Emissivity &J, const Real rho, const Real temp, const Real Ye,
