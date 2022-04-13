@@ -56,7 +56,7 @@ struct PlanckDistribution {
   PORTABLE_INLINE_FUNCTION
   Real TemperatureFromEnergyDensity(const Real er,
                                     Real *lambda = nullptr) const {
-    return pow(15. * std::pow(pc::c, 2) * std::pow(pc::h, 3) * er /
+    return pow(15. * std::pow(pc::c, 3) * std::pow(pc::h, 3) * er /
                    (8. * std::pow(M_PI, 5) * std::pow(pc::kb, 4)),
                1. / 4.);
   }
