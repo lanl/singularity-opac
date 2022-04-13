@@ -41,8 +41,6 @@ class MeanOpacity {
   MeanOpacity(const Opacity &opac, Real lRhoMin, Real lRhoMax, int NRho,
               Real lTMin, Real lTMax, int NT, Real YeMin, Real YeMax, int NYe,
               Real *lambda = nullptr) {
-    nlambda_ = opac.nlambda();
-
     lkappaPlanck_.resize(NRho, NT, NYe, NEUTRINO_NTYPES);
     // index 0 is the species and is not interpolatable
     lkappaPlanck_.setRange(1, YeMin, YeMax, NYe);
@@ -157,15 +155,12 @@ class MeanOpacity {
   }
 #endif
 
-  PORTABLE_INLINE_FUNCTION int nlambda() const { return nlambda_; }
-
   PORTABLE_INLINE_FUNCTION void PrintParams() const {
     printf("Mean opacity\n");
   }
 
   MeanOpacity GetOnDevice() {
     MeanOpacity other;
-    other.nlambda_ = nlambda_;
     other.lkappaPlanck_ = Spiner::getOnDeviceDataBox(lkappaPlanck_);
     other.lkappaRosseland_ = Spiner::getOnDeviceDataBox(lkappaRosseland_);
     return other;
@@ -205,9 +200,10 @@ class MeanOpacity {
   }
   Spiner::DataBox lkappaPlanck_;
   Spiner::DataBox lkappaRosseland_;
-  int nlambda_;
   const char *filename_;
 };
+
+#undef EPS
 
 } // namespace neutrinos
 } // namespace singularity
