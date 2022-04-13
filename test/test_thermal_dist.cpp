@@ -47,6 +47,7 @@ TEST_CASE("Neutrino thermal distribution", "[NeutrinoThermalDistribution]") {
   WHEN("We initialize a gray neutrino opacity") {
     constexpr Real MeV2K = 1e6 * pc::eV / pc::kb;
     constexpr Real temp = 10 * MeV2K; // 10 MeV
+    constexpr RadiationType type = RadiationType::NU_ELECTRON;
 
     neutrinos::Gray opac_host(1);
     neutrinos::Opacity opac = opac_host.GetOnDevice();
