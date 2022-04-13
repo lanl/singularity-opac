@@ -70,7 +70,6 @@ endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS On)
 
-
 # Patches variant to be compatible with cuda
 # Assumes "patch" is present on system
 message(STATUS "Patching mpark::variant to support GPUs")

@@ -128,7 +128,7 @@ class MeanOpacity {
   }
 
 #ifdef SPINER_USE_HDF
-  SpinerOpacity(const std::string &filename)
+  MeanOpacity(const std::string &filename)
       : filename_(filename.c_str()), memoryStatus_(impl::DataStatus::OnHost) {
     herr_t status = H5_SUCCESS;
     hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
