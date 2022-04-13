@@ -102,9 +102,9 @@ TEST_CASE("Photon thermal distribution", "[PhotonThermalDistribution]") {
       portableFor(
           "calc temperatures", 0, 100, PORTABLE_LAMBDA(const int &i) {
             Real Tr0 = (1. + 0.01 * i) * temp;
-            Real er = opac.EnergyDensityFromTemperature(Tr0, type);
-            Real B = opac.ThermalDistributionOfT(Tr0, type);
-            Real Tr = opac.TemperatureFromEnergyDensity(er, type);
+            Real er = opac.EnergyDensityFromTemperature(Tr0);
+            Real B = opac.ThermalDistributionOfT(Tr0);
+            Real Tr = opac.TemperatureFromEnergyDensity(er);
             if (FractionalDifference(er, B / pc::c) > EPS_TEST) {
               n_wrong_d() += 1;
             }
