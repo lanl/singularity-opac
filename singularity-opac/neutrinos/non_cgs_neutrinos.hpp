@@ -92,25 +92,6 @@ class NonCGSUnits {
     return alpha * length_unit_;
   }
 
-  PORTABLE_INLINE_FUNCTION
-  Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp,
-                                       const Real Ye, const RadiationType type,
-                                       Real *lambda = nullptr) const {
-    const Real alpha = opac_.PlanckMeanAbsorptionCoefficient(
-        rho_unit_ * rho, temp_unit_ * temp, Ye, type, lambda);
-    return alpha * length_unit_;
-  }
-
-  PORTABLE_INLINE_FUNCTION
-  Real RosselandMeanAbsorptionCoefficient(const Real rho, const Real temp,
-                                          const Real Ye,
-                                          const RadiationType type,
-                                          Real *lambda = nullptr) const {
-    const Real alpha = opac_.RosselandMeanAbsorptionCoefficient(
-        rho_unit_ * rho, temp_unit_ * temp, Ye, type, lambda);
-    return alpha * length_unit_;
-  }
-
   // TODO(JMM): Doing the frequency conversion here is SUPER gross.
   // Is there no better way? Should we just not allow modified units?
   template <typename FrequencyIndexer, typename DataIndexer>

@@ -97,30 +97,6 @@ class Variant {
         opac_);
   }
 
-  // Planck mean absorption coefficient with units of 1/length
-  // Signature should be at least
-  // rho, temp, lambda
-  PORTABLE_INLINE_FUNCTION Real PlanckMeanAbsorptionCoefficient(
-      const Real rho, const Real temp, Real *lambda = nullptr) const {
-    return mpark::visit(
-        [=](const auto &opac) {
-          return opac.PlanckMeanAbsorptionCoefficient(rho, temp, lambda);
-        },
-        opac_);
-  }
-
-  // Rosseland mean absorption coefficient with units of 1/length
-  // Signature should be at least
-  // rho, temp, lambda
-  PORTABLE_INLINE_FUNCTION Real RosselandMeanAbsorptionCoefficient(
-      const Real rho, const Real temp, Real *lambda = nullptr) const {
-    return mpark::visit(
-        [=](const auto &opac) {
-          return opac.RosselandMeanAbsorptionCoefficient(rho, temp, lambda);
-        },
-        opac_);
-  }
-
   // Angle-averaged absorption coefficient with units of 1/length
   // Signature should be at least
   // rho, temp, nu, lambda
