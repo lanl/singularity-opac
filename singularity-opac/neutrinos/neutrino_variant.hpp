@@ -242,6 +242,17 @@ class Variant {
         opac_);
   }
 
+  // Temperature derivative of specific intensity of thermal distribution
+  PORTABLE_INLINE_FUNCTION Real
+  DThermalDistributionOfTNuDT(const Real temp, const RadiationType type,
+                              const Real nu, Real *lambda = nullptr) const {
+    return mpark::visit(
+        [=](const auto &opac) {
+          return opac.DThermalDistributionOfTNuDT(temp, type, nu, lambda);
+        },
+        opac_);
+  }
+
   // Energy density of thermal distribution
   PORTABLE_INLINE_FUNCTION Real ThermalDistributionOfT(
       const Real temp, const RadiationType type, Real *lambda = nullptr) const {

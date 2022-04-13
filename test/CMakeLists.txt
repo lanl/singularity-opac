@@ -39,6 +39,7 @@ PRIVATE
   test_brt_opacities.cpp
   test_chebyshev.cpp
   test_spiner_opac_neutrinos.cpp
+  test_mean_opacities.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_unit_tests

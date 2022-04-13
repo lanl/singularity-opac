@@ -145,6 +145,12 @@ class GrayOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
+  Real DThermalDistributionOfTNuDT(const Real temp, const Real nu,
+                                   Real *lambda = nullptr) const {
+    return dist_.DThermalDistributionOfTNuDT(temp, nu, lambda);
+  }
+
+  PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfT(const Real temp, Real *lambda = nullptr) const {
     return dist_.ThermalDistributionOfT(temp, lambda);
   }
