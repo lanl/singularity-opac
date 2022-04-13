@@ -61,7 +61,7 @@ enum class DataStatus { Deallocated, OnDevice, OnHost };
 template <typename ThermalDistribution>
 class SpinerOpacity {
  public:
-  static constexpr Real EPS = 10.0 * std::numeric_limits<Real>::epsilon();
+  static constexpr Real EPS = 10.0 * std::numeric_limits<Real>::min();
   using pc = PhysicalConstants<CGS>;
   static constexpr Real Hz2MeV = pc::h / (1e6 * pc::eV);
   static constexpr Real MeV2Hz = 1 / Hz2MeV;
@@ -322,6 +322,13 @@ class SpinerOpacity {
   Real ThermalDistributionOfTNu(const Real temp, const RadiationType type,
                                 const Real nu, Real *lambda = nullptr) const {
     return dist_.ThermalDistributionOfTNu(temp, type, nu, lambda);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real DThermalDistributionOfTNuDT(const Real temp, const RadiationType type,
+                                   const Real nu,
+                                   Real *lambda = nullptr) const {
+    return dist_.DThermalDistributionOfTNuDT(temp, type, nu, lambda);
   }
 
   PORTABLE_INLINE_FUNCTION

@@ -189,6 +189,14 @@ class NonCGSUnits {
   }
 
   PORTABLE_INLINE_FUNCTION
+  Real DThermalDistributionOfTNuDT(const Real temp, const RadiationType type,
+                                   const Real nu,
+                                   Real *lambda = nullptr) const {
+    Real dBdToH = opac_.DThermalDistributionOfTNuDT(temp, type, nu, lambda);
+    return dBdToH * inv_intensity_unit_ * temp_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfT(const Real temp, const RadiationType type,
                               Real *lambda = nullptr) const {
     Real BoH = opac_.ThermalDistributionOfT(temp * temp_unit_, type, lambda);
@@ -232,6 +240,58 @@ class NonCGSUnits {
   Real time_unit_, mass_unit_, length_unit_, temp_unit_;
   Real rho_unit_, freq_unit_, inv_emiss_unit_, inv_num_emiss_unit_;
   Real inv_intensity_unit_, inv_energy_dens_unit_;
+};
+
+template <typename MeanOpac>
+class MeanNonCGSUnits {
+ public:
+  MeanNonCGSUnits() = default;
+  MeanNonCGSUnits(MeanOpac &&mean_opac, const Real time_unit,
+                  const Real mass_unit, const Real length_unit,
+                  const Real temp_unit)
+      : mean_opac_(std::forward<MeanOpac>(mean_opac)), time_unit_(time_unit),
+        mass_unit_(mass_unit), length_unit_(length_unit), temp_unit_(temp_unit),
+        rho_unit_(mass_unit_ / (length_unit_ * length_unit_ * length_unit_)) {}
+
+  auto GetOnDevice() {
+    return MeanNonCGSUnits<MeanOpac>(mean_opac_.GetOnDevice(), time_unit_,
+                                     mass_unit_, length_unit_, temp_unit_);
+  }
+  inline void Finalize() noexcept { mean_opac_.Finalize(); }
+
+  PORTABLE_INLINE_FUNCTION
+  int nlambda() const noexcept { return mean_opac_.nlambda(); }
+
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp,
+                                       const Real Ye,
+                                       const RadiationType type) const {
+    const Real alpha = mean_opac_.PlanckMeanAbsorptionCoefficient(
+        rho_unit_ * rho, temp_unit_ * temp, Ye, type);
+    // alpha output in units of 1/cm. Want to convert out of CGS.
+    // multiplication by length_unit converts length to cm.
+    // division converts length from cm to unit system.
+    // thus multiplication converts (1/cm) to unit system.
+    return alpha * length_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandMeanAbsorptionCoefficient(const Real rho, const Real temp,
+                                          const Real Ye,
+                                          const RadiationType type) const {
+    const Real alpha = mean_opac_.RosselandMeanAbsorptionCoefficient(
+        rho_unit_ * rho, temp_unit_ * temp, Ye, type);
+    // alpha output in units of 1/cm. Want to convert out of CGS.
+    // multiplication by length_unit converts length to cm.
+    // division converts length from cm to unit system.
+    // thus multiplication converts (1/cm) to unit system.
+    return alpha * length_unit_;
+  }
+
+ private:
+  MeanOpac mean_opac_;
+  Real time_unit_, mass_unit_, length_unit_, temp_unit_;
+  Real rho_unit_;
 };
 
 } // namespace neutrinos

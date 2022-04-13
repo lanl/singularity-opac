@@ -18,15 +18,21 @@
 
 namespace SP5 {
 
-  namespace Opac {
-    constexpr char defaultFileName[] = "opac.sp5";
-    constexpr char AbsorptionCoefficient[] = "absorption coefficient";
-    constexpr char AngleAveragedAbsorptionCoefficient[] = "angle-averaged absorption coefficient";
-    constexpr char EmissivityPerNu[] = "emissivity per nu";
-    constexpr char TotalEmissivity[] = "total emissivity";
-    constexpr char NumberEmissivity[] = "number emissivity";
-  }
+namespace Opac {
+constexpr char defaultFileName[] = "opac.sp5";
+constexpr char AbsorptionCoefficient[] = "absorption coefficient";
+constexpr char AngleAveragedAbsorptionCoefficient[] =
+    "angle-averaged absorption coefficient";
+constexpr char EmissivityPerNu[] = "emissivity per nu";
+constexpr char TotalEmissivity[] = "total emissivity";
+constexpr char NumberEmissivity[] = "number emissivity";
+} // namespace Opac
 
-}
+namespace MeanOpac {
+constexpr char PlanckMeanOpacity[] = "Planck mean opacity";
+constexpr char RosselandMeanOpacity[] = "Rosseland mean opacity";
+} // namespace MeanOpac
+
+} // namespace SP5
 
 #endif // SINGULARITY_OPAC_BASE_SP5_

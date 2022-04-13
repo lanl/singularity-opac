@@ -135,6 +135,13 @@ class BRTOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
+  Real DThermalDistributionOfTNuDT(const Real temp, const RadiationType type,
+                                   const Real nu,
+                                   Real *lambda = nullptr) const {
+    return dist_.DThermalDistributionOfTNuDT(temp, type, nu, lambda);
+  }
+
+  PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfT(const Real temp, const RadiationType type,
                               Real *lambda = nullptr) const {
     return dist_.ThermalDistributionOfT(temp, type, lambda);

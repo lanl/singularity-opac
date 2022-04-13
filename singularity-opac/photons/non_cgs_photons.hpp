@@ -175,6 +175,13 @@ class NonCGSUnits {
   }
 
   PORTABLE_INLINE_FUNCTION
+  Real DThermalDistributionOfTNuDT(const Real temp, const Real nu,
+                                   Real *lambda = nullptr) const {
+    Real dBdToH = opac_.DThermalDistributionOfTNuDT(temp, nu, lambda);
+    return dBdToH * inv_intensity_unit_ * temp_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfT(const Real temp, Real *lambda = nullptr) const {
     Real BoH = opac_.ThermalDistributionOfT(temp * temp_unit_, lambda);
     return BoH * inv_energy_dens_unit_ * time_unit_ / length_unit_;

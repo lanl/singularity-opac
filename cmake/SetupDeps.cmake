@@ -48,11 +48,11 @@ if (HDF5_FOUND)
     )
 
     # if HDF5 is parallel, also get MPI libraries
-    if (HDF5_IS_PARALELL)
+    if (HDF5_IS_PARALLEL)
       message(status "Parallel HDF5 found. Looking for MPI")
       # Provides MPI::MPI_CXX
       if (NOT TARGET MPI::MPI_CXX)
-	find_package(MPI COMPONENTS CXX REQUIRED)
+	find_package(MPI COMPONENTS)# CXX REQUIRED)
 	if (NOT MPI_FOUND)
 	  message(FATAL_ERROR
 	    "HDF5 parallel found, but could not find MPI! "

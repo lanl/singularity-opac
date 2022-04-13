@@ -18,6 +18,7 @@ singularity-opac provides a uniform API for all opacity models. The following fu
 | Emissivity | `\int j_{\nu} d\nu d\Omega`  | Total emissivity | `erg cm^{-3} s^{-1}` |
 | NumberEmissivity | `\int \frac{1}{h \nu} j_{\nu} d\Omega d\nu` | Total number emissivity | `cm^{-3} s^{-1}` |
 | ThermalDistributionOfTNu | `B_{\nu} = \frac{dE}{dA dt d\Omega d\nu}` | Specific intensity of thermal distribution | `erg cm^{-2} s^{-1} Sr^{-1} Hz^{-1}` |
+| DThermalDistributionOfTNuDT | `dB_{\nu}/dT` | Temperature derivative of specific intensity of thermal distribution | `erg cm^{-2} s^{-1} Sr^{-1} Hz^{-1} K^{-1}` |
 | ThermalDistributionOfT | `B = \int B_{\nu} d\Omega d\nu` | Frequency- and angle-integrated intensity of thermal distribution | `erg cm^{-2} s^{-1}` |
 | ThermalNumberDistributionOfT | `B = \int \frac{1}{h \nu} B_{\nu} d\Omega d\nu` | Frequency- and angle-integrated intensity of thermal distribution | `erg cm^{-2} s^{-1}` |
 
@@ -44,6 +45,7 @@ Then, in the singularity-opac root directory:
 mkdir -p bin
 cd bin
 cmake -DSINGULARITY_BUILD_TESTS=ON ..
+cmake -DSINGULARITY_BUILD_TESTS=ON -DSINGULARITY_USE_HDF5=ON -DCMAKE_CXX_COMPILER=mpicxx ..
 make -j
 make test
 ```

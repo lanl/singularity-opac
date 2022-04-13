@@ -37,6 +37,15 @@ struct PlanckDistribution {
     return Bnu;
   }
   PORTABLE_INLINE_FUNCTION
+  Real DThermalDistributionOfTNuDT(const Real temp, const Real nu,
+                                   Real *lambda = nullptr) const {
+    Real x = pc::h * nu / (pc::kb * temp);
+    Real dBnudT = (2. * pc::h * pc::h * nu * nu * nu * nu /
+                   (temp * temp * pc::c * pc::c * pc::kb)) *
+                  1. / (std::exp(x) + -1.);
+    return dBnudT;
+  }
+  PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfT(const Real temp, Real *lambda = nullptr) const {
     return 8. * std::pow(M_PI, 5) * std::pow(pc::kb, 4) * std::pow(temp, 4) /
            (15. * std::pow(pc::c, 2) * std::pow(pc::h, 3));
