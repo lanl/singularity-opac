@@ -43,8 +43,19 @@ PORTABLE_INLINE_FUNCTION T FractionalDifference(const T &a, const T &b) {
   return 2 * std::abs(b - a) / (std::abs(a) + std::abs(b) + 1e-20);
 }
 constexpr Real EPS_TEST = 1e-3;
+template <typename T>
+PORTABLE_INLINE_FUNCTION bool IsWrong(const T &a, const T &b) {
+  // We only care if the data is different and significantly nonzero.
+  constexpr Real ZERO =
+      std::numeric_limits<Real>::epsilon() / (EPS_TEST * EPS_TEST);
+  return ((std::isnan(a) || std::isnan(b)) ||
+          ((std::abs(a) > ZERO || std::abs(b) > ZERO) &&
+           FractionalDifference(a, b) > EPS_TEST));
+}
 
 TEST_CASE("Mean neutrino opacities", "[MeanNeutrinos]") {
+  const std::string grayname = "mean_gray.sp5";
+
   WHEN("We initialize a mean neutrino opacity") {
     constexpr Real MeV2K = 1e6 * pc::eV / pc::kb;
     constexpr Real MeV2Hz = 1e6 * pc::eV / pc::h;
@@ -110,14 +121,13 @@ TEST_CASE("Mean neutrino opacities", "[MeanNeutrinos]") {
       AND_THEN("The reloaded table matches the gray opacities") {
 
         neutrinos::MeanOpacity mean_opac_load =
-            mean_opac_load_host.GetOnDevice();
+            mean_opac_host_load.GetOnDevice();
 
         int n_wrong = 0;
         portableReduce(
             "rebuilt table vs gray", 0, NRho, 0, NT, 0, NYe, 0, NEUTRINO_NTYPES,
-            0, Ne,
             PORTABLE_LAMBDA(const int iRho, const int iT, const int iYe,
-                            const int itp, const int ie, int &accumulate) {
+                            const int itp, int &accumulate) {
               const Real lRho =
                   lRhoMin + (lRhoMax - lRhoMin) / (NRho - 1) * iRho;
               const Real rho = std::pow(10, lRho);

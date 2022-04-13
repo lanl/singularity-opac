@@ -45,6 +45,7 @@ Then, in the singularity-opac root directory:
 mkdir -p bin
 cd bin
 cmake -DSINGULARITY_BUILD_TESTS=ON ..
+cmake -DSINGULARITY_BUILD_TESTS=ON -DSINGULARITY_USE_HDF5=ON -DCMAKE_CXX_COMPILER=mpicxx ..
 make -j
 make test
 ```

@@ -19,11 +19,11 @@ jobs:
         - name: Set system to non-interactive mode
           run: export DEBIAN_FRONTEND=noninteractive
         - name: install dependencies
-          run: sudo apt-get install -y --force-yes -qq build-essential
+          run: sudo apt-get install -y --force-yes -qq build-essential libhdf5-serial-dev
         - name: build and run tests
           run: |
             mkdir -p bin
             cd bin
-            cmake -DSINGULARITY_BUILD_TESTS=ON ..
+            cmake -DSINGULARITY_BUILD_TESTS=ON -DSINGULARITY_USE_HDF5=ON ..
             make -j
             make test

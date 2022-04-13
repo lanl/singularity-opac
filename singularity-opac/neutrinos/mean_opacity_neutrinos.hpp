@@ -20,6 +20,7 @@
 
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
+#include <singularity-opac/base/sp5.hpp>
 #include <singularity-opac/constants/constants.hpp>
 #include <spiner/databox.hpp>
 
@@ -128,12 +129,12 @@ class MeanOpacity {
   }
 
 #ifdef SPINER_USE_HDF
-  MeanOpacity(const std::string &filename)
-      : filename_(filename.c_str()), memoryStatus_(impl::DataStatus::OnHost) {
+  MeanOpacity(const std::string &filename) : filename_(filename.c_str()) {
     herr_t status = H5_SUCCESS;
     hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-    status += lkappaPlanck_.loadHDF(file, SP5::Opac::PlanckMeanOpacity);
-    status += lkappaRosseland_.loadHDF(file, SP5::Opac::RosselandMeanOpacity);
+    status += lkappaPlanck_.loadHDF(file, SP5::MeanOpac::PlanckMeanOpacity);
+    status +=
+        lkappaRosseland_.loadHDF(file, SP5::MeanOpac::RosselandMeanOpacity);
     status += H5Fclose(file);
 
     if (status != H5_SUCCESS) {
@@ -145,8 +146,9 @@ class MeanOpacity {
     herr_t status = H5_SUCCESS;
     hid_t file =
         H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    status += lkappaPlanck_.saveHDF(file, SP5::Opac::PlanckMeanOpacity);
-    status += lkappaRosseland_.saveHDF(file, SP5::Opac::RosselandMeanOpacity);
+    status += lkappaPlanck_.saveHDF(file, SP5::MeanOpac::PlanckMeanOpacity);
+    status +=
+        lkappaRosseland_.saveHDF(file, SP5::MeanOpac::RosselandMeanOpacity);
     status += H5Fclose(file);
 
     if (status != H5_SUCCESS) {
@@ -204,6 +206,7 @@ class MeanOpacity {
   Spiner::DataBox lkappaPlanck_;
   Spiner::DataBox lkappaRosseland_;
   int nlambda_;
+  const char *filename_;
 };
 
 } // namespace neutrinos
