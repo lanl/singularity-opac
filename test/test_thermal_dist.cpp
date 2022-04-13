@@ -88,8 +88,8 @@ TEST_CASE("Photon thermal distribution", "[PhotonThermalDistribution]") {
   WHEN("We initialize a gray photon opacity") {
     constexpr Real temp = 1.e6;
 
-    neutrinos::Gray opac_host(1);
-    neutrinos::Opacity opac = opac_host.GetOnDevice();
+    photons::Gray opac_host(1);
+    photons::Opacity opac = opac_host.GetOnDevice();
 
     THEN("The energy density of temperature is consistent with the temperature "
          "of energy density") {
