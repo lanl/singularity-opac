@@ -145,6 +145,24 @@ class BRTOpacity {
     return dist_.ThermalNumberDistributionOfT(temp, type, lambda);
   }
 
+  PORTABLE_INLINE_FUNCTION
+  Real EnergyDensityFromTemperature(const Real temp, const RadiationType type,
+                                    Real *lambda = nullptr) const {
+    return dist_.EnergyDensityFromTemperature(temp, type, lambda);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real TemperatureFromEnergyDensity(const Real er, const RadiationType type,
+                                    Real *lambda = nullptr) const {
+    return dist_.TemperatureFromEnergyDensity(er, type, lambda);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real NumberDensityFromTemperature(const Real temp, const RadiationType type,
+                                    Real *lambda = nullptr) const {
+    return dist_.NumberDensityFromTemperature(temp, type, lambda);
+  }
+
  private:
   Real GetSigmac(const RadiationType type, const Real nu) const {
     if (type != RadiationType::NU_ELECTRON) {
