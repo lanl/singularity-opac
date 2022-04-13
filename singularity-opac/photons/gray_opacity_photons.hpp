@@ -145,6 +145,24 @@ class GrayOpacity {
     return dist_.ThermalNumberDistributionOfT(temp, lambda);
   }
 
+  PORTABLE_INLINE_FUNCTION
+  Real EnergyDensityFromTemperature(const Real temp,
+                                    Real *lambda = nullptr) const {
+    return dist_.EnergyDensityFromTemperature(temp, lambda);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real TemperatureFromEnergyDensity(const Real er,
+                                    Real *lambda = nullptr) const {
+    return dist_.TemperatureFromEnergyDensity(er, lambda);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real NumberDensityFromTemperature(const Real temp,
+                                    Real *lambda = nullptr) const {
+    return dist_.NumberDensityFromTemperature(temp, lambda);
+  }
+
  private:
   Real kappa_; // Opacity. Units of cm^2/g
   PlanckDistribution dist_;

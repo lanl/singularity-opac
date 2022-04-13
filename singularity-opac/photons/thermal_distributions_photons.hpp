@@ -57,6 +57,23 @@ struct PlanckDistribution {
     return 16. * pow(pc::kb, 3) * M_PI * pow(temp, 3) * zeta3 /
            (pow(pc::c, 2) * pow(pc::h, 3));
   }
+  PORTABLE_INLINE_FUNCTION
+  Real EnergyDensityFromTemperature(const Real temp,
+                                    Real *lambda = nullptr) const {
+    return ThermalDistributionOfT(temp, lambda) / pc::c;
+  }
+  PORTABLE_INLINE_FUNCTION
+  Real TemperatureFromEnergyDensity(const Real er,
+                                    Real *lambda = nullptr) const {
+    return pow(15. * std::pow(pc::c, 3) * std::pow(pc::h, 3) * er /
+                   (8. * std::pow(M_PI, 5) * std::pow(pc::kb, 4)),
+               1. / 4.);
+  }
+  PORTABLE_INLINE_FUNCTION
+  Real NumberDensityFromTemperature(const Real temp,
+                                    Real *lambda = nullptr) const {
+    return ThermalNumberDistributionOfT(temp, lambda) / pc::c;
+  }
   template <typename Emissivity>
   PORTABLE_INLINE_FUNCTION Real AbsorptionCoefficientFromKirkhoff(
       const Emissivity &J, const Real rho, const Real temp, const Real nu,

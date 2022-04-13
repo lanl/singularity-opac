@@ -210,7 +210,7 @@ class Variant {
         opac_);
   }
 
-  // Energy density of thermal distribution
+  // Integral of thermal distribution over frequency and angle
   PORTABLE_INLINE_FUNCTION Real
   ThermalDistributionOfT(const Real temp, Real *lambda = nullptr) const {
     return mpark::visit(
@@ -220,12 +220,42 @@ class Variant {
         opac_);
   }
 
-  // Number density of thermal distribution
+  // Integral of thermal distribution over energy per frequency and angle
   PORTABLE_INLINE_FUNCTION Real
   ThermalNumberDistributionOfT(const Real temp, Real *lambda = nullptr) const {
     return mpark::visit(
         [=](const auto &opac) {
           return opac.ThermalNumberDistributionOfT(temp, lambda);
+        },
+        opac_);
+  }
+
+  // Energy density of thermal distribution
+  PORTABLE_INLINE_FUNCTION Real
+  EnergyDensityFromTemperature(const Real temp, Real *lambda = nullptr) const {
+    return mpark::visit(
+        [=](const auto &opac) {
+          return opac.EnergyDensityFromTemperature(temp, lambda);
+        },
+        opac_);
+  }
+
+  // Temperature of thermal distribution
+  PORTABLE_INLINE_FUNCTION Real
+  TemperatureFromEnergyDensity(const Real er, Real *lambda = nullptr) const {
+    return mpark::visit(
+        [=](const auto &opac) {
+          return opac.TemperatureFromEnergyDensity(er, lambda);
+        },
+        opac_);
+  }
+
+  // Number density of thermal distribution
+  PORTABLE_INLINE_FUNCTION Real
+  NumberDensityFromTemperature(const Real temp, Real *lambda = nullptr) const {
+    return mpark::visit(
+        [=](const auto &opac) {
+          return opac.NumberDensityFromTemperature(temp, lambda);
         },
         opac_);
   }

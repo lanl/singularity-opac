@@ -183,7 +183,8 @@ class NonCGSUnits {
   PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfTNu(const Real temp, const RadiationType type,
                                 const Real nu, Real *lambda = nullptr) const {
-    Real BoH = opac_.ThermalDistributionOfTNu(temp, type, nu, lambda);
+    Real BoH = opac_.ThermalDistributionOfTNu(temp * temp_unit_, type,
+                                              nu * freq_unit_, lambda);
     return BoH * inv_intensity_unit_;
   }
 
@@ -198,14 +199,39 @@ class NonCGSUnits {
   PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfT(const Real temp, const RadiationType type,
                               Real *lambda = nullptr) const {
-    Real BoH = opac_.ThermalDistributionOfT(temp, type, lambda);
-    return BoH * inv_energy_dens_unit_;
+    Real BoH = opac_.ThermalDistributionOfT(temp * temp_unit_, type, lambda);
+    return BoH * inv_energy_dens_unit_ * time_unit_ / length_unit_;
   }
 
   PORTABLE_INLINE_FUNCTION
   Real ThermalNumberDistributionOfT(const Real temp, const RadiationType type,
                                     Real *lambda = nullptr) const {
-    Real NoH = opac_.ThermalNumberDistributionOfT(temp, type, lambda);
+    Real NoH =
+        opac_.ThermalNumberDistributionOfT(temp * temp_unit_, type, lambda);
+    return NoH * mass_unit_ / rho_unit_ * time_unit_ / length_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real EnergyDensityFromTemperature(const Real temp, const RadiationType type,
+                                    Real *lambda = nullptr) const {
+    Real BoH =
+        opac_.EnergyDensityFromTemperature(temp * temp_unit_, type, lambda);
+    return BoH * inv_energy_dens_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real TemperatureFromEnergyDensity(const Real er, const RadiationType type,
+                                    Real *lambda = nullptr) const {
+    Real BoH = opac_.TemperatureFromEnergyDensity(er / inv_energy_dens_unit_,
+                                                  type, lambda);
+    return BoH / temp_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real NumberDensityFromTemperature(const Real temp, const RadiationType type,
+                                    Real *lambda = nullptr) const {
+    Real NoH =
+        opac_.NumberDensityFromTemperature(temp * temp_unit_, type, lambda);
     return NoH * mass_unit_ / rho_unit_;
   }
 
