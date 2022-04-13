@@ -21,6 +21,7 @@
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
 #include <singularity-opac/constants/constants.hpp>
+#include <spiner/databox.hpp>
 
 namespace singularity {
 namespace neutrinos {
@@ -35,9 +36,12 @@ using pc = PhysicalConstants<CGS>;
 class MeanOpacity {
  public:
   MeanOpacity() = default;
+  template <typename Opacity>
   MeanOpacity(const Opacity &opac, Real lRhoMin, Real lRhoMax, int NRho,
               Real lTMin, Real lTMax, int NT, Real YeMin, Real YeMax, int NYe,
               Real *lambda = nullptr) {
+    nlambda_ = opac.nlambda();
+
     lkappaPlanck_.resize(NRho, NT, NYe, NEUTRINO_NTYPES);
     // index 0 is the species and is not interpolatable
     lkappaPlanck_.setRange(1, YeMin, YeMax, NYe);
@@ -81,6 +85,37 @@ class MeanOpacity {
               kappaRosselandDenom +=
                   opac.DThermalDistributionOfTNuDT(T, type, nu) * nu * dlnu;
             }
+
+            // Trapezoidal rule
+            const Real nu0 = fromLog_(lnuMin);
+            const Real nu1 = fromLog_(lnuMax);
+            kappaPlanckNum -=
+                0.5 * 1. / rho *
+                (opac.AbsorptionCoefficient(rho, T, Ye, type, nu0, lambda) *
+                     opac.ThermalDistributionOfTNu(T, type, nu0) * nu0 +
+                 opac.AbsorptionCoefficient(rho, T, Ye, type, nu1, lambda) *
+                     opac.ThermalDistributionOfTNu(T, type, nu1) * nu1) *
+                dlnu;
+            kappaPlanckDenom -=
+                0.5 *
+                (opac.ThermalDistributionOfTNu(T, type, nu0) * nu0 +
+                 opac.ThermalDistributionOfTNu(T, type, nu1) * nu1) *
+                dlnu;
+            kappaRosselandNum -=
+                0.5 * rho *
+                (1. /
+                     opac.AbsorptionCoefficient(rho, T, Ye, type, nu0, lambda) *
+                     opac.DThermalDistributionOfTNuDT(T, type, nu0) * nu0 +
+                 1. /
+                     opac.AbsorptionCoefficient(rho, T, Ye, type, nu1, lambda) *
+                     opac.DThermalDistributionOfTNuDT(T, type, nu1) * nu1) *
+                dlnu;
+            kappaRosselandDenom -=
+                0.5 *
+                (opac.DThermalDistributionOfTNuDT(T, type, nu0) * nu0 +
+                 opac.DThermalDistributionOfTNuDT(T, type, nu1) * nu1) *
+                dlnu;
+
             Real lkappaPlanck = toLog_(kappaPlanckNum / kappaPlanckDenom);
             Real lkappaRosseland =
                 toLog_(1. / (kappaRosselandNum / kappaRosselandDenom));
@@ -92,8 +127,43 @@ class MeanOpacity {
     }
   }
 
+#ifdef SPINER_USE_HDF
+  SpinerOpacity(const std::string &filename)
+      : filename_(filename.c_str()), memoryStatus_(impl::DataStatus::OnHost) {
+    herr_t status = H5_SUCCESS;
+    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    status += lkappaPlanck_.loadHDF(file, SP5::Opac::PlanckMeanOpacity);
+    status += lkappaRosseland_.loadHDF(file, SP5::Opac::RosselandMeanOpacity);
+    status += H5Fclose(file);
+
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("neutrinos::MeanOpacity: HDF5 error\n");
+    }
+  }
+
+  void Save(const std::string &filename) const {
+    herr_t status = H5_SUCCESS;
+    hid_t file =
+        H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    status += lkappaPlanck_.saveHDF(file, SP5::Opac::PlanckMeanOpacity);
+    status += lkappaRosseland_.saveHDF(file, SP5::Opac::RosselandMeanOpacity);
+    status += H5Fclose(file);
+
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("neutrinos::MeanOpacity: HDF5 error\n");
+    }
+  }
+#endif
+
+  PORTABLE_INLINE_FUNCTION int nlambda() const { return nlambda_; }
+
+  PORTABLE_INLINE_FUNCTION void PrintParams() const {
+    printf("Mean opacity\n");
+  }
+
   MeanOpacity GetOnDevice() {
     MeanOpacity other;
+    other.nlambda_ = nlambda_;
     other.lkappaPlanck_ = Spiner::getOnDeviceDataBox(lkappaPlanck_);
     other.lkappaRosseland_ = Spiner::getOnDeviceDataBox(lkappaRosseland_);
     return other;
@@ -133,6 +203,7 @@ class MeanOpacity {
   }
   Spiner::DataBox lkappaPlanck_;
   Spiner::DataBox lkappaRosseland_;
+  int nlambda_;
 };
 
 } // namespace neutrinos
