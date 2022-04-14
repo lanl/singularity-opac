@@ -88,7 +88,7 @@ struct BasicThermal {
         (4. * M_PI);
     return jnu / Bnu;
   }
-}
+};
 
 template <int NSPECIES>
 struct FermiDiracDistributionNoMu {
