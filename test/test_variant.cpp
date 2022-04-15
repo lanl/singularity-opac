@@ -34,28 +34,27 @@ using POpac = singularity::photons::Opacity;
 TEST_CASE("Constructor and assignment for neutrinos", "[Neutrinos][Variant]") {
   WHEN("We initialize an opacity") {
     NOpac opac1 = neutrinos::Gray(1);
-    
+
     THEN("We can assign to another one") {
       NOpac opac2;
       opac2 = opac1;
 
       // If this compiles, the test passed.
-      REQUIRE( true );
+      REQUIRE(true);
     }
   }
 }
 
-
 TEST_CASE("Constructor and assignment for photons", "[Photons][Variant]") {
   WHEN("We initialize an opacity") {
     POpac opac1 = photons::Gray(1);
-    
+
     THEN("We can assign to another one") {
       POpac opac2;
       opac2 = opac1;
 
       // If this compiles, the test passed.
-      REQUIRE( true );
+      REQUIRE(true);
     }
   }
 }

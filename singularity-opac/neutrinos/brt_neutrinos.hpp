@@ -21,6 +21,7 @@
 #include <cstdio>
 
 #include <ports-of-call/portability.hpp>
+#include <singularity-opac/constants/constants.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/neutrinos/thermal_distributions_neutrinos.hpp>
 
@@ -34,10 +35,9 @@ template <typename ThermalDistribution>
 class BRTOpacity {
  public:
   BRTOpacity() = default;
-  BRTOpacity(const ThermalDistribution &dist)
-    : dist_(dist) {}
+  BRTOpacity(const ThermalDistribution &dist) : dist_(dist) {}
   BRTOpacity GetOnDevice() { return *this; }
-  
+
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return 0; }
   PORTABLE_INLINE_FUNCTION
@@ -180,7 +180,7 @@ class BRTOpacity {
       return 0.;
     }
 
-    return sigma0_ * ((1. + 3. * gA_ * gA_) / 4.) *
+    return pc::nu_sigma0 * ((1. + 3. * pc::gA * pc::gA) / 4.) *
            pow((pc::h * nu + Deltanp_) / (pc::me * pc::c * pc::c), 2);
   }
 
@@ -191,7 +191,7 @@ class BRTOpacity {
       return 0.;
     }
 
-    Real retval = (1. + 3. * gA_ * gA_) * pow(pc::kb * temp, 4) * rho * sigma0_;
+    Real retval = (1. + 3. * pc::gA * pc::gA) * pow(pc::kb * temp, 4) * rho * pc::nu_sigma0;
     retval *= (310. * pow(pc::kb * temp, 2) * pow(M_PI, 6) +
                147. * pow(M_PI, 4) * Deltanp_ * Deltanp_ +
                113400. * pc::kb * temp * Deltanp_ * zeta5_);
@@ -202,7 +202,7 @@ class BRTOpacity {
   PORTABLE_INLINE_FUNCTION
   Real GetNAlphac(const Real rho, const Real temp,
                   const RadiationType type) const {
-    Real retval = (1. + 3. * gA_ * gA_) * pow(pc::kb * temp, 3) * rho * sigma0_;
+    Real retval = (1. + 3. * pc::gA * pc::gA) * pow(pc::kb * temp, 3) * rho * pc::nu_sigma0;
     retval *= (7. * pc::kb * pow(M_PI, 4) * temp * Deltanp_ +
                90. * pow(Deltanp_, 2) * zeta3_ +
                1350. * pow(pc::kb * temp, 2) * zeta5_);
@@ -210,12 +210,6 @@ class BRTOpacity {
     return retval;
   }
 
-  static constexpr Real Fc_ =
-      4.543791885043567014e+00; // Fermi coupling constant. Units of erg^-2
-  static constexpr Real sigma0_ = 4. * Fc_ * Fc_ * pc::c * pc::c * pc::hbar * pc::hbar *
-    pc::me * pc::me * pc::c * pc::c * pc::c * pc::c /
-    M_PI; // Fiducial weak cross section. Units of cm^2
-  static constexpr Real gA_ = -1.23;
   static constexpr Real Deltanp_ = 2.072126995e-6; // erg
   static constexpr Real mu_ = pc::mp;
   static constexpr Real zeta3_ = 1.2020569031595942853;

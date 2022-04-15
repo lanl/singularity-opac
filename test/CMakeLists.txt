@@ -48,5 +48,12 @@ PRIVATE
   catch2_define
   ${PROJECT_NAME})
 
+# Ensure code works with C++11 and earlier
+# TODO(MM): Remove this later when it's not needed.
+set_target_properties(${PROJECT_NAME}_unit_tests
+  PROPERTIES CXX_STANDARD 14
+  CXX_STANDARD_REQUIRED YES
+  CXX_EXTENSIONS NO)
+
 include(Catch)
 catch_discover_tests(${PROJECT_NAME}_unit_tests)
