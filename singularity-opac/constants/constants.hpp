@@ -13,8 +13,8 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef SINGULARITY_CONSTANTS_CONSTANTS_
-#define SINGULARITY_CONSTANTS_CONSTANTS_
+#ifndef SINGULARITY_OPAC_CONSTANTS_CONSTANTS_
+#define SINGULARITY_OPAC_CONSTANTS_CONSTANTS_
 
 #ifdef SINGULARITY_ENABLE_EXCEPTIONS
 #include <stdexcept>
@@ -153,6 +153,21 @@ class PhysicalConstants {
   // Atomic mass unit (CODATA 2010 value)
   static constexpr double atomic_mass_unit = 1.660538921e-27 * mass;
   static constexpr double amu = atomic_mass_unit;
+
+  // Fermi coupling constant (Units of erg^{-2})
+  static constexpr double fermi_coupling_constant =
+      4.543791885043567014 / (energy * energy);
+  static constexpr double Fc = fermi_coupling_constant;
+
+  // Fiducial weak cross section (Units of cm^2)
+  static constexpr double fiducial_weak_cross_section =
+      4. * length * length * Fc * Fc * c * c * hbar * hbar * me * me * c * c *
+      c * c / M_PI;
+  static constexpr double nu_sigma0 = fiducial_weak_cross_section;
+
+  // Axial-vector coupling
+  static constexpr double axial_vector_coupling_constant = -1.23;
+  static constexpr double gA = axial_vector_coupling_constant;
 };
 
 // These can be removed for C++17 and up
@@ -232,10 +247,22 @@ template <typename T>
 constexpr double PhysicalConstants<T>::atomic_mass_unit;
 template <typename T>
 constexpr double PhysicalConstants<T>::amu;
+template <typename T>
+constexpr double PhysicalConstants<T>::fermi_coupling_constant;
+template <typename T>
+constexpr double PhysicalConstants<T>::Fc;
+template <typename T>
+constexpr double PhysicalConstants<T>::fiducial_weak_cross_section;
+template <typename T>
+constexpr double PhysicalConstants<T>::nu_sigma0;
+template <typename T>
+constexpr double PhysicalConstants<T>::axial_vector_coupling_constant;
+template <typename T>
+constexpr double PhysicalConstants<T>::gA;
 
 } // namespace singularity
 
 #undef CONSTANTS_ERROR
 #undef UNDEFINED_ERROR
 
-#endif // SINGULARITY_CONSTANTS_CONSTANTS_
+#endif // SINGULARITY_OPAC_CONSTANTS_CONSTANTS_

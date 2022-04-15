@@ -34,19 +34,26 @@ target_link_libraries(catch2_define PUBLIC
 add_executable(${PROJECT_NAME}_unit_tests)
 target_sources(${PROJECT_NAME}_unit_tests
 PRIVATE
-  test_trivial.cpp
   test_thermal_dist.cpp
   test_gray_opacities.cpp
   test_brt_opacities.cpp
   test_chebyshev.cpp
   test_spiner_opac_neutrinos.cpp
   test_mean_opacities.cpp
+  test_variant.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_unit_tests
 PRIVATE
   catch2_define
   ${PROJECT_NAME})
+
+# Ensure code works with C++11 and earlier
+# TODO(MM): Remove this later when it's not needed.
+set_target_properties(${PROJECT_NAME}_unit_tests
+  PROPERTIES CXX_STANDARD 14
+  CXX_STANDARD_REQUIRED YES
+  CXX_EXTENSIONS NO)
 
 include(Catch)
 catch_discover_tests(${PROJECT_NAME}_unit_tests)
