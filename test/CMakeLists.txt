@@ -34,13 +34,13 @@ target_link_libraries(catch2_define PUBLIC
 add_executable(${PROJECT_NAME}_unit_tests)
 target_sources(${PROJECT_NAME}_unit_tests
 PRIVATE
-  test_trivial.cpp
   test_thermal_dist.cpp
   test_gray_opacities.cpp
   test_brt_opacities.cpp
   test_chebyshev.cpp
   test_spiner_opac_neutrinos.cpp
   test_mean_opacities.cpp
+  test_variant.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_unit_tests

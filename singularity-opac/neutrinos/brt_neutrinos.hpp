@@ -34,7 +34,10 @@ template <typename ThermalDistribution>
 class BRTOpacity {
  public:
   BRTOpacity() = default;
+  BRTOpacity(const ThermalDistribution &dist)
+    : dist_(dist) {}
   BRTOpacity GetOnDevice() { return *this; }
+  
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return 0; }
   PORTABLE_INLINE_FUNCTION
@@ -171,6 +174,7 @@ class BRTOpacity {
   }
 
  private:
+  PORTABLE_INLINE_FUNCTION
   Real GetSigmac(const RadiationType type, const Real nu) const {
     if (type != RadiationType::NU_ELECTRON) {
       return 0.;
@@ -180,6 +184,7 @@ class BRTOpacity {
            pow((pc::h * nu + Deltanp_) / (pc::me * pc::c * pc::c), 2);
   }
 
+  PORTABLE_INLINE_FUNCTION
   Real GetAlphac(const Real rho, const Real temp,
                  const RadiationType type) const {
     if (type != RadiationType::NU_ELECTRON) {
@@ -194,6 +199,7 @@ class BRTOpacity {
     return retval;
   }
 
+  PORTABLE_INLINE_FUNCTION
   Real GetNAlphac(const Real rho, const Real temp,
                   const RadiationType type) const {
     Real retval = (1. + 3. * gA_ * gA_) * pow(pc::kb * temp, 3) * rho * sigma0_;
@@ -204,16 +210,16 @@ class BRTOpacity {
     return retval;
   }
 
-  const Real Fc_ =
+  static constexpr Real Fc_ =
       4.543791885043567014e+00; // Fermi coupling constant. Units of erg^-2
-  const Real sigma0_ = 4. * Fc_ * Fc_ * pc::c * pc::c * pc::hbar * pc::hbar *
-                       pc::me * pc::me * pc::c * pc::c * pc::c * pc::c /
-                       M_PI; // Fiducial weak cross section. Units of cm^2
-  const Real gA_ = -1.23;
-  const Real Deltanp_ = 2.072126995e-6; // erg
-  const Real mu_ = pc::mp;
-  const Real zeta3_ = 1.2020569031595942853;
-  const Real zeta5_ = 1.0369277551433699263;
+  static constexpr Real sigma0_ = 4. * Fc_ * Fc_ * pc::c * pc::c * pc::hbar * pc::hbar *
+    pc::me * pc::me * pc::c * pc::c * pc::c * pc::c /
+    M_PI; // Fiducial weak cross section. Units of cm^2
+  static constexpr Real gA_ = -1.23;
+  static constexpr Real Deltanp_ = 2.072126995e-6; // erg
+  static constexpr Real mu_ = pc::mp;
+  static constexpr Real zeta3_ = 1.2020569031595942853;
+  static constexpr Real zeta5_ = 1.0369277551433699263;
   ThermalDistribution dist_;
 };
 

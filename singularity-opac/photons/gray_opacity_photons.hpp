@@ -29,6 +29,7 @@ namespace photons {
 
 class GrayOpacity {
  public:
+  GrayOpacity() = default;
   GrayOpacity(const Real kappa) : kappa_(kappa) {}
   GrayOpacity(const PlanckDistribution &dist, const Real kappa)
       : dist_(dist), kappa_(kappa) {}
