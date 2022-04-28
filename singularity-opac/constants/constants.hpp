@@ -50,6 +50,64 @@ struct CGS {
   static constexpr double angle = 1.;                       // Radian
 };
 
+struct HVal1 {
+  static constexpr double h = 1.;
+};
+
+template <typename H=HVal1>
+class TrivialConstants {
+  public:
+  constexpr TrivialConstants() {}
+
+  static constexpr double avogadro = 1.;
+  static constexpr double na = avogadro;
+  static constexpr double fine_structure = 1.;
+  static constexpr double alpha = fine_structure;
+  static constexpr double planck = 1.;//H::h;
+  static constexpr double h = planck;
+  static constexpr double reduced_planck = planck / (2.0 * M_PI);
+  static constexpr double hbar = reduced_planck;
+  static constexpr double gas_constant = 1.;
+  static constexpr double r_gas = gas_constant;
+  static constexpr double boltzmann = 1.;
+  static constexpr double kb = boltzmann;
+  static constexpr double electron_charge = 1.;
+  static constexpr double qe = electron_charge;
+  static constexpr double speed_of_light = 1.;
+  static constexpr double c = speed_of_light;
+  static constexpr double gravitational_constant = 1.;
+  static constexpr double g_newt = gravitational_constant;
+  static constexpr double acceleration_from_gravity = 1.;
+  static constexpr double g_accel = acceleration_from_gravity;
+  static constexpr double electron_mass = 1.;
+  static constexpr double me = electron_mass;
+  static constexpr double proton_mass = 1.;
+  static constexpr double mp = proton_mass;
+  static constexpr double stefan_boltzmann = 1.;
+  static constexpr double sb = stefan_boltzmann;
+  static constexpr double faraday_constant = 1.;
+  static constexpr double faraday = faraday_constant;
+  static constexpr double vacuum_permeability = 1.;
+  static constexpr double mu0 = vacuum_permeability;
+  static constexpr double vacuum_permittivity = 1.;
+  static constexpr double eps0 = vacuum_permittivity;
+  static constexpr double classical_electron_radius = 1.;
+  static constexpr double re = classical_electron_radius;
+  static constexpr double electron_volt = 1.;
+  static constexpr double eV = electron_volt;
+  static constexpr double atomic_mass_unit = 1.;
+  static constexpr double amu = atomic_mass_unit;
+  static constexpr double fermi_coupling_constant = 1.;
+  static constexpr double Fc = fermi_coupling_constant;
+  static constexpr double fiducial_weak_cross_section =
+      4. * Fc * Fc * c * c * hbar * hbar * me * me * c * c *
+      c * c / M_PI;
+  static constexpr double nu_sigma0 = fiducial_weak_cross_section;
+  static constexpr double axial_vector_coupling_constant = 1.;
+  static constexpr double gA = axial_vector_coupling_constant;
+
+};
+
 // Defines and encapsulates physical and mathematical constants in a purely
 // constexpr way, with support for multiple unit systems.
 template <typename UNITSYSTEM>

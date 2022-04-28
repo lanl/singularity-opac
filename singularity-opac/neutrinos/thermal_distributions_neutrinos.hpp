@@ -25,11 +25,10 @@
 namespace singularity {
 namespace neutrinos {
 
-using pc = PhysicalConstants<CGS>;
-
 #define EPS (10.0 * std::numeric_limits<Real>::min())
 
 // Trivial thermal distribution (everything is 1) for simple test problems
+/*template <typename pc = PhysicalConstants<CGS>>
 struct BasicThermal {
   PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfTNu(const Real temp, const RadiationType type,
@@ -88,9 +87,9 @@ struct BasicThermal {
         (4. * M_PI);
     return jnu / Bnu;
   }
-}
+};*/
 
-template <int NSPECIES>
+template <int NSPECIES, typename pc = PhysicalConstants<CGS>>
 struct FermiDiracDistributionNoMu {
   PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfTNu(const Real temp, const RadiationType type,
