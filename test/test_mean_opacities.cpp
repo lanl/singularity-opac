@@ -32,7 +32,7 @@
 
 using namespace singularity;
 
-using pc = PhysicalConstants<CGS>;
+using pc = PhysicalConstantsCGS;
 
 #ifdef PORTABILITY_STRATEGY_KOKKOS
 using atomic_view = Kokkos::MemoryTraits<Kokkos::Atomic>;
@@ -81,9 +81,9 @@ TEST_CASE("Mean neutrino opacities", "[MeanNeutrinos]") {
     neutrinos::Gray opac_host(kappa);
     neutrinos::Opacity opac = opac_host.GetOnDevice();
 
-    neutrinos::MeanOpacity mean_opac_host(opac_host, lRhoMin, lRhoMax, NRho,
+    neutrinos::MeanOpacity<pc> mean_opac_host(opac_host, lRhoMin, lRhoMax, NRho,
                                           lTMin, lTMax, NT, YeMin, YeMax, NYe);
-    neutrinos::MeanOpacity mean_opac = mean_opac_host.GetOnDevice();
+    auto mean_opac = mean_opac_host.GetOnDevice();
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
       int n_wrong_h = 0;
@@ -171,8 +171,8 @@ TEST_CASE("Mean neutrino opacities", "[MeanNeutrinos]") {
           mass_unit / (length_unit * length_unit * length_unit);
 
       auto funny_units_host =
-          neutrinos::MeanNonCGSUnits<neutrinos::MeanOpacity>(
-              std::forward<neutrinos::MeanOpacity>(mean_opac_host), time_unit,
+          neutrinos::MeanNonCGSUnits<neutrinos::MeanOpacity<pc>>(
+              std::forward<neutrinos::MeanOpacity<pc>>(mean_opac_host), time_unit,
               mass_unit, length_unit, temp_unit);
 
       auto funny_units = funny_units_host.GetOnDevice();

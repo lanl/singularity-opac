@@ -96,8 +96,8 @@ struct UnitConversionSIToCGS {
   static constexpr Real charge = 2.997924580e9;           // Statcoulomb
 };
 
-template <typename BASE, typename CONVERSION=UnitConversionDefault>
-struct NewPhysicalConstants {
+template <typename BASE=BaseSICODATA2010, typename CONVERSION=UnitConversionSIToCGS>
+struct PhysicalConstants {
  protected:
   static constexpr Real length = CONVERSION::length;
   static constexpr Real mass = CONVERSION::mass;
@@ -199,6 +199,11 @@ struct NewPhysicalConstants {
   static constexpr Real gA = axial_vector_coupling_constant;
 };
 
+using PhysicalConstantsUnity = PhysicalConstants<BaseUnity, UnitConversionDefault>;
+using PhysicalConstantsSI = PhysicalConstants<BaseSICODATA2010, UnitConversionDefault>;
+using PhysicalConstantsCGS = PhysicalConstants<BaseSICODATA2010, UnitConversionSIToCGS>;
+
+/*
 // Unit system conversion factors
 
 struct SI {
@@ -490,7 +495,7 @@ template <typename T>
 constexpr double PhysicalConstants<T>::axial_vector_coupling_constant;
 template <typename T>
 constexpr double PhysicalConstants<T>::gA;
-
+*/
 } // namespace singularity
 
 #undef CONSTANTS_ERROR

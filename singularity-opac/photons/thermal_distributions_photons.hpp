@@ -25,8 +25,7 @@
 namespace singularity {
 namespace photons {
 
-using pc = PhysicalConstants<CGS>;
-
+template <typename pc = PhysicalConstantsCGS>
 struct PlanckDistribution {
   PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfTNu(const Real temp, const Real nu,

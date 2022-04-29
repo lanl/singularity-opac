@@ -34,8 +34,7 @@ using namespace singularity;
 using atomic_view = Kokkos::MemoryTraits<Kokkos::Atomic>;
 #endif
 
-using pc = PhysicalConstants<CGS>;
-using npc = NewPhysicalConstants<BaseSICODATA2010, UnitConversionSIToCGS>;
+using pc = PhysicalConstantsCGS;
 
 template <typename T>
 PORTABLE_INLINE_FUNCTION T FractionalDifference(const T &a, const T &b) {

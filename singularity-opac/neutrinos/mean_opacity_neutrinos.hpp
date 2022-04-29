@@ -27,13 +27,12 @@
 namespace singularity {
 namespace neutrinos {
 
-using pc = PhysicalConstants<CGS>;
-
 #define EPS (10.0 * std::numeric_limits<Real>::min())
 
 // TODO(BRR) Note: It is assumed that lambda is constant for all densities,
 // temperatures, and Ye
 
+template <typename pc=PhysicalConstantsCGS>
 class MeanOpacity {
  public:
   MeanOpacity() = default;

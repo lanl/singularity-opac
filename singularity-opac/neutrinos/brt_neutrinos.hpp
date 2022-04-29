@@ -28,10 +28,8 @@
 namespace singularity {
 namespace neutrinos {
 
-using pc = PhysicalConstants<CGS>;
-
 // Neutrino electron absorption from Burrows, Reddy, & Thompson 2004
-template <typename ThermalDistribution>
+template <typename ThermalDistribution, typename pc=PhysicalConstantsCGS>
 class BRTOpacity {
  public:
   BRTOpacity() = default;

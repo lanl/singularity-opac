@@ -89,7 +89,7 @@ struct BasicThermal {
   }
 };*/
 
-template <int NSPECIES, typename pc = PhysicalConstants<CGS>>
+template <int NSPECIES, typename pc = PhysicalConstantsCGS>
 struct FermiDiracDistributionNoMu {
   PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfTNu(const Real temp, const RadiationType type,
