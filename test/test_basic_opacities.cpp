@@ -34,6 +34,9 @@ using namespace singularity;
 using atomic_view = Kokkos::MemoryTraits<Kokkos::Atomic>;
 #endif
 
+using pc = PhysicalConstants<CGS>;
+using npc = NewPhysicalConstants<BaseSICODATA2010, UnitConversionSIToCGS>;
+
 template <typename T>
 PORTABLE_INLINE_FUNCTION T FractionalDifference(const T &a, const T &b) {
   return 2 * std::abs(b - a) / (std::abs(a) + std::abs(b) + 1e-20);
@@ -42,10 +45,16 @@ constexpr Real EPS_TEST = 1e-3;
 
 TEST_CASE("Basic neutrino opacities", "[BasicNeutrinos]") {
   WHEN("We initialize a gray neutrino opacity") {
-    constexpr RadiationType type = RadiationType::NU_ELECTRON;
 
     neutrinos::Basic opac_host(1);
     neutrinos::Opacity opac = opac_host.GetOnDevice();
+    constexpr Real MeV2K = 1e6 * pc::eV / pc::kb;
+    constexpr Real MeV2Hz = 1e6 * pc::eV / pc::h;
+    constexpr Real rho = 1e11;        // g/cc
+    constexpr Real temp = 10 * MeV2K; // 10 MeV
+    constexpr Real Ye = 0.1;
+    constexpr RadiationType type = RadiationType::NU_ELECTRON;
+    constexpr Real nu = 1.25 * MeV2Hz; // 1 MeV
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
       int n_wrong_h = 0;
