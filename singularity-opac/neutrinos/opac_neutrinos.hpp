@@ -30,7 +30,8 @@ namespace singularity {
 namespace neutrinos {
 
 // TODO(JMM): Include chemical potential
-using Basic = GrayOpacity<FermiDiracDistributionNoMu<3, PhysicalConstantsUnity>, PhysicalConstantsUnity>;
+using Basic = GrayOpacity<FermiDiracDistributionNoMu<3, PhysicalConstantsUnity>,
+                          PhysicalConstantsUnity>;
 using BRTOpac = BRTOpacity<FermiDiracDistributionNoMu<3>>;
 using Gray = GrayOpacity<FermiDiracDistributionNoMu<3>>;
 using Tophat = TophatEmissivity<FermiDiracDistributionNoMu<3>>;

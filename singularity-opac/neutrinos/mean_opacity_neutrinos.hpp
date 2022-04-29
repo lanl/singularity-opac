@@ -32,7 +32,7 @@ namespace neutrinos {
 // TODO(BRR) Note: It is assumed that lambda is constant for all densities,
 // temperatures, and Ye
 
-template <typename pc=PhysicalConstantsCGS>
+template <typename pc = PhysicalConstantsCGS>
 class MeanOpacity {
  public:
   MeanOpacity() = default;

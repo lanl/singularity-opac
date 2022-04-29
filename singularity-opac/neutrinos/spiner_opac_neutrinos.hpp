@@ -58,7 +58,7 @@ enum class DataStatus { Deallocated, OnDevice, OnHost };
 // DataBox. Bottom of the table is a floor. Top of the table is
 // power law extrapolation.
 // TODO(JMM): Should lJ be stored on disk or computed at start up?
-template <typename ThermalDistribution, typename pc=PhysicalConstantsCGS>
+template <typename ThermalDistribution, typename pc = PhysicalConstantsCGS>
 class SpinerOpacity {
  public:
   static constexpr Real EPS = 10.0 * std::numeric_limits<Real>::min();

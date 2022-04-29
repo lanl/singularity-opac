@@ -27,7 +27,7 @@
 namespace singularity {
 namespace photons {
 
-template <typename pc=PhysicalConstantsCGS>
+template <typename pc = PhysicalConstantsCGS>
 class GrayOpacity {
  public:
   GrayOpacity() = default;
