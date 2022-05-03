@@ -183,7 +183,7 @@ struct PhysicalConstants {
   static constexpr Real eps0 = vacuum_permittivity;
 
   // Electron volt (derived)
-  static constexpr Real electron_volt = qe * energy;
+  static constexpr Real electron_volt = BASE::elementary_charge * energy;
   static constexpr Real eV = electron_volt;
 
   static constexpr Real fermi_coupling_constant =
