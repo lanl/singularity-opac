@@ -24,6 +24,8 @@
 #include <singularity-opac/constants/constants.hpp>
 #include <spiner/databox.hpp>
 
+#include <singularity-opac/neutrinos/mean_neutrino_variant.hpp>
+
 namespace singularity {
 namespace neutrinos {
 
@@ -64,8 +66,9 @@ class MeanOpacity {
             Real kappaRosselandDenom = 0.;
             // Integrate over frequency
             const int nnu = 100;
-            const Real lnuMin = toLog_(1.e10);
-            const Real lnuMax = toLog_(1.e30);
+            const Real lnuMin =
+                toLog_(1.e-3 * pc::kb * fromLog_(lTMin) / pc::h);
+            const Real lnuMax = toLog_(1.e3 * pc::kb * fromLog_(lTMax) / pc::h);
             const Real dlnu = (lnuMax - lnuMin) / (nnu - 1);
             for (int inu = 0; inu < nnu; ++inu) {
               const Real lnu = lnuMin + inu * dlnu;
@@ -82,6 +85,18 @@ class MeanOpacity {
                   opac.DThermalDistributionOfTNuDT(T, type, nu) * nu * dlnu;
               kappaRosselandDenom +=
                   opac.DThermalDistributionOfTNuDT(T, type, nu) * nu * dlnu;
+
+              printf(
+                  "a: %e d: %e %e %e %e\n",
+                  opac.AbsorptionCoefficient(rho, T, Ye, type, nu, lambda),
+                  opac.AbsorptionCoefficient(rho, T, Ye, type, nu, lambda) /
+                      rho * opac.ThermalDistributionOfTNu(T, type, nu) * nu *
+                      dlnu,
+                  opac.ThermalDistributionOfTNu(T, type, nu) * nu * dlnu,
+                  rho /
+                      opac.AbsorptionCoefficient(rho, T, Ye, type, nu, lambda) *
+                      opac.DThermalDistributionOfTNuDT(T, type, nu) * nu * dlnu,
+                  opac.DThermalDistributionOfTNuDT(T, type, nu) * nu * dlnu);
             }
 
             // Trapezoidal rule
@@ -119,6 +134,13 @@ class MeanOpacity {
                 toLog_(1. / (kappaRosselandNum / kappaRosselandDenom));
             lkappaPlanck_(iRho, iT, iYe, idx) = lkappaPlanck;
             lkappaRosseland_(iRho, iT, iYe, idx) = lkappaRosseland;
+            printf("[%i %i %i %i] = %e %e\n", iRho, iT, iYe, idx,
+                   lkappaPlanck_(iRho, iT, iYe, idx),
+                   lkappaRosseland_(iRho, iT, iYe, idx));
+            if (std::isnan(lkappaPlanck_(iRho, iT, iYe, idx)) ||
+                std::isnan(lkappaRosseland_(iRho, iT, iYe, idx))) {
+              OPAC_ERROR("neutrinos::MeanOpacity: NAN in opacity evaluations");
+            }
           }
         }
       }
@@ -203,6 +225,10 @@ class MeanOpacity {
 };
 
 #undef EPS
+
+using MeanScaleFree = MeanOpacity<PhysicalConstantsUnity>;
+using MeanCGS = MeanOpacity<PhysicalConstantsCGS>;
+using VMeanOpacity = impl::MeanVariant<MeanScaleFree, MeanCGS>;
 
 } // namespace neutrinos
 } // namespace singularity
