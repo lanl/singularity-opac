@@ -81,8 +81,8 @@ TEST_CASE("Mean neutrino opacities", "[MeanNeutrinos]") {
     neutrinos::Gray opac_host(kappa);
     neutrinos::Opacity opac = opac_host.GetOnDevice();
 
-    neutrinos::MeanOpacity<pc> mean_opac_host(opac_host, lRhoMin, lRhoMax, NRho,
-                                          lTMin, lTMax, NT, YeMin, YeMax, NYe);
+    neutrinos::MeanOpacity<pc> mean_opac_host(
+        opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, YeMin, YeMax, NYe);
     auto mean_opac = mean_opac_host.GetOnDevice();
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
@@ -116,12 +116,10 @@ TEST_CASE("Mean neutrino opacities", "[MeanNeutrinos]") {
 #ifdef SPINER_USE_HDF
     THEN("We can save to disk and reload") {
       mean_opac.Save(grayname);
-      neutrinos::MeanOpacity mean_opac_host_load =
-          neutrinos::MeanOpacity(grayname);
+      neutrinos::MeanOpacity<pc> mean_opac_host_load(grayname);
       AND_THEN("The reloaded table matches the gray opacities") {
 
-        neutrinos::MeanOpacity mean_opac_load =
-            mean_opac_host_load.GetOnDevice();
+        auto mean_opac_load = mean_opac_host_load.GetOnDevice();
 
         int n_wrong = 0;
         portableReduce(
@@ -172,8 +170,8 @@ TEST_CASE("Mean neutrino opacities", "[MeanNeutrinos]") {
 
       auto funny_units_host =
           neutrinos::MeanNonCGSUnits<neutrinos::MeanOpacity<pc>>(
-              std::forward<neutrinos::MeanOpacity<pc>>(mean_opac_host), time_unit,
-              mass_unit, length_unit, temp_unit);
+              std::forward<neutrinos::MeanOpacity<pc>>(mean_opac_host),
+              time_unit, mass_unit, length_unit, temp_unit);
 
       auto funny_units = funny_units_host.GetOnDevice();
 

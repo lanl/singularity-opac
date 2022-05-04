@@ -56,6 +56,7 @@ A number of options are avaialable for compiling:
 | Option                            | Default | Comment                                                                              |
 | --------------------------------- | ------- | ------------------------------------------------------------------------------------ |
 | SINGULARITY_BUILD_TESTS           | OFF     | Build test infrastructure.                                                           |
+| SINGULARITY_USE_HDF5              | ON      | Enables HDF5. Required for Spiner opacities.                                         |
 
 ## Copyright
 
