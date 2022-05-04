@@ -85,18 +85,6 @@ class MeanOpacity {
                   opac.DThermalDistributionOfTNuDT(T, type, nu) * nu * dlnu;
               kappaRosselandDenom +=
                   opac.DThermalDistributionOfTNuDT(T, type, nu) * nu * dlnu;
-
-              printf(
-                  "a: %e d: %e %e %e %e\n",
-                  opac.AbsorptionCoefficient(rho, T, Ye, type, nu, lambda),
-                  opac.AbsorptionCoefficient(rho, T, Ye, type, nu, lambda) /
-                      rho * opac.ThermalDistributionOfTNu(T, type, nu) * nu *
-                      dlnu,
-                  opac.ThermalDistributionOfTNu(T, type, nu) * nu * dlnu,
-                  rho /
-                      opac.AbsorptionCoefficient(rho, T, Ye, type, nu, lambda) *
-                      opac.DThermalDistributionOfTNuDT(T, type, nu) * nu * dlnu,
-                  opac.DThermalDistributionOfTNuDT(T, type, nu) * nu * dlnu);
             }
 
             // Trapezoidal rule
@@ -134,9 +122,6 @@ class MeanOpacity {
                 toLog_(1. / (kappaRosselandNum / kappaRosselandDenom));
             lkappaPlanck_(iRho, iT, iYe, idx) = lkappaPlanck;
             lkappaRosseland_(iRho, iT, iYe, idx) = lkappaRosseland;
-            printf("[%i %i %i %i] = %e %e\n", iRho, iT, iYe, idx,
-                   lkappaPlanck_(iRho, iT, iYe, idx),
-                   lkappaRosseland_(iRho, iT, iYe, idx));
             if (std::isnan(lkappaPlanck_(iRho, iT, iYe, idx)) ||
                 std::isnan(lkappaRosseland_(iRho, iT, iYe, idx))) {
               OPAC_ERROR("neutrinos::MeanOpacity: NAN in opacity evaluations");
