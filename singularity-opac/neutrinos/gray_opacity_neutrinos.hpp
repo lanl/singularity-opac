@@ -27,7 +27,7 @@
 namespace singularity {
 namespace neutrinos {
 
-template <typename ThermalDistribution>
+template <typename ThermalDistribution, typename pc = PhysicalConstantsCGS>
 class GrayOpacity {
  public:
   GrayOpacity() = default;

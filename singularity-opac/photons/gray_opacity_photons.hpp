@@ -27,11 +27,12 @@
 namespace singularity {
 namespace photons {
 
+template <typename pc = PhysicalConstantsCGS>
 class GrayOpacity {
  public:
   GrayOpacity() = default;
   GrayOpacity(const Real kappa) : kappa_(kappa) {}
-  GrayOpacity(const PlanckDistribution &dist, const Real kappa)
+  GrayOpacity(const PlanckDistribution<pc> &dist, const Real kappa)
       : dist_(dist), kappa_(kappa) {}
 
   GrayOpacity GetOnDevice() { return *this; }
@@ -166,7 +167,7 @@ class GrayOpacity {
 
  private:
   Real kappa_; // Opacity. Units of cm^2/g
-  PlanckDistribution dist_;
+  PlanckDistribution<pc> dist_;
 };
 
 } // namespace photons

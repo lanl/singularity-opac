@@ -21,17 +21,15 @@
 #include <cstdio>
 
 #include <ports-of-call/portability.hpp>
-#include <singularity-opac/constants/constants.hpp>
 #include <singularity-opac/base/opac_error.hpp>
+#include <singularity-opac/constants/constants.hpp>
 #include <singularity-opac/neutrinos/thermal_distributions_neutrinos.hpp>
 
 namespace singularity {
 namespace neutrinos {
 
-using pc = PhysicalConstants<CGS>;
-
 // Neutrino electron absorption from Burrows, Reddy, & Thompson 2004
-template <typename ThermalDistribution>
+template <typename ThermalDistribution, typename pc = PhysicalConstantsCGS>
 class BRTOpacity {
  public:
   BRTOpacity() = default;
@@ -191,7 +189,8 @@ class BRTOpacity {
       return 0.;
     }
 
-    Real retval = (1. + 3. * pc::gA * pc::gA) * pow(pc::kb * temp, 4) * rho * pc::nu_sigma0;
+    Real retval = (1. + 3. * pc::gA * pc::gA) * pow(pc::kb * temp, 4) * rho *
+                  pc::nu_sigma0;
     retval *= (310. * pow(pc::kb * temp, 2) * pow(M_PI, 6) +
                147. * pow(M_PI, 4) * Deltanp_ * Deltanp_ +
                113400. * pc::kb * temp * Deltanp_ * zeta5_);
@@ -202,7 +201,8 @@ class BRTOpacity {
   PORTABLE_INLINE_FUNCTION
   Real GetNAlphac(const Real rho, const Real temp,
                   const RadiationType type) const {
-    Real retval = (1. + 3. * pc::gA * pc::gA) * pow(pc::kb * temp, 3) * rho * pc::nu_sigma0;
+    Real retval = (1. + 3. * pc::gA * pc::gA) * pow(pc::kb * temp, 3) * rho *
+                  pc::nu_sigma0;
     retval *= (7. * pc::kb * pow(M_PI, 4) * temp * Deltanp_ +
                90. * pow(Deltanp_, 2) * zeta3_ +
                1350. * pow(pc::kb * temp, 2) * zeta5_);

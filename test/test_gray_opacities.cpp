@@ -31,7 +31,7 @@
 
 using namespace singularity;
 
-using pc = PhysicalConstants<CGS>;
+using pc = PhysicalConstantsCGS;
 
 #ifdef PORTABILITY_STRATEGY_KOKKOS
 using atomic_view = Kokkos::MemoryTraits<Kokkos::Atomic>;

@@ -31,7 +31,7 @@
 
 using namespace singularity;
 
-using pc = PhysicalConstants<CGS>;
+using pc = PhysicalConstantsCGS;
 
 #ifdef PORTABILITY_STRATEGY_KOKKOS
 using atomic_view = Kokkos::MemoryTraits<Kokkos::Atomic>;
@@ -54,7 +54,8 @@ TEST_CASE("BRT neutrino opacities", "[BRTNeutrinos]") {
     constexpr Real nu = 1.25 * MeV2Hz; // 1 MeV
 
     neutrinos::BRTOpac opac_host;
-    neutrinos::Opacity opac = opac_host.GetOnDevice();
+    neutrinos::Opacity opac;
+    opac = opac_host.GetOnDevice(); // Test copy constructor
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
       int n_wrong_h = 0;

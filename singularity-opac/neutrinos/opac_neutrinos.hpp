@@ -30,12 +30,15 @@ namespace singularity {
 namespace neutrinos {
 
 // TODO(JMM): Include chemical potential
+using ScaleFree =
+    GrayOpacity<FermiDiracDistributionNoMu<3, PhysicalConstantsUnity>,
+                PhysicalConstantsUnity>;
 using BRTOpac = BRTOpacity<FermiDiracDistributionNoMu<3>>;
 using Gray = GrayOpacity<FermiDiracDistributionNoMu<3>>;
 using Tophat = TophatEmissivity<FermiDiracDistributionNoMu<3>>;
 using SpinerOpac = SpinerOpacity<FermiDiracDistributionNoMu<3>>;
 
-using Opacity = impl::Variant<BRTOpac, Gray, Tophat, SpinerOpac,
+using Opacity = impl::Variant<ScaleFree, BRTOpac, Gray, Tophat, SpinerOpac,
                               NonCGSUnits<BRTOpac>, NonCGSUnits<Gray>,
                               NonCGSUnits<Tophat>, NonCGSUnits<SpinerOpac>>;
 

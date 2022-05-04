@@ -27,11 +27,9 @@
 namespace singularity {
 namespace neutrinos {
 
-using pc = PhysicalConstants<CGS>;
-
 // Neutrino tophat emissivity from
 // Miller, Ryan, Dolence (2019). arXiv:1903.09273
-template <typename ThermalDistribution>
+template <typename ThermalDistribution, typename pc = PhysicalConstantsCGS>
 class TophatEmissivity {
  public:
   TophatEmissivity(const Real C, const Real numin, const Real numax)
