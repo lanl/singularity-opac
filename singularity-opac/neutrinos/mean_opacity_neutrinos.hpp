@@ -35,13 +35,13 @@ namespace neutrinos {
 // temperatures, and Ye
 
 template <typename pc = PhysicalConstantsCGS>
-class MeanOpacity {
+class MeanOpacityImpl {
  public:
-  MeanOpacity() = default;
+  MeanOpacityImpl() = default;
   template <typename Opacity>
-  MeanOpacity(const Opacity &opac, Real lRhoMin, Real lRhoMax, int NRho,
-              Real lTMin, Real lTMax, int NT, Real YeMin, Real YeMax, int NYe,
-              Real *lambda = nullptr) {
+  MeanOpacityImpl(const Opacity &opac, Real lRhoMin, Real lRhoMax, int NRho,
+                  Real lTMin, Real lTMax, int NT, Real YeMin, Real YeMax,
+                  int NYe, Real *lambda = nullptr) {
     lkappaPlanck_.resize(NRho, NT, NYe, NEUTRINO_NTYPES);
     // index 0 is the species and is not interpolatable
     lkappaPlanck_.setRange(1, YeMin, YeMax, NYe);
@@ -133,7 +133,7 @@ class MeanOpacity {
   }
 
 #ifdef SPINER_USE_HDF
-  MeanOpacity(const std::string &filename) : filename_(filename.c_str()) {
+  MeanOpacityImpl(const std::string &filename) : filename_(filename.c_str()) {
     herr_t status = H5_SUCCESS;
     hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
     status += lkappaPlanck_.loadHDF(file, SP5::MeanOpac::PlanckMeanOpacity);
@@ -165,8 +165,8 @@ class MeanOpacity {
     printf("Mean opacity\n");
   }
 
-  MeanOpacity GetOnDevice() {
-    MeanOpacity other;
+  MeanOpacityImpl GetOnDevice() {
+    MeanOpacityImpl other;
     other.lkappaPlanck_ = Spiner::getOnDeviceDataBox(lkappaPlanck_);
     other.lkappaRosseland_ = Spiner::getOnDeviceDataBox(lkappaRosseland_);
     return other;
@@ -211,9 +211,9 @@ class MeanOpacity {
 
 #undef EPS
 
-using MeanScaleFree = MeanOpacity<PhysicalConstantsUnity>;
-using MeanCGS = MeanOpacity<PhysicalConstantsCGS>;
-using VMeanOpacity = impl::MeanVariant<MeanScaleFree, MeanCGS>;
+using MeanOpacityScaleFree = MeanOpacityImpl<PhysicalConstantsUnity>;
+using MeanOpacityCGS = MeanOpacityImpl<PhysicalConstantsCGS>;
+using MeanOpacity = impl::MeanVariant<MeanOpacityScaleFree, MeanOpacityCGS>;
 
 } // namespace neutrinos
 } // namespace singularity
