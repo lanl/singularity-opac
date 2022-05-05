@@ -33,8 +33,6 @@ struct FermiDiracDistributionNoMu {
   Real ThermalDistributionOfTNu(const Real temp, const RadiationType type,
                                 const Real nu, Real *lambda = nullptr) const {
     Real x = pc::h * nu / (pc::kb * temp);
-    printf("x: %e h: %e nu: %e kb: %e temp: %e\n",
-      x, pc::h, nu, pc::kb, temp);
     Real Bnu = NSPECIES * (2. * pc::h * nu * nu * nu / (pc::c * pc::c)) * 1. /
                (std::exp(x) + 1.);
     return Bnu;

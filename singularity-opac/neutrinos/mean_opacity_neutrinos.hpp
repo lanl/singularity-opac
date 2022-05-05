@@ -39,9 +39,10 @@ class MeanOpacityImpl {
  public:
   MeanOpacityImpl() = default;
   template <typename Opacity>
-  MeanOpacityImpl(const Opacity &opac, Real lRhoMin, Real lRhoMax, int NRho,
-                  Real lTMin, Real lTMax, int NT, Real YeMin, Real YeMax,
-                  int NYe, Real *lambda = nullptr) {
+  MeanOpacityImpl(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
+                  const int NRho, const Real lTMin, const Real lTMax,
+                  const int NT, const Real YeMin, const Real YeMax,
+                  const int NYe, Real *lambda = nullptr) {
     lkappaPlanck_.resize(NRho, NT, NYe, NEUTRINO_NTYPES);
     // index 0 is the species and is not interpolatable
     lkappaPlanck_.setRange(1, YeMin, YeMax, NYe);
