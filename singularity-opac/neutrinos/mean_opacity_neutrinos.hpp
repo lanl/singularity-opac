@@ -24,8 +24,11 @@
 #include <singularity-opac/constants/constants.hpp>
 #include <spiner/databox.hpp>
 
+#include <singularity-opac/neutrinos/mean_neutrino_variant.hpp>
+
 namespace singularity {
 namespace neutrinos {
+namespace impl {
 
 #define EPS (10.0 * std::numeric_limits<Real>::min())
 
@@ -37,8 +40,9 @@ class MeanOpacity {
  public:
   MeanOpacity() = default;
   template <typename Opacity>
-  MeanOpacity(const Opacity &opac, Real lRhoMin, Real lRhoMax, int NRho,
-              Real lTMin, Real lTMax, int NT, Real YeMin, Real YeMax, int NYe,
+  MeanOpacity(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
+              const int NRho, const Real lTMin, const Real lTMax, const int NT,
+              const Real YeMin, const Real YeMax, const int NYe,
               Real *lambda = nullptr) {
     lkappaPlanck_.resize(NRho, NT, NYe, NEUTRINO_NTYPES);
     // index 0 is the species and is not interpolatable
@@ -64,8 +68,9 @@ class MeanOpacity {
             Real kappaRosselandDenom = 0.;
             // Integrate over frequency
             const int nnu = 100;
-            const Real lnuMin = toLog_(1.e10);
-            const Real lnuMax = toLog_(1.e30);
+            const Real lnuMin =
+                toLog_(1.e-3 * pc::kb * fromLog_(lTMin) / pc::h);
+            const Real lnuMax = toLog_(1.e3 * pc::kb * fromLog_(lTMax) / pc::h);
             const Real dlnu = (lnuMax - lnuMin) / (nnu - 1);
             for (int inu = 0; inu < nnu; ++inu) {
               const Real lnu = lnuMin + inu * dlnu;
@@ -119,6 +124,10 @@ class MeanOpacity {
                 toLog_(1. / (kappaRosselandNum / kappaRosselandDenom));
             lkappaPlanck_(iRho, iT, iYe, idx) = lkappaPlanck;
             lkappaRosseland_(iRho, iT, iYe, idx) = lkappaRosseland;
+            if (std::isnan(lkappaPlanck_(iRho, iT, iYe, idx)) ||
+                std::isnan(lkappaRosseland_(iRho, iT, iYe, idx))) {
+              OPAC_ERROR("neutrinos::MeanOpacity: NAN in opacity evaluations");
+            }
           }
         }
       }
@@ -203,6 +212,12 @@ class MeanOpacity {
 };
 
 #undef EPS
+
+} // namespace impl
+
+using MeanOpacityScaleFree = impl::MeanOpacity<PhysicalConstantsUnity>;
+using MeanOpacityCGS = impl::MeanOpacity<PhysicalConstantsCGS>;
+using MeanOpacity = impl::MeanVariant<MeanOpacityScaleFree, MeanOpacityCGS>;
 
 } // namespace neutrinos
 } // namespace singularity

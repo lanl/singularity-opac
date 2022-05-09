@@ -26,6 +26,8 @@
 #include <singularity-opac/neutrinos/thermal_distributions_neutrinos.hpp>
 #include <singularity-opac/neutrinos/tophat_emissivity_neutrinos.hpp>
 
+#include <singularity-opac/neutrinos/mean_opacity_neutrinos.hpp>
+
 namespace singularity {
 namespace neutrinos {
 
