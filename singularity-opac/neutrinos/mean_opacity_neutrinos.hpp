@@ -28,6 +28,7 @@
 
 namespace singularity {
 namespace neutrinos {
+namespace impl {
 
 #define EPS (10.0 * std::numeric_limits<Real>::min())
 
@@ -35,14 +36,14 @@ namespace neutrinos {
 // temperatures, and Ye
 
 template <typename pc = PhysicalConstantsCGS>
-class MeanOpacityImpl {
+class MeanOpacity {
  public:
-  MeanOpacityImpl() = default;
+  MeanOpacity() = default;
   template <typename Opacity>
-  MeanOpacityImpl(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
-                  const int NRho, const Real lTMin, const Real lTMax,
-                  const int NT, const Real YeMin, const Real YeMax,
-                  const int NYe, Real *lambda = nullptr) {
+  MeanOpacity(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
+              const int NRho, const Real lTMin, const Real lTMax, const int NT,
+              const Real YeMin, const Real YeMax, const int NYe,
+              Real *lambda = nullptr) {
     lkappaPlanck_.resize(NRho, NT, NYe, NEUTRINO_NTYPES);
     // index 0 is the species and is not interpolatable
     lkappaPlanck_.setRange(1, YeMin, YeMax, NYe);
@@ -134,7 +135,7 @@ class MeanOpacityImpl {
   }
 
 #ifdef SPINER_USE_HDF
-  MeanOpacityImpl(const std::string &filename) : filename_(filename.c_str()) {
+  MeanOpacity(const std::string &filename) : filename_(filename.c_str()) {
     herr_t status = H5_SUCCESS;
     hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
     status += lkappaPlanck_.loadHDF(file, SP5::MeanOpac::PlanckMeanOpacity);
@@ -166,8 +167,8 @@ class MeanOpacityImpl {
     printf("Mean opacity\n");
   }
 
-  MeanOpacityImpl GetOnDevice() {
-    MeanOpacityImpl other;
+  MeanOpacity GetOnDevice() {
+    MeanOpacity other;
     other.lkappaPlanck_ = Spiner::getOnDeviceDataBox(lkappaPlanck_);
     other.lkappaRosseland_ = Spiner::getOnDeviceDataBox(lkappaRosseland_);
     return other;
@@ -212,8 +213,10 @@ class MeanOpacityImpl {
 
 #undef EPS
 
-using MeanOpacityScaleFree = MeanOpacityImpl<PhysicalConstantsUnity>;
-using MeanOpacityCGS = MeanOpacityImpl<PhysicalConstantsCGS>;
+} // namespace impl
+
+using MeanOpacityScaleFree = impl::MeanOpacity<PhysicalConstantsUnity>;
+using MeanOpacityCGS = impl::MeanOpacity<PhysicalConstantsCGS>;
 using MeanOpacity = impl::MeanVariant<MeanOpacityScaleFree, MeanOpacityCGS>;
 
 } // namespace neutrinos
