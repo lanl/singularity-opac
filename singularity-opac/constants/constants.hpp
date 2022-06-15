@@ -16,6 +16,8 @@
 #ifndef SINGULARITY_OPAC_CONSTANTS_CONSTANTS_
 #define SINGULARITY_OPAC_CONSTANTS_CONSTANTS_
 
+#include <ports-of-call/portability.hpp>
+
 #ifdef SINGULARITY_ENABLE_EXCEPTIONS
 #include <stdexcept>
 #define CONSTANTS_ERROR(x) (throw std::runtime_error(x))
