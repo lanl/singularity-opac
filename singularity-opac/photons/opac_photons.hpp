@@ -21,11 +21,16 @@
 #include <singularity-opac/photons/photon_variant.hpp>
 #include <singularity-opac/photons/thermal_distributions_photons.hpp>
 
+#include <singularity-opac/photons/mean_opacity_photons.hpp>
+
 namespace singularity {
 namespace photons {
 
+using ScaleFree =
+    GrayOpacity<PhysicalConstantsUnity>;
 using Gray = GrayOpacity<PhysicalConstantsCGS>;
-using Opacity = impl::Variant<Gray, NonCGSUnits<Gray>>;
+
+using Opacity = impl::Variant<ScaleFree, Gray, NonCGSUnits<Gray>>;
 
 } // namespace photons
 } // namespace singularity

@@ -71,18 +71,18 @@ class MeanVariant {
   }
 
   PORTABLE_INLINE_FUNCTION Real PlanckMeanAbsorptionCoefficient(
-      const Real rho, const Real temp, const Real Ye, const RadiationType type) const {
+      const Real rho, const Real temp) const {
     return mpark::visit(
         [=](const auto &opac) {
-          return opac.PlanckMeanAbsorptionCoefficient(rho, temp, Ye, type);
+          return opac.PlanckMeanAbsorptionCoefficient(rho, temp);
         },
         opac_);
   }
   PORTABLE_INLINE_FUNCTION Real RosselandMeanAbsorptionCoefficient(
-      const Real rho, const Real temp, const Real Ye, const RadiationType type) const {
+      const Real rho, const Real temp) const {
     return mpark::visit(
         [=](const auto &opac) {
-          return opac.RosselandMeanAbsorptionCoefficient(rho, temp, Ye, type);
+          return opac.RosselandMeanAbsorptionCoefficient(rho, temp);
         },
         opac_);
   }
