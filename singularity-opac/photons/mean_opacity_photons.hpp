@@ -56,73 +56,64 @@ class MeanOpacity {
       for (int iT = 0; iT < NT; ++iT) {
         Real lT = lkappaPlanck_.range(2).x(iT);
         Real T = fromLog_(lT);
-            Real kappaPlanckNum = 0.;
-            Real kappaPlanckDenom = 0.;
-            Real kappaRosselandNum = 0.;
-            Real kappaRosselandDenom = 0.;
-            // Integrate over frequency
-            const int nnu = 100;
-            const Real lnuMin =
-                toLog_(1.e-3 * pc::kb * fromLog_(lTMin) / pc::h);
-            const Real lnuMax = toLog_(1.e3 * pc::kb * fromLog_(lTMax) / pc::h);
-            const Real dlnu = (lnuMax - lnuMin) / (nnu - 1);
-            for (int inu = 0; inu < nnu; ++inu) {
-              const Real lnu = lnuMin + inu * dlnu;
-              const Real nu = fromLog_(lnu);
-              kappaPlanckNum +=
-                  opac.AbsorptionCoefficient(rho, T, nu, lambda) /
-                  rho * opac.ThermalDistributionOfTNu(T, nu) * nu * dlnu;
-              kappaPlanckDenom +=
-                  opac.ThermalDistributionOfTNu(T, nu) * nu * dlnu;
+        Real kappaPlanckNum = 0.;
+        Real kappaPlanckDenom = 0.;
+        Real kappaRosselandNum = 0.;
+        Real kappaRosselandDenom = 0.;
+        // Integrate over frequency
+        const int nnu = 100;
+        const Real lnuMin = toLog_(1.e-3 * pc::kb * fromLog_(lTMin) / pc::h);
+        const Real lnuMax = toLog_(1.e3 * pc::kb * fromLog_(lTMax) / pc::h);
+        const Real dlnu = (lnuMax - lnuMin) / (nnu - 1);
+        for (int inu = 0; inu < nnu; ++inu) {
+          const Real lnu = lnuMin + inu * dlnu;
+          const Real nu = fromLog_(lnu);
+          kappaPlanckNum += opac.AbsorptionCoefficient(rho, T, nu, lambda) /
+                            rho * opac.ThermalDistributionOfTNu(T, nu) * nu *
+                            dlnu;
+          kappaPlanckDenom += opac.ThermalDistributionOfTNu(T, nu) * nu * dlnu;
 
-              kappaRosselandNum +=
-                  rho /
-                  opac.AbsorptionCoefficient(rho, T, nu, lambda) *
-                  opac.DThermalDistributionOfTNuDT(T, nu) * nu * dlnu;
-              kappaRosselandDenom +=
-                  opac.DThermalDistributionOfTNuDT(T, nu) * nu * dlnu;
-            }
+          kappaRosselandNum +=
+              rho / opac.AbsorptionCoefficient(rho, T, nu, lambda) *
+              opac.DThermalDistributionOfTNuDT(T, nu) * nu * dlnu;
+          kappaRosselandDenom +=
+              opac.DThermalDistributionOfTNuDT(T, nu) * nu * dlnu;
+        }
 
-            // Trapezoidal rule
-            const Real nu0 = fromLog_(lnuMin);
-            const Real nu1 = fromLog_(lnuMax);
-            kappaPlanckNum -=
-                0.5 * 1. / rho *
-                (opac.AbsorptionCoefficient(rho, T, nu0, lambda) *
-                     opac.ThermalDistributionOfTNu(T, nu0) * nu0 +
-                 opac.AbsorptionCoefficient(rho, T, nu1, lambda) *
-                     opac.ThermalDistributionOfTNu(T, nu1) * nu1) *
-                dlnu;
-            kappaPlanckDenom -=
-                0.5 *
-                (opac.ThermalDistributionOfTNu(T, nu0) * nu0 +
-                 opac.ThermalDistributionOfTNu(T, nu1) * nu1) *
-                dlnu;
-            kappaRosselandNum -=
-                0.5 * rho *
-                (1. /
-                     opac.AbsorptionCoefficient(rho, T, nu0, lambda) *
-                     opac.DThermalDistributionOfTNuDT(T, nu0) * nu0 +
-                 1. /
-                     opac.AbsorptionCoefficient(rho, T, nu1, lambda) *
-                     opac.DThermalDistributionOfTNuDT(T, nu1) * nu1) *
-                dlnu;
-            kappaRosselandDenom -=
-                0.5 *
-                (opac.DThermalDistributionOfTNuDT(T, nu0) * nu0 +
+        // Trapezoidal rule
+        const Real nu0 = fromLog_(lnuMin);
+        const Real nu1 = fromLog_(lnuMax);
+        kappaPlanckNum -= 0.5 * 1. / rho *
+                          (opac.AbsorptionCoefficient(rho, T, nu0, lambda) *
+                               opac.ThermalDistributionOfTNu(T, nu0) * nu0 +
+                           opac.AbsorptionCoefficient(rho, T, nu1, lambda) *
+                               opac.ThermalDistributionOfTNu(T, nu1) * nu1) *
+                          dlnu;
+        kappaPlanckDenom -= 0.5 *
+                            (opac.ThermalDistributionOfTNu(T, nu0) * nu0 +
+                             opac.ThermalDistributionOfTNu(T, nu1) * nu1) *
+                            dlnu;
+        kappaRosselandNum -=
+            0.5 * rho *
+            (1. / opac.AbsorptionCoefficient(rho, T, nu0, lambda) *
+                 opac.DThermalDistributionOfTNuDT(T, nu0) * nu0 +
+             1. / opac.AbsorptionCoefficient(rho, T, nu1, lambda) *
                  opac.DThermalDistributionOfTNuDT(T, nu1) * nu1) *
-                dlnu;
+            dlnu;
+        kappaRosselandDenom -=
+            0.5 *
+            (opac.DThermalDistributionOfTNuDT(T, nu0) * nu0 +
+             opac.DThermalDistributionOfTNuDT(T, nu1) * nu1) *
+            dlnu;
 
-            Real lkappaPlanck = toLog_(kappaPlanckNum / kappaPlanckDenom);
-            Real lkappaRosseland =
-                toLog_(1. / (kappaRosselandNum / kappaRosselandDenom));
-            lkappaPlanck_(iRho, iT) = lkappaPlanck;
-            lkappaRosseland_(iRho, iT) = lkappaRosseland;
-            if (std::isnan(lkappaPlanck_(iRho, iT)) ||
-                std::isnan(lkappaRosseland_(iRho, iT))) {
-              OPAC_ERROR("photons::MeanOpacity: NAN in opacity evaluations");
-            }
-          }
+        Real lkappaPlanck = toLog_(kappaPlanckNum / kappaPlanckDenom);
+        Real lkappaRosseland =
+            toLog_(1. / (kappaRosselandNum / kappaRosselandDenom));
+        lkappaPlanck_(iRho, iT) = lkappaPlanck;
+        lkappaRosseland_(iRho, iT) = lkappaRosseland;
+        if (std::isnan(lkappaPlanck_(iRho, iT)) ||
+            std::isnan(lkappaRosseland_(iRho, iT))) {
+          OPAC_ERROR("photons::MeanOpacity: NAN in opacity evaluations");
         }
       }
     }
@@ -181,7 +172,8 @@ class MeanOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real RosselandMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
+  Real RosselandMeanAbsorptionCoefficient(const Real rho,
+                                          const Real temp) const {
     Real lRho = toLog_(rho);
     Real lT = toLog_(temp);
     return rho * fromLog_(lkappaRosseland_.interpToReal(lRho, lT));
