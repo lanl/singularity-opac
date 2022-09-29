@@ -152,7 +152,7 @@ class NonCGSUnits {
 
   PORTABLE_INLINE_FUNCTION
   Real Emissivity(const Real rho, const Real temp,
-                  const Real *lambda = nullptr) const {
+                  Real *lambda = nullptr) const {
     const Real J = opac_.Emissivity(rho * rho_unit_, temp * temp_unit_, lambda);
     // Jnu integrated over frequency, but divide by frequency to get out of cgs
     return J * inv_emiss_unit_ * time_unit_;
