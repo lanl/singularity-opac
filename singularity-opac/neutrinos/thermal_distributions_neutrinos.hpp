@@ -20,6 +20,7 @@
 
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
+#include <singularity-opac/base/robust_utils.hpp>
 #include <singularity-opac/constants/constants.hpp>
 
 namespace singularity {
@@ -87,7 +88,7 @@ struct FermiDiracDistributionNoMu {
         std::max(ThermalDistributionOfTNu(temp, type, nu, lambda), EPS);
     const Real jnu =
         std::max(J.EmissivityPerNuOmega(rho, temp, Ye, type, nu, lambda), EPS);
-    return jnu / Bnu;
+    return robust::ratio(jnu, Bnu);
   }
   template <typename Emissivity>
   PORTABLE_INLINE_FUNCTION Real AngleAveragedAbsorptionCoefficientFromKirkhoff(
@@ -98,7 +99,7 @@ struct FermiDiracDistributionNoMu {
     const Real jnu =
         std::max(J.EmissivityPerNu(rho, temp, Ye, type, nu, lambda), EPS) /
         (4. * M_PI);
-    return jnu / Bnu;
+    return robust::ratio(jnu, Bnu);
   }
 };
 

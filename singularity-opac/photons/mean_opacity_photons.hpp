@@ -44,17 +44,16 @@ class MeanOpacity {
               const int NRho, const Real lTMin, const Real lTMax, const int NT,
               Real *lambda = nullptr) {
     lkappaPlanck_.resize(NRho, NT);
-    // index 0 is the species and is not interpolatable
-    lkappaPlanck_.setRange(1, lTMin, lTMax, NT);
-    lkappaPlanck_.setRange(2, lRhoMin, lRhoMax, NRho);
+    lkappaPlanck_.setRange(0, lTMin, lTMax, NT);
+    lkappaPlanck_.setRange(1, lRhoMin, lRhoMax, NRho);
     lkappaRosseland_.copyMetadata(lkappaPlanck_);
 
     // Fill tables
     for (int iRho = 0; iRho < NRho; ++iRho) {
-      Real lRho = lkappaPlanck_.range(3).x(iRho);
+      Real lRho = lkappaPlanck_.range(1).x(iRho);
       Real rho = fromLog_(lRho);
       for (int iT = 0; iT < NT; ++iT) {
-        Real lT = lkappaPlanck_.range(2).x(iT);
+        Real lT = lkappaPlanck_.range(0).x(iT);
         Real T = fromLog_(lT);
         Real kappaPlanckNum = 0.;
         Real kappaPlanckDenom = 0.;
