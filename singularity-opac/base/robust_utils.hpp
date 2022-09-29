@@ -18,40 +18,40 @@
 #include <limits>
 #include <ports-of-call/portability.hpp>
 
-namespace singularity {
-namespace robust {
+namespace singularity - opac {
+  namespace robust {
 
-template <typename T = Real>
-PORTABLE_FORCEINLINE_FUNCTION constexpr auto SMALL() {
-  return 10 * std::numeric_limits<T>::min();
-}
+  template <typename T = Real>
+  PORTABLE_FORCEINLINE_FUNCTION constexpr auto SMALL() {
+    return 10 * std::numeric_limits<T>::min();
+  }
 
-template <typename T = Real>
-PORTABLE_FORCEINLINE_FUNCTION constexpr auto EPS() {
-  return 10 * std::numeric_limits<T>::epsilon();
-}
+  template <typename T = Real>
+  PORTABLE_FORCEINLINE_FUNCTION constexpr auto EPS() {
+    return 10 * std::numeric_limits<T>::epsilon();
+  }
 
-template <typename T>
-PORTABLE_FORCEINLINE_FUNCTION auto make_positive(const T val) {
-  return std::max(val, EPS<T>());
-}
+  template <typename T>
+  PORTABLE_FORCEINLINE_FUNCTION auto make_positive(const T val) {
+    return std::max(val, EPS<T>());
+  }
 
-PORTABLE_FORCEINLINE_FUNCTION
-Real make_bounded(const Real val, const Real vmin, const Real vmax) {
-  return std::min(std::max(val, vmin + EPS()), vmax * (1.0 - EPS()));
-}
+  PORTABLE_FORCEINLINE_FUNCTION
+  Real make_bounded(const Real val, const Real vmin, const Real vmax) {
+    return std::min(std::max(val, vmin + EPS()), vmax * (1.0 - EPS()));
+  }
 
-template <typename T>
-PORTABLE_FORCEINLINE_FUNCTION int sgn(const T &val) {
-  return (T(0) <= val) - (val < T(0));
-}
+  template <typename T>
+  PORTABLE_FORCEINLINE_FUNCTION int sgn(const T &val) {
+    return (T(0) <= val) - (val < T(0));
+  }
 
-template <typename A, typename B>
-PORTABLE_FORCEINLINE_FUNCTION auto ratio(const A &a, const B &b) {
-  return a / (b + sgn(b) * SMALL<B>());
-}
+  template <typename A, typename B>
+  PORTABLE_FORCEINLINE_FUNCTION auto ratio(const A &a, const B &b) {
+    return a / (b + sgn(b) * SMALL<B>());
+  }
 
-} // namespace robust
-} // namespace singularity
+  } // namespace robust
+} // namespace opac
 
 #endif // SINGULARITY_OPAC_BASE_ROBUST_UTILS_HPP_

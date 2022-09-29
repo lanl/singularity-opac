@@ -25,6 +25,8 @@
 namespace singularity {
 namespace photons {
 
+using namespace singularity - opac;
+
 template <typename pc = PhysicalConstantsCGS>
 struct PlanckDistribution {
   PORTABLE_INLINE_FUNCTION

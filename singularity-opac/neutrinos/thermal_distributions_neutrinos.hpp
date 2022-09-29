@@ -26,6 +26,8 @@
 namespace singularity {
 namespace neutrinos {
 
+using namespace singularity - opac;
+
 #define EPS (10.0 * std::numeric_limits<Real>::min())
 
 template <int NSPECIES, typename pc = PhysicalConstantsCGS>
