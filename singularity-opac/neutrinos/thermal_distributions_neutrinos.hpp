@@ -26,8 +26,6 @@
 namespace singularity {
 namespace neutrinos {
 
-using namespace singularity - opac;
-
 #define EPS (10.0 * std::numeric_limits<Real>::min())
 
 template <int NSPECIES, typename pc = PhysicalConstantsCGS>
@@ -90,7 +88,7 @@ struct FermiDiracDistributionNoMu {
         std::max(ThermalDistributionOfTNu(temp, type, nu, lambda), EPS);
     const Real jnu =
         std::max(J.EmissivityPerNuOmega(rho, temp, Ye, type, nu, lambda), EPS);
-    return robust::ratio(jnu, Bnu);
+    return singularity_opac::robust::ratio(jnu, Bnu);
   }
   template <typename Emissivity>
   PORTABLE_INLINE_FUNCTION Real AngleAveragedAbsorptionCoefficientFromKirkhoff(
@@ -101,7 +99,7 @@ struct FermiDiracDistributionNoMu {
     const Real jnu =
         std::max(J.EmissivityPerNu(rho, temp, Ye, type, nu, lambda), EPS) /
         (4. * M_PI);
-    return robust::ratio(jnu, Bnu);
+    return singularity_opac::robust::ratio(jnu, Bnu);
   }
 };
 
