@@ -70,16 +70,16 @@ class MeanVariant {
         opac_);
   }
 
-  PORTABLE_INLINE_FUNCTION Real PlanckMeanAbsorptionCoefficient(
-      const Real rho, const Real temp) const {
+  PORTABLE_INLINE_FUNCTION Real
+  PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
     return mpark::visit(
         [=](const auto &opac) {
           return opac.PlanckMeanAbsorptionCoefficient(rho, temp);
         },
         opac_);
   }
-  PORTABLE_INLINE_FUNCTION Real RosselandMeanAbsorptionCoefficient(
-      const Real rho, const Real temp) const {
+  PORTABLE_INLINE_FUNCTION Real
+  RosselandMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
     return mpark::visit(
         [=](const auto &opac) {
           return opac.RosselandMeanAbsorptionCoefficient(rho, temp);
@@ -90,11 +90,10 @@ class MeanVariant {
   inline void Finalize() noexcept {
     return mpark::visit([](auto &opac) { return opac.Finalize(); }, opac_);
   }
-
 };
 
-} // impl
-}
-}
+} // namespace impl
+} // namespace photons
+} // namespace singularity
 
 #endif // SINGULARITY_OPAC_PHOTONS_MEAN_PHOTON_VARIANT_

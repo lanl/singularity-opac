@@ -26,8 +26,7 @@
 namespace singularity {
 namespace photons {
 
-using ScaleFree =
-    GrayOpacity<PhysicalConstantsUnity>;
+using ScaleFree = GrayOpacity<PhysicalConstantsUnity>;
 using Gray = GrayOpacity<PhysicalConstantsCGS>;
 
 using Opacity = impl::Variant<ScaleFree, Gray, NonCGSUnits<Gray>>;
