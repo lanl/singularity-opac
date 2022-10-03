@@ -33,8 +33,8 @@ namespace impl {
 
 #define EPS (10.0 * std::numeric_limits<Real>::min())
 
-// TODO(BRR) Note: It is assumed that lambda is constant for all densities,
-// temperatures, and Ye
+// TODO(BRR) Note: It is assumed that lambda is constant for all densities and
+// temperatures
 
 template <typename pc = PhysicalConstantsCGS>
 class MeanOpacity {
