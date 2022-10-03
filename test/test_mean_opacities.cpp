@@ -320,7 +320,7 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
       constexpr Real rho_unit =
           mass_unit / (length_unit * length_unit * length_unit);
 
-      auto funny_units_host = neutrinos::MeanNonCGSUnits<photons::MeanOpacity>(
+      auto funny_units_host = photons::MeanNonCGSUnits<photons::MeanOpacity>(
           std::forward<photons::MeanOpacity>(mean_opac_host), time_unit,
           mass_unit, length_unit, temp_unit);
 
