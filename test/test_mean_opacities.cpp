@@ -281,8 +281,9 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
 
         int n_wrong = 0;
         portableReduce(
-            "rebuilt table vs gray", 0, NRho, 0, NT, 0,
-            PORTABLE_LAMBDA(const int iRho, const int iT, int &accumulate) {
+            "rebuilt table vs gray", 0, NRho, 0, NT, 0, 0,
+            PORTABLE_LAMBDA(const int iRho, const int iT, const int igarbage,
+                            int &accumulate) {
               const Real lRho =
                   lRhoMin + (lRhoMax - lRhoMin) / (NRho - 1) * iRho;
               const Real rho = std::pow(10, lRho);
