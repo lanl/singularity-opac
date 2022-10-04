@@ -19,7 +19,7 @@
 #include <cmath>
 
 #include <ports-of-call/portability.hpp>
-#include <singularity-opac/base/radiation_types.hpp>
+#include <singularity-opac/base/robust_utils.hpp>
 #include <singularity-opac/constants/constants.hpp>
 
 namespace singularity {
@@ -79,7 +79,7 @@ struct PlanckDistribution {
       Real *lambda = nullptr) const {
     Real Bnu = ThermalDistributionOfTNu(temp, nu, lambda);
     Real jnu = J.EmissivityPerNuOmega(rho, temp, nu, lambda);
-    return jnu / Bnu;
+    return singularity_opac::robust::ratio(jnu, Bnu);
   }
   template <typename Emissivity>
   PORTABLE_INLINE_FUNCTION Real AngleAveragedAbsorptionCoefficientFromKirkhoff(
@@ -87,7 +87,7 @@ struct PlanckDistribution {
       Real *lambda = nullptr) const {
     Real Bnu = ThermalDistributionOfTNu(temp, nu, lambda);
     Real jnu = J.EmissivityPerNu(rho, temp, nu, lambda) / (4. * M_PI);
-    return jnu / Bnu;
+    return singularity_opac::robust::ratio(jnu, Bnu);
   }
 };
 
