@@ -111,20 +111,6 @@ class S_Variant {
         s_opac_);
   }
 
-  // Angle-averaged scattering coefficient with units of 1/length
-  // Signature should be at least
-  // rho, temp, Ye, type, nu, lambda
-  PORTABLE_INLINE_FUNCTION Real AngleAveragedScatteringCoefficient(
-      const Real rho, const Real temp, const Real Ye, const RadiationType type,
-      const Real nu, Real *lambda = nullptr) const {
-    return mpark::visit(
-        [=](const auto &s_opac) {
-          return s_opac.AngleAveragedScatteringCoefficient(rho, temp, Ye, type,
-                                                           nu, lambda);
-        },
-        s_opac_);
-  }
-
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept {
     return mpark::visit([](const auto &s_opac) { return s_opac.nlambda(); },
