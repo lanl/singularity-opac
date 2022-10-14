@@ -31,7 +31,7 @@ class NonCGSUnitsS {
  public:
   NonCGSUnitsS() = default;
   NonCGSUnitsS(SOpac &&s_opac, const Real time_unit, const Real mass_unit,
-              const Real length_unit, const Real temp_unit)
+               const Real length_unit, const Real temp_unit)
       : s_opac_(std::forward<SOpac>(s_opac)), time_unit_(time_unit),
         mass_unit_(mass_unit), length_unit_(length_unit), temp_unit_(temp_unit),
         rho_unit_(mass_unit_ / (length_unit_ * length_unit_ * length_unit_)),
@@ -39,7 +39,7 @@ class NonCGSUnitsS {
 
   auto GetOnDevice() {
     return NonCGSUnitsS<SOpac>(s_opac_.GetOnDevice(), time_unit_, mass_unit_,
-                             length_unit_, temp_unit_);
+                               length_unit_, temp_unit_);
   }
   inline void Finalize() noexcept { s_opac_.Finalize(); }
 
@@ -81,15 +81,16 @@ class MeanNonCGSUnitsS {
  public:
   MeanNonCGSUnitsS() = default;
   MeanNonCGSUnitsS(MeanSOpac &&mean_s_opac, const Real time_unit,
-                  const Real mass_unit, const Real length_unit,
-                  const Real temp_unit)
-      : mean_s_opac_(std::forward<MeanSOpac>(mean_s_opac)), time_unit_(time_unit),
-        mass_unit_(mass_unit), length_unit_(length_unit), temp_unit_(temp_unit),
+                   const Real mass_unit, const Real length_unit,
+                   const Real temp_unit)
+      : mean_s_opac_(std::forward<MeanSOpac>(mean_s_opac)),
+        time_unit_(time_unit), mass_unit_(mass_unit), length_unit_(length_unit),
+        temp_unit_(temp_unit),
         rho_unit_(mass_unit_ / (length_unit_ * length_unit_ * length_unit_)) {}
 
   auto GetOnDevice() {
     return MeanNonCGSUnitsS<MeanSOpac>(mean_s_opac_.GetOnDevice(), time_unit_,
-                                     mass_unit_, length_unit_, temp_unit_);
+                                       mass_unit_, length_unit_, temp_unit_);
   }
   inline void Finalize() noexcept { mean_s_opac_.Finalize(); }
 

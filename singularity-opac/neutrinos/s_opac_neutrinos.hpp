@@ -18,20 +18,18 @@
 
 #include <variant/include/mpark/variant.hpp>
 
-#include <singularity-opac/neutrinos/non_cgs_s_neutrinos.hpp>
 #include <singularity-opac/neutrinos/gray_s_opacity_neutrinos.hpp>
 #include <singularity-opac/neutrinos/neutrino_s_variant.hpp>
+#include <singularity-opac/neutrinos/non_cgs_s_neutrinos.hpp>
 
 namespace singularity {
 namespace neutrinos {
 
 // TODO(JMM): Include chemical potential
-using ScaleFreeS =
-    GraySOpacity<PhysicalConstantsUnity>;
+using ScaleFreeS = GraySOpacity<PhysicalConstantsUnity>;
 using GrayS = GraySOpacity<>;
 
-using SOpacity = impl::S_Variant<ScaleFreeS, GrayS,
-                              NonCGSUnitsS<GrayS>>;
+using SOpacity = impl::S_Variant<ScaleFreeS, GrayS, NonCGSUnitsS<GrayS>>;
 
 } // namespace neutrinos
 } // namespace singularity

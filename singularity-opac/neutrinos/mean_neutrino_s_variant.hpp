@@ -66,12 +66,15 @@ class MeanSVariant {
 
   MeanSVariant GetOnDevice() {
     return mpark::visit(
-        [](auto &s_opac) { return s_opac_variant<SOpacs...>(s_opac.GetOnDevice()); },
+        [](auto &s_opac) {
+          return s_opac_variant<SOpacs...>(s_opac.GetOnDevice());
+        },
         s_opac_);
   }
 
   PORTABLE_INLINE_FUNCTION Real PlanckMeanScatteringCoefficient(
-      const Real rho, const Real temp, const Real Ye, const RadiationType type) const {
+      const Real rho, const Real temp, const Real Ye,
+      const RadiationType type) const {
     return mpark::visit(
         [=](const auto &s_opac) {
           return s_opac.PlanckMeanScatteringCoefficient(rho, temp, Ye, type);
@@ -79,7 +82,8 @@ class MeanSVariant {
         s_opac_);
   }
   PORTABLE_INLINE_FUNCTION Real RosselandMeanScatteringCoefficient(
-      const Real rho, const Real temp, const Real Ye, const RadiationType type) const {
+      const Real rho, const Real temp, const Real Ye,
+      const RadiationType type) const {
     return mpark::visit(
         [=](const auto &s_opac) {
           return s_opac.RosselandMeanScatteringCoefficient(rho, temp, Ye, type);
@@ -88,13 +92,13 @@ class MeanSVariant {
   }
 
   inline void Finalize() noexcept {
-    return mpark::visit([](auto &s_opac) { return s_opac.Finalize(); }, s_opac_);
+    return mpark::visit([](auto &s_opac) { return s_opac.Finalize(); },
+                        s_opac_);
   }
-
 };
 
-} // impl
-}
-}
+} // namespace impl
+} // namespace neutrinos
+} // namespace singularity
 
 #endif // SINGULARITY_OPAC_NEUTRINOS_MEAN_NEUTRINO_S_VARIANT_

@@ -125,7 +125,7 @@ class S_Variant {
 };
 
 } // namespace impl
-} // namespace impl
 } // namespace neutrinos
+} // namespace singularity
 
 #endif // SINGUALRITY_OPAC_NEUTRINOS_NEUTRINO_S_VARIANT_

@@ -41,9 +41,9 @@ class MeanSOpacity {
   MeanSOpacity() = default;
   template <typename SOpacity>
   MeanSOpacity(const SOpacity &s_opac, const Real lRhoMin, const Real lRhoMax,
-              const int NRho, const Real lTMin, const Real lTMax, const int NT,
-              const Real YeMin, const Real YeMax, const int NYe,
-              Real *lambda = nullptr) {
+               const int NRho, const Real lTMin, const Real lTMax, const int NT,
+               const Real YeMin, const Real YeMax, const int NYe,
+               Real *lambda = nullptr) {
     ThermalDistribution dist;
 
     lkappaPlanck_.resize(NRho, NT, NYe, NEUTRINO_NTYPES);
@@ -109,10 +109,12 @@ class MeanSOpacity {
             kappaRosselandNum -=
                 0.5 * rho *
                 (1. /
-                     s_opac.ScatteringCoefficient(rho, T, Ye, type, nu0, lambda) *
+                     s_opac.ScatteringCoefficient(rho, T, Ye, type, nu0,
+                                                  lambda) *
                      dist.DThermalDistributionOfTNuDT(T, type, nu0) * nu0 +
                  1. /
-                     s_opac.ScatteringCoefficient(rho, T, Ye, type, nu1, lambda) *
+                     s_opac.ScatteringCoefficient(rho, T, Ye, type, nu1,
+                                                  lambda) *
                      dist.DThermalDistributionOfTNuDT(T, type, nu1) * nu1) *
                 dlnu;
             kappaRosselandDenom -=
@@ -128,7 +130,8 @@ class MeanSOpacity {
             lkappaRosseland_(iRho, iT, iYe, idx) = lkappaRosseland;
             if (std::isnan(lkappaPlanck_(iRho, iT, iYe, idx)) ||
                 std::isnan(lkappaRosseland_(iRho, iT, iYe, idx))) {
-              OPAC_ERROR("neutrinos::MeanSOpacity: NAN in scattering opacity evaluations");
+              OPAC_ERROR("neutrinos::MeanSOpacity: NAN in scattering opacity "
+                         "evaluations");
             }
           }
         }
@@ -217,8 +220,11 @@ class MeanSOpacity {
 
 } // namespace impl
 
-using MeanSOpacityScaleFree = impl::MeanSOpacity<FermiDiracDistributionNoMu<3,PhysicalConstantsUnity>, PhysicalConstantsUnity>;
-using MeanSOpacityCGS = impl::MeanSOpacity<FermiDiracDistributionNoMu<3>, PhysicalConstantsCGS>;
+using MeanSOpacityScaleFree =
+    impl::MeanSOpacity<FermiDiracDistributionNoMu<3, PhysicalConstantsUnity>,
+                       PhysicalConstantsUnity>;
+using MeanSOpacityCGS =
+    impl::MeanSOpacity<FermiDiracDistributionNoMu<3>, PhysicalConstantsCGS>;
 using MeanSOpacity = impl::MeanSVariant<MeanSOpacityScaleFree, MeanSOpacityCGS>;
 
 } // namespace neutrinos

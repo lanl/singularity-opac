@@ -36,7 +36,7 @@ constexpr char RosselandMeanOpacity[] = "Rosseland mean opacity";
 namespace MeanSOpac {
 constexpr char PlanckMeanSOpacity[] = "Planck mean scattering opacity";
 constexpr char RosselandMeanSOpacity[] = "Rosseland mean scattering opacity";
-} // namespace MeanOpac
+} // namespace MeanSOpac
 
 } // namespace SP5
 

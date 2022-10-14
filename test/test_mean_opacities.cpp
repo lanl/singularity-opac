@@ -28,8 +28,8 @@
 #include <singularity-opac/constants/constants.hpp>
 
 #include <singularity-opac/neutrinos/mean_opacity_neutrinos.hpp>
-#include <singularity-opac/neutrinos/opac_neutrinos.hpp>
 #include <singularity-opac/neutrinos/mean_s_opacity_neutrinos.hpp>
+#include <singularity-opac/neutrinos/opac_neutrinos.hpp>
 #include <singularity-opac/neutrinos/s_opac_neutrinos.hpp>
 #include <singularity-opac/photons/mean_opacity_photons.hpp>
 #include <singularity-opac/photons/opac_photons.hpp>
