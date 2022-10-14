@@ -30,35 +30,39 @@ template <typename pc = PhysicalConstantsCGS>
 class GraySOpacity {
  public:
   GraySOpacity() = default;
-  GraySOpacity(const Real kappa) : kappa_(kappa) {}
+  GraySOpacity(const Real sigma, const Real mmw) : sigma_(sigma), mmw_(mmw) {}
 
   GraySOpacity GetOnDevice() { return *this; }
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return 0; }
   PORTABLE_INLINE_FUNCTION
   void PrintParams() const noexcept {
-    printf("Gray scattering opacity. kappa = %g\n", kappa_);
+    printf("Gray scattering opacity. sigma = %g mmw = %g\n", sigma_, mmw_);
   }
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION
-  Real ScatteringCoefficient(const Real rho, const Real temp, const Real Ye,
-                             const RadiationType type, const Real nu,
-                             Real *lambda = nullptr) const {
-    return rho * kappa_;
-  }
+  Real TotalCrossSection(const Real rho, const Real temp, const Real Ye,
+                         const RadiationType type, const Real nu, Real *lambda = nullptr) const {
+                         return sigma_;
+                         }
 
   PORTABLE_INLINE_FUNCTION
-  Real AngleAveragedScatteringCoefficient(const Real rho, const Real temp,
-                                          const Real Ye,
-                                          const RadiationType type,
-                                          const Real nu,
-                                          Real *lambda = nullptr) const {
-    return rho * kappa_;
+  Real DifferentialCrossSection(const Real rho, const Real temp, const Real Ye,
+      const RadiationType type, const Real nu, const Real theta, Real *lambda = nullptr) const {
+        return sigma_ / (4. * M_PI);
+      }
+
+  PORTABLE_INLINE_FUNCTION
+  Real TotalScatteringCoefficient(const Real rho, const Real temp, const Real Ye,
+                             const RadiationType type, const Real nu,
+                             Real *lambda = nullptr) const {
+    return (rho / mmw_) * sigma_;
   }
 
  private:
-  Real kappa_; // Scattering opacity. Units of cm^2/g
+  Real sigma_; // Scattering cross section. Units of cm^2
+  Real mmw_; // Mean molecular weight. Units of g
 };
 
 } // namespace neutrinos

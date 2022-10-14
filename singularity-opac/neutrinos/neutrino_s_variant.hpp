@@ -74,10 +74,34 @@ class S_Variant {
         s_opac_);
   }
 
-  // Directional scattering coefficient with units of 1/length
+  // Total cross section with units of length^2
   // Signature should be at least
   // rho, temp, Ye, type, nu, lambda
-  PORTABLE_INLINE_FUNCTION Real ScatteringCoefficient(
+  PORTABLE_INLINE_FUNCTION Real TotalCrossSection(
+    const Real rho, const Real temp, const Real Ye, const RadiationType type,
+    const Real nu, Real *lambda = nullptr) const {
+      return mpark::visit(
+       [=](const auto &s_opac) {
+         return s_opac.TotalCrossSection(rho, temp, Ye, type, nu, lambda);
+       }, s_opac_);
+    }
+
+  // Differential cross section with units of length^2/steradian
+  // Signature should be at least
+  // rho, temp, Ye, type, nu, theta, lambda
+  PORTABLE_INLINE_FUNCTION Real DifferentialCrossSection(
+    const Real rho, const Real temp, const Real Ye, const RadiationType type,
+    const Real nu, const Real theta, Real *lambda = nullptr) const {
+      return mpark::visit(
+      [=](const auto &s_opac) {
+        return s_opac.DifferentialCrossSection(rho, temp, Ye, type, nu, theta, lambda);
+      }, s_opac_);
+    }
+
+  // Total scattering coefficient with units of 1/length
+  // Signature should be at least
+  // rho, temp, Ye, type, nu, lambda
+  PORTABLE_INLINE_FUNCTION Real TotalScatteringCoefficient(
       const Real rho, const Real temp, const Real Ye, const RadiationType type,
       const Real nu, Real *lambda = nullptr) const {
     return mpark::visit(

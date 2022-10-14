@@ -47,26 +47,31 @@ class NonCGSUnitsS {
   int nlambda() const noexcept { return s_opac_.nlambda(); }
 
   PORTABLE_INLINE_FUNCTION
-  Real ScatteringCoefficient(const Real rho, const Real temp, const Real Ye,
+  Real TotalCrossSection(const Real rho, const Real temp, const Real Ye,
+  const RadiationType type, const Real nu, Real *lambda=nullptr) const {
+    const Real sigma = s_opac_.TotalCrossSection(
+      rho_unit_ * rho, temp_unit_ * temp, Ye, type, nu * freq_unit_, lambda);
+    return sigma / (length_unit_ * length_unit_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real DifferentialCrossSection(const Real rho, const Real temp, const Real Ye,
+  const RadiationType type, const Real nu, const Real theta, Real *lambda=nullptr) const {
+    const Real dsigma = s_opac_.DifferentialCrossSection(
+      rho_unit_ * rho, temp_unit_ * temp, Ye, type, nu * freq_unit_, theta, lambda);
+    return dsigma / (length_unit_ * length_unit_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real TotalScatteringCoefficient(const Real rho, const Real temp, const Real Ye,
                              const RadiationType type, const Real nu,
                              Real *lambda = nullptr) const {
-    const Real alpha = s_opac_.ScatteringCoefficient(
+    const Real alpha = s_opac_.TotalScatteringCoefficient(
         rho_unit_ * rho, temp_unit_ * temp, Ye, type, nu * freq_unit_, lambda);
     // alpha output in units of 1/cm. Want to convert out of CGS.
     // multiplication by length_unit converts length to cm.
     // division converts length from cm to unit system.
     // thus multiplication converts (1/cm) to unit system.
-    return alpha * length_unit_;
-  }
-
-  PORTABLE_INLINE_FUNCTION
-  Real AngleAveragedScatteringCoefficient(const Real rho, const Real temp,
-                                          const Real Ye,
-                                          const RadiationType type,
-                                          const Real nu,
-                                          Real *lambda = nullptr) const {
-    const Real alpha = s_opac_.AngleAveragedScatteringCoefficient(
-        rho * rho_unit_, temp * temp_unit_, Ye, type, nu * freq_unit_, lambda);
     return alpha * length_unit_;
   }
 
@@ -98,10 +103,10 @@ class MeanNonCGSUnitsS {
   int nlambda() const noexcept { return mean_s_opac_.nlambda(); }
 
   PORTABLE_INLINE_FUNCTION
-  Real PlanckMeanScatteringCoefficient(const Real rho, const Real temp,
+  Real PlanckMeanTotalScatteringCoefficient(const Real rho, const Real temp,
                                        const Real Ye,
                                        const RadiationType type) const {
-    const Real alpha = mean_s_opac_.PlanckMeanScatteringCoefficient(
+    const Real alpha = mean_s_opac_.PlanckMeanTotalScatteringCoefficient(
         rho_unit_ * rho, temp_unit_ * temp, Ye, type);
     // alpha output in units of 1/cm. Want to convert out of CGS.
     // multiplication by length_unit converts length to cm.
@@ -111,10 +116,10 @@ class MeanNonCGSUnitsS {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real RosselandMeanScatteringCoefficient(const Real rho, const Real temp,
+  Real RosselandMeanTotalScatteringCoefficient(const Real rho, const Real temp,
                                           const Real Ye,
                                           const RadiationType type) const {
-    const Real alpha = mean_s_opac_.RosselandMeanScatteringCoefficient(
+    const Real alpha = mean_s_opac_.RosselandMeanTotalScatteringCoefficient(
         rho_unit_ * rho, temp_unit_ * temp, Ye, type);
     // alpha output in units of 1/cm. Want to convert out of CGS.
     // multiplication by length_unit converts length to cm.
