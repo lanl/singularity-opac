@@ -25,6 +25,7 @@
 #include <spiner/databox.hpp>
 
 #include <singularity-opac/neutrinos/mean_neutrino_s_variant.hpp>
+#include <singularity-opac/neutrinos/thermal_distributions_neutrinos.hpp>
 
 namespace singularity {
 namespace neutrinos {
