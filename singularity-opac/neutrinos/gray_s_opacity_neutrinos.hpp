@@ -30,39 +30,43 @@ template <typename pc = PhysicalConstantsCGS>
 class GraySOpacity {
  public:
   GraySOpacity() = default;
-  GraySOpacity(const Real sigma, const Real mmw) : sigma_(sigma), mmw_(mmw) {}
+  GraySOpacity(const Real sigma, const Real avg_particle_mass)
+      : sigma_(sigma), apm_(avg_particle_mass) {}
 
   GraySOpacity GetOnDevice() { return *this; }
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return 0; }
   PORTABLE_INLINE_FUNCTION
   void PrintParams() const noexcept {
-    printf("Gray scattering opacity. sigma = %g mmw = %g\n", sigma_, mmw_);
+    printf("Gray scattering opacity. sigma = %g avg particle mass = %g\n",
+           sigma_, apm_);
   }
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION
   Real TotalCrossSection(const Real rho, const Real temp, const Real Ye,
-                         const RadiationType type, const Real nu, Real *lambda = nullptr) const {
-                         return sigma_;
-                         }
+                         const RadiationType type, const Real nu,
+                         Real *lambda = nullptr) const {
+    return sigma_;
+  }
 
   PORTABLE_INLINE_FUNCTION
   Real DifferentialCrossSection(const Real rho, const Real temp, const Real Ye,
-      const RadiationType type, const Real nu, const Real theta, Real *lambda = nullptr) const {
-        return sigma_ / (4. * M_PI);
-      }
+                                const RadiationType type, const Real nu,
+                                const Real mu, Real *lambda = nullptr) const {
+    return sigma_ / (4. * M_PI);
+  }
 
   PORTABLE_INLINE_FUNCTION
-  Real TotalScatteringCoefficient(const Real rho, const Real temp, const Real Ye,
-                             const RadiationType type, const Real nu,
-                             Real *lambda = nullptr) const {
-    return (rho / mmw_) * sigma_;
+  Real TotalScatteringCoefficient(const Real rho, const Real temp,
+                                  const Real Ye, const RadiationType type,
+                                  const Real nu, Real *lambda = nullptr) const {
+    return (rho / apm_) * sigma_;
   }
 
  private:
   Real sigma_; // Scattering cross section. Units of cm^2
-  Real mmw_; // Mean molecular weight. Units of g
+  Real apm_;   // Mean molecular weight. Units of g
 };
 
 } // namespace neutrinos

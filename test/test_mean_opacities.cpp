@@ -242,9 +242,11 @@ TEST_CASE("Mean neutrino scattering opacities", "[MeanNeutrinosS]") {
     constexpr Real YeMax = 0.5;
     constexpr int NYe = 10;
 
-    constexpr Real kappa = 1.e-20;
+    constexpr Real sigma = 1.e-20;
 
-    neutrinos::GrayS opac_host(kappa);
+    constexpr Real avg_particle_mass = pc::mp;
+
+    neutrinos::GrayS opac_host(sigma, avg_particle_mass);
     neutrinos::SOpacity opac = opac_host.GetOnDevice();
 
     neutrinos::MeanSOpacityCGS mean_opac_host(
@@ -262,14 +264,17 @@ TEST_CASE("Mean neutrino scattering opacities", "[MeanNeutrinosS]") {
 
       portableFor(
           "calc mean opacities", 0, 100, PORTABLE_LAMBDA(const int &i) {
-            Real alphaPlanck =
-                mean_opac.PlanckMeanScatteringCoefficient(rho, temp, Ye, type);
+            Real alphaPlanck = mean_opac.PlanckMeanTotalScatteringCoefficient(
+                rho, temp, Ye, type);
             Real alphaRosseland =
-                mean_opac.PlanckMeanScatteringCoefficient(rho, temp, Ye, type);
-            if (FractionalDifference(kappa * rho, alphaPlanck) > EPS_TEST) {
+                mean_opac.PlanckMeanTotalScatteringCoefficient(rho, temp, Ye,
+                                                               type);
+            if (FractionalDifference(sigma * rho / pc::mp, alphaPlanck) >
+                EPS_TEST) {
               n_wrong_d() += 1;
             }
-            if (FractionalDifference(kappa * rho, alphaRosseland) > EPS_TEST) {
+            if (FractionalDifference(sigma * rho / pc::mp, alphaRosseland) >
+                EPS_TEST) {
               n_wrong_d() += 1;
             }
           });
@@ -302,17 +307,18 @@ TEST_CASE("Mean neutrino scattering opacities", "[MeanNeutrinosS]") {
               const RadiationType type = Idx2RadType(itp);
 
               const Real kappaPgray =
-                  mean_opac.PlanckMeanScatteringCoefficient(rho, T, Ye, type);
-              const Real kappaPload =
-                  mean_opac_load.PlanckMeanScatteringCoefficient(rho, T, Ye,
+                  mean_opac.PlanckMeanTotalScatteringCoefficient(rho, T, Ye,
                                                                  type);
+              const Real kappaPload =
+                  mean_opac_load.PlanckMeanTotalScatteringCoefficient(rho, T,
+                                                                      Ye, type);
 
               const Real kappaRgray =
-                  mean_opac.RosselandMeanScatteringCoefficient(rho, T, Ye,
-                                                               type);
-              const Real kappaRload =
-                  mean_opac_load.RosselandMeanScatteringCoefficient(rho, T, Ye,
+                  mean_opac.RosselandMeanTotalScatteringCoefficient(rho, T, Ye,
                                                                     type);
+              const Real kappaRload =
+                  mean_opac_load.RosselandMeanTotalScatteringCoefficient(
+                      rho, T, Ye, type);
 
               if (IsWrong(kappaPgray, kappaPload)) {
                 accumulate += 1;
@@ -351,14 +357,16 @@ TEST_CASE("Mean neutrino scattering opacities", "[MeanNeutrinosS]") {
 
       portableFor(
           "compare different units", 0, 100, PORTABLE_LAMBDA(const int &i) {
-            Real alphaPlanck =
-                mean_opac.PlanckMeanScatteringCoefficient(rho, temp, Ye, type);
-            Real alphaRosseland = mean_opac.RosselandMeanScatteringCoefficient(
+            Real alphaPlanck = mean_opac.PlanckMeanTotalScatteringCoefficient(
                 rho, temp, Ye, type);
-            Real alphaPlanckFunny = funny_units.PlanckMeanScatteringCoefficient(
-                rho / rho_unit, temp / temp_unit, Ye, type);
+            Real alphaRosseland =
+                mean_opac.RosselandMeanTotalScatteringCoefficient(rho, temp, Ye,
+                                                                  type);
+            Real alphaPlanckFunny =
+                funny_units.PlanckMeanTotalScatteringCoefficient(
+                    rho / rho_unit, temp / temp_unit, Ye, type);
             Real alphaRosselandFunny =
-                funny_units.RosselandMeanScatteringCoefficient(
+                funny_units.RosselandMeanTotalScatteringCoefficient(
                     rho / rho_unit, temp / temp_unit, Ye, type);
             if (FractionalDifference(alphaPlanck, alphaPlanckFunny /
                                                       length_unit) > EPS_TEST) {

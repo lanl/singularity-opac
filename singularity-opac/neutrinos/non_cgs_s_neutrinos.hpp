@@ -48,24 +48,27 @@ class NonCGSUnitsS {
 
   PORTABLE_INLINE_FUNCTION
   Real TotalCrossSection(const Real rho, const Real temp, const Real Ye,
-  const RadiationType type, const Real nu, Real *lambda=nullptr) const {
+                         const RadiationType type, const Real nu,
+                         Real *lambda = nullptr) const {
     const Real sigma = s_opac_.TotalCrossSection(
-      rho_unit_ * rho, temp_unit_ * temp, Ye, type, nu * freq_unit_, lambda);
+        rho_unit_ * rho, temp_unit_ * temp, Ye, type, nu * freq_unit_, lambda);
     return sigma / (length_unit_ * length_unit_);
   }
 
   PORTABLE_INLINE_FUNCTION
   Real DifferentialCrossSection(const Real rho, const Real temp, const Real Ye,
-  const RadiationType type, const Real nu, const Real theta, Real *lambda=nullptr) const {
-    const Real dsigma = s_opac_.DifferentialCrossSection(
-      rho_unit_ * rho, temp_unit_ * temp, Ye, type, nu * freq_unit_, theta, lambda);
+                                const RadiationType type, const Real nu,
+                                const Real mu, Real *lambda = nullptr) const {
+    const Real dsigma =
+        s_opac_.DifferentialCrossSection(rho_unit_ * rho, temp_unit_ * temp, Ye,
+                                         type, nu * freq_unit_, mu, lambda);
     return dsigma / (length_unit_ * length_unit_);
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real TotalScatteringCoefficient(const Real rho, const Real temp, const Real Ye,
-                             const RadiationType type, const Real nu,
-                             Real *lambda = nullptr) const {
+  Real TotalScatteringCoefficient(const Real rho, const Real temp,
+                                  const Real Ye, const RadiationType type,
+                                  const Real nu, Real *lambda = nullptr) const {
     const Real alpha = s_opac_.TotalScatteringCoefficient(
         rho_unit_ * rho, temp_unit_ * temp, Ye, type, nu * freq_unit_, lambda);
     // alpha output in units of 1/cm. Want to convert out of CGS.
@@ -104,8 +107,8 @@ class MeanNonCGSUnitsS {
 
   PORTABLE_INLINE_FUNCTION
   Real PlanckMeanTotalScatteringCoefficient(const Real rho, const Real temp,
-                                       const Real Ye,
-                                       const RadiationType type) const {
+                                            const Real Ye,
+                                            const RadiationType type) const {
     const Real alpha = mean_s_opac_.PlanckMeanTotalScatteringCoefficient(
         rho_unit_ * rho, temp_unit_ * temp, Ye, type);
     // alpha output in units of 1/cm. Want to convert out of CGS.
@@ -117,8 +120,8 @@ class MeanNonCGSUnitsS {
 
   PORTABLE_INLINE_FUNCTION
   Real RosselandMeanTotalScatteringCoefficient(const Real rho, const Real temp,
-                                          const Real Ye,
-                                          const RadiationType type) const {
+                                               const Real Ye,
+                                               const RadiationType type) const {
     const Real alpha = mean_s_opac_.RosselandMeanTotalScatteringCoefficient(
         rho_unit_ * rho, temp_unit_ * temp, Ye, type);
     // alpha output in units of 1/cm. Want to convert out of CGS.

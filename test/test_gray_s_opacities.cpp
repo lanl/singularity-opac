@@ -53,7 +53,9 @@ TEST_CASE("Gray neutrino scattering opacities", "[GraySNeutrinos]") {
     constexpr RadiationType type = RadiationType::NU_ELECTRON;
     constexpr Real nu = 1.25 * MeV2Hz; // 1 MeV
 
-    neutrinos::GrayS opac_host(1);
+    constexpr Real avg_particle_mass = pc::mp;
+
+    neutrinos::GrayS opac_host(1, avg_particle_mass);
     neutrinos::SOpacity opac = opac_host.GetOnDevice();
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
@@ -66,10 +68,11 @@ TEST_CASE("Gray neutrino scattering opacities", "[GraySNeutrinos]") {
 
       portableFor(
           "calc s opacities", 0, 100, PORTABLE_LAMBDA(const int &i) {
-            Real kappa = opac.ScatteringCoefficient(rho, temp, Ye, type, nu);
-            Real kappa_avg = opac.AngleAveragedScatteringCoefficient(
-                rho, temp, Ye, type, nu);
-            if (FractionalDifference(kappa, kappa_avg) > EPS_TEST) {
+            Real kappa =
+                opac.TotalScatteringCoefficient(rho, temp, Ye, type, nu);
+            Real sigma = opac.TotalCrossSection(rho, temp, Ye, type, nu);
+            if (FractionalDifference(kappa, rho / avg_particle_mass * sigma) >
+                EPS_TEST) {
               n_wrong_d() += 1;
             }
           });
@@ -89,9 +92,9 @@ TEST_CASE("Gray neutrino scattering opacities", "[GraySNeutrinos]") {
           mass_unit / (length_unit * length_unit * length_unit);
       constexpr Real kappa_unit = 1. / length_unit;
       neutrinos::SOpacity funny_units_host =
-          neutrinos::NonCGSUnitsS<neutrinos::GrayS>(neutrinos::GrayS(1),
-                                                    time_unit, mass_unit,
-                                                    length_unit, temp_unit);
+          neutrinos::NonCGSUnitsS<neutrinos::GrayS>(
+              neutrinos::GrayS(1, avg_particle_mass), time_unit, mass_unit,
+              length_unit, temp_unit);
       auto funny_units = funny_units_host.GetOnDevice();
 
       THEN("We can convert meaningfully into and out of funny units") {
@@ -104,9 +107,10 @@ TEST_CASE("Gray neutrino scattering opacities", "[GraySNeutrinos]") {
 
         portableFor(
             "opacities in funny units", 0, 100, PORTABLE_LAMBDA(const int &i) {
-              Real kappa_funny = funny_units.ScatteringCoefficient(
+              Real kappa_funny = funny_units.TotalScatteringCoefficient(
                   rho / rho_unit, temp / temp_unit, Ye, type, nu * time_unit);
-              Real kappa = opac.ScatteringCoefficient(rho, temp, Ye, type, nu);
+              Real kappa =
+                  opac.TotalScatteringCoefficient(rho, temp, Ye, type, nu);
               if (FractionalDifference(kappa, kappa_funny * kappa_unit) >
                   EPS_TEST) {
                 n_wrong_d() += 1;
