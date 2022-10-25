@@ -20,6 +20,7 @@
 
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
+#include <singularity-opac/base/robust_utils.hpp>
 #include <singularity-opac/base/sp5.hpp>
 #include <singularity-opac/constants/constants.hpp>
 #include <spiner/databox.hpp>
@@ -37,6 +38,7 @@ namespace impl {
 
 template <typename pc = PhysicalConstantsCGS>
 class MeanOpacity {
+
  public:
   MeanOpacity() = default;
   template <typename Opacity>
@@ -82,8 +84,9 @@ class MeanOpacity {
                   opac.ThermalDistributionOfTNu(T, type, nu) * nu * dlnu;
 
               kappaRosselandNum +=
-                  rho /
-                  opac.AbsorptionCoefficient(rho, T, Ye, type, nu, lambda) *
+                  singularity_opac::robust::ratio(
+                      rho, opac.AbsorptionCoefficient(rho, T, Ye, type, nu,
+                                                      lambda)) *
                   opac.DThermalDistributionOfTNuDT(T, type, nu) * nu * dlnu;
               kappaRosselandDenom +=
                   opac.DThermalDistributionOfTNuDT(T, type, nu) * nu * dlnu;
@@ -106,11 +109,13 @@ class MeanOpacity {
                 dlnu;
             kappaRosselandNum -=
                 0.5 * rho *
-                (1. /
-                     opac.AbsorptionCoefficient(rho, T, Ye, type, nu0, lambda) *
+                (singularity_opac::robust::ratio(
+                     1., opac.AbsorptionCoefficient(rho, T, Ye, type, nu0,
+                                                    lambda)) *
                      opac.DThermalDistributionOfTNuDT(T, type, nu0) * nu0 +
-                 1. /
-                     opac.AbsorptionCoefficient(rho, T, Ye, type, nu1, lambda) *
+                 singularity_opac::robust::ratio(
+                     1., opac.AbsorptionCoefficient(rho, T, Ye, type, nu1,
+                                                    lambda)) *
                      opac.DThermalDistributionOfTNuDT(T, type, nu1) * nu1) *
                 dlnu;
             kappaRosselandDenom -=
@@ -119,9 +124,10 @@ class MeanOpacity {
                  opac.DThermalDistributionOfTNuDT(T, type, nu1) * nu1) *
                 dlnu;
 
-            Real lkappaPlanck = toLog_(kappaPlanckNum / kappaPlanckDenom);
-            Real lkappaRosseland =
-                toLog_(1. / (kappaRosselandNum / kappaRosselandDenom));
+            Real lkappaPlanck = toLog_(singularity_opac::robust::ratio(
+                kappaPlanckNum, kappaPlanckDenom));
+            Real lkappaRosseland = toLog_(singularity_opac::robust::ratio(
+                kappaRosselandDenom, kappaRosselandNum));
             lkappaPlanck_(iRho, iT, iYe, idx) = lkappaPlanck;
             lkappaRosseland_(iRho, iT, iYe, idx) = lkappaRosseland;
             if (std::isnan(lkappaPlanck_(iRho, iT, iYe, idx)) ||
