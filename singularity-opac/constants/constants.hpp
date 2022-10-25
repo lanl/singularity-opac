@@ -117,7 +117,7 @@ struct PhysicalConstants {
   static constexpr Real avogadro = BASE::avogadro;
   static constexpr Real na = avogadro;
 
-  static constexpr Real fine_structure = BASE::fine_structore;
+  static constexpr Real fine_structure = BASE::fine_structure;
   static constexpr Real alpha = fine_structure;
 
   static constexpr Real planck = BASE::planck * energy * time;

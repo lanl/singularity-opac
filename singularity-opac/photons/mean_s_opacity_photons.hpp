@@ -44,8 +44,8 @@ class MeanSOpacity {
   MeanSOpacity() = default;
   template <typename SOpacity>
   MeanSOpacity(const SOpacity &s_opac, const Real lRhoMin, const Real lRhoMax,
-              const int NRho, const Real lTMin, const Real lTMax, const int NT,
-              Real *lambda = nullptr) {
+               const int NRho, const Real lTMin, const Real lTMax, const int NT,
+               Real *lambda = nullptr) {
     ThermalDistribution dist;
 
     lkappaPlanck_.resize(NRho, NT);
@@ -72,9 +72,9 @@ class MeanSOpacity {
         for (int inu = 0; inu < nnu; ++inu) {
           const Real lnu = lnuMin + inu * dlnu;
           const Real nu = fromLog_(lnu);
-          kappaPlanckNum += s_opac.TotalScatteringCoefficient(rho, T, nu, lambda) /
-                            rho * dist.ThermalDistributionOfTNu(T, nu) * nu *
-                            dlnu;
+          kappaPlanckNum +=
+              s_opac.TotalScatteringCoefficient(rho, T, nu, lambda) / rho *
+              dist.ThermalDistributionOfTNu(T, nu) * nu * dlnu;
           kappaPlanckDenom += dist.ThermalDistributionOfTNu(T, nu) * nu * dlnu;
 
           kappaRosselandNum +=
@@ -88,12 +88,13 @@ class MeanSOpacity {
         // Trapezoidal rule
         const Real nu0 = fromLog_(lnuMin);
         const Real nu1 = fromLog_(lnuMax);
-        kappaPlanckNum -= 0.5 * 1. / rho *
-                          (s_opac.TotalScatteringCoefficient(rho, T, nu0, lambda) *
-                               dist.ThermalDistributionOfTNu(T, nu0) * nu0 +
-                           s_opac.TotalScatteringCoefficient(rho, T, nu1, lambda) *
-                               dist.ThermalDistributionOfTNu(T, nu1) * nu1) *
-                          dlnu;
+        kappaPlanckNum -=
+            0.5 * 1. / rho *
+            (s_opac.TotalScatteringCoefficient(rho, T, nu0, lambda) *
+                 dist.ThermalDistributionOfTNu(T, nu0) * nu0 +
+             s_opac.TotalScatteringCoefficient(rho, T, nu1, lambda) *
+                 dist.ThermalDistributionOfTNu(T, nu1) * nu1) *
+            dlnu;
         kappaPlanckDenom -= 0.5 *
                             (dist.ThermalDistributionOfTNu(T, nu0) * nu0 +
                              dist.ThermalDistributionOfTNu(T, nu1) * nu1) *
@@ -113,9 +114,10 @@ class MeanSOpacity {
              dist.DThermalDistributionOfTNuDT(T, nu1) * nu1) *
             dlnu;
 
-        Real lkappaPlanck = toLog_(singularity_opac::robust::ratio(kappaPlanckNum, kappaPlanckDenom));
-        Real lkappaRosseland =
-            toLog_(singularity_opac::robust::ratio(kappaRosselandDenom, kappaRosselandNum));
+        Real lkappaPlanck = toLog_(
+            singularity_opac::robust::ratio(kappaPlanckNum, kappaPlanckDenom));
+        Real lkappaRosseland = toLog_(singularity_opac::robust::ratio(
+            kappaRosselandDenom, kappaRosselandNum));
         lkappaPlanck_(iRho, iT) = lkappaPlanck;
         lkappaRosseland_(iRho, iT) = lkappaRosseland;
         if (std::isnan(lkappaPlanck_(iRho, iT)) ||
@@ -172,7 +174,8 @@ class MeanSOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real PlanckMeanTotalScatteringCoefficient(const Real rho, const Real temp) const {
+  Real PlanckMeanTotalScatteringCoefficient(const Real rho,
+                                            const Real temp) const {
     Real lRho = toLog_(rho);
     Real lT = toLog_(temp);
     return rho * fromLog_(lkappaPlanck_.interpToReal(lRho, lT));
@@ -180,7 +183,7 @@ class MeanSOpacity {
 
   PORTABLE_INLINE_FUNCTION
   Real RosselandMeanTotalScatteringCoefficient(const Real rho,
-                                          const Real temp) const {
+                                               const Real temp) const {
     Real lRho = toLog_(rho);
     Real lT = toLog_(temp);
     return rho * fromLog_(lkappaRosseland_.interpToReal(lRho, lT));
@@ -202,8 +205,12 @@ class MeanSOpacity {
 
 } // namespace impl
 
-using MeanSOpacityScaleFree = impl::MeanSOpacity<PlanckDistribution<PhysicalConstantsUnity>, PhysicalConstantsUnity>;
-using MeanSOpacityCGS = impl::MeanSOpacity<PlanckDistribution<PhysicalConstantsCGS>, PhysicalConstantsCGS>;
+using MeanSOpacityScaleFree =
+    impl::MeanSOpacity<PlanckDistribution<PhysicalConstantsUnity>,
+                       PhysicalConstantsUnity>;
+using MeanSOpacityCGS =
+    impl::MeanSOpacity<PlanckDistribution<PhysicalConstantsCGS>,
+                       PhysicalConstantsCGS>;
 using MeanSOpacity = impl::MeanSVariant<MeanSOpacityScaleFree, MeanSOpacityCGS>;
 
 } // namespace photons

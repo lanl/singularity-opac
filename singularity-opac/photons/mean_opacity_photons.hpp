@@ -110,9 +110,10 @@ class MeanOpacity {
              opac.DThermalDistributionOfTNuDT(T, nu1) * nu1) *
             dlnu;
 
-        Real lkappaPlanck = toLog_(singularity_opac::robust::ratio(kappaPlanckNum, kappaPlanckDenom));
-        Real lkappaRosseland =
-            toLog_(singularity_opac::robust::ratio(kappaRosselandDenom, kappaRosselandNum));
+        Real lkappaPlanck = toLog_(
+            singularity_opac::robust::ratio(kappaPlanckNum, kappaPlanckDenom));
+        Real lkappaRosseland = toLog_(singularity_opac::robust::ratio(
+            kappaRosselandDenom, kappaRosselandNum));
         lkappaPlanck_(iRho, iT) = lkappaPlanck;
         lkappaRosseland_(iRho, iT) = lkappaRosseland;
         if (std::isnan(lkappaPlanck_(iRho, iT)) ||

@@ -47,8 +47,7 @@ class NonCGSUnitsS {
   int nlambda() const noexcept { return s_opac_.nlambda(); }
 
   PORTABLE_INLINE_FUNCTION
-  Real TotalCrossSection(const Real rho, const Real temp,
-                         const Real nu,
+  Real TotalCrossSection(const Real rho, const Real temp, const Real nu,
                          Real *lambda = nullptr) const {
     const Real sigma = s_opac_.TotalCrossSection(
         rho_unit_ * rho, temp_unit_ * temp, nu * freq_unit_, lambda);
@@ -56,12 +55,10 @@ class NonCGSUnitsS {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real DifferentialCrossSection(const Real rho, const Real temp,
-                                const Real nu,
+  Real DifferentialCrossSection(const Real rho, const Real temp, const Real nu,
                                 const Real mu, Real *lambda = nullptr) const {
-    const Real dsigma =
-        s_opac_.DifferentialCrossSection(rho_unit_ * rho, temp_unit_ * temp,
-                                         nu * freq_unit_, mu, lambda);
+    const Real dsigma = s_opac_.DifferentialCrossSection(
+        rho_unit_ * rho, temp_unit_ * temp, nu * freq_unit_, mu, lambda);
     return dsigma / (length_unit_ * length_unit_);
   }
 
@@ -105,8 +102,8 @@ class MeanNonCGSUnitsS {
   int nlambda() const noexcept { return mean_s_opac_.nlambda(); }
 
   PORTABLE_INLINE_FUNCTION
-  Real PlanckMeanTotalScatteringCoefficient(const Real rho, const Real temp
-                                            ) const {
+  Real PlanckMeanTotalScatteringCoefficient(const Real rho,
+                                            const Real temp) const {
     const Real alpha = mean_s_opac_.PlanckMeanTotalScatteringCoefficient(
         rho_unit_ * rho, temp_unit_ * temp);
     // alpha output in units of 1/cm. Want to convert out of CGS.
@@ -117,8 +114,8 @@ class MeanNonCGSUnitsS {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real RosselandMeanTotalScatteringCoefficient(const Real rho, const Real temp
-                                               ) const {
+  Real RosselandMeanTotalScatteringCoefficient(const Real rho,
+                                               const Real temp) const {
     const Real alpha = mean_s_opac_.RosselandMeanTotalScatteringCoefficient(
         rho_unit_ * rho, temp_unit_ * temp);
     // alpha output in units of 1/cm. Want to convert out of CGS.

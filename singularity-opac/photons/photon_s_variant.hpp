@@ -77,9 +77,9 @@ class S_Variant {
   // Total cross section with units of length^2
   // Signature should be at least
   // rho, temp, Ye, type, nu, lambda
-  PORTABLE_INLINE_FUNCTION Real TotalCrossSection(
-      const Real rho, const Real temp,
-      const Real nu, Real *lambda = nullptr) const {
+  PORTABLE_INLINE_FUNCTION Real
+  TotalCrossSection(const Real rho, const Real temp, const Real nu,
+                    Real *lambda = nullptr) const {
     return mpark::visit(
         [=](const auto &s_opac) {
           return s_opac.TotalCrossSection(rho, temp, nu, lambda);
@@ -90,13 +90,12 @@ class S_Variant {
   // Differential cross section with units of length^2/steradian
   // Signature should be at least
   // rho, temp, Ye, type, nu, mu, lambda
-  PORTABLE_INLINE_FUNCTION Real DifferentialCrossSection(
-      const Real rho, const Real temp,
-      const Real nu, const Real mu, Real *lambda = nullptr) const {
+  PORTABLE_INLINE_FUNCTION Real
+  DifferentialCrossSection(const Real rho, const Real temp, const Real nu,
+                           const Real mu, Real *lambda = nullptr) const {
     return mpark::visit(
         [=](const auto &s_opac) {
-          return s_opac.DifferentialCrossSection(rho, temp, nu, mu,
-                                                 lambda);
+          return s_opac.DifferentialCrossSection(rho, temp, nu, mu, lambda);
         },
         s_opac_);
   }
@@ -104,13 +103,12 @@ class S_Variant {
   // Total scattering coefficient with units of 1/length
   // Signature should be at least
   // rho, temp, Ye, type, nu, lambda
-  PORTABLE_INLINE_FUNCTION Real TotalScatteringCoefficient(
-      const Real rho, const Real temp,
-      const Real nu, Real *lambda = nullptr) const {
+  PORTABLE_INLINE_FUNCTION Real
+  TotalScatteringCoefficient(const Real rho, const Real temp, const Real nu,
+                             Real *lambda = nullptr) const {
     return mpark::visit(
         [=](const auto &s_opac) {
-          return s_opac.TotalScatteringCoefficient(rho, temp, nu,
-                                                   lambda);
+          return s_opac.TotalScatteringCoefficient(rho, temp, nu, lambda);
         },
         s_opac_);
   }

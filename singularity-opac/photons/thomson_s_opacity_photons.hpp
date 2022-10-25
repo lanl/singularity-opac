@@ -13,8 +13,8 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef SINGULARITY_OPAC_PHOTONS_GRAY_S_OPACITY_PHOTONS_
-#define SINGULARITY_OPAC_PHOTONS_GRAY_S_OPACITY_PHOTONS_
+#ifndef SINGULARITY_OPAC_PHOTONS_THOMSON_S_OPACITY_PHOTONS_
+#define SINGULARITY_OPAC_PHOTONS_THOMSON_S_OPACITY_PHOTONS_
 
 #include <cassert>
 #include <cmath>
@@ -27,46 +27,47 @@ namespace singularity {
 namespace photons {
 
 template <typename pc = PhysicalConstantsCGS>
-class GraySOpacity {
+class ThomsonSOpacity {
  public:
-  GraySOpacity() = default;
-  GraySOpacity(const Real sigma, const Real avg_particle_mass)
-      : sigma_(sigma), apm_(avg_particle_mass) {}
+  ThomsonSOpacity() = default;
+  ThomsonSOpacity(const Real avg_particle_mass)
+      : sigmaT_(8. * M_PI / 3. *
+                std::pow(pc::alpha * pc::hbar / (pc::me * pc::c), 2)),
+        apm_(avg_particle_mass) {}
 
-  GraySOpacity GetOnDevice() { return *this; }
+  ThomsonSOpacity GetOnDevice() { return *this; }
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return 0; }
   PORTABLE_INLINE_FUNCTION
   void PrintParams() const noexcept {
-    printf("Gray scattering opacity. sigma = %g avg particle mass = %g\n",
-           sigma_, apm_);
+    printf("Thomson scattering opacity. avg particle mass = %g\n", apm_);
   }
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION
   Real TotalCrossSection(const Real rho, const Real temp, const Real nu,
                          Real *lambda = nullptr) const {
-    return sigma_;
+    return sigmaT_;
   }
 
   PORTABLE_INLINE_FUNCTION
   Real DifferentialCrossSection(const Real rho, const Real temp, const Real nu,
                                 const Real mu, Real *lambda = nullptr) const {
-    return sigma_ / (4. * M_PI);
+    return sigmaT_ / (4. * M_PI);
   }
 
   PORTABLE_INLINE_FUNCTION
   Real TotalScatteringCoefficient(const Real rho, const Real temp,
                                   const Real nu, Real *lambda = nullptr) const {
-    return (rho / apm_) * sigma_;
+    return (rho / apm_) * sigmaT_;
   }
 
  private:
-  Real sigma_; // Scattering cross section. Units of cm^2
-  Real apm_;   // Mean molecular weight. Units of g
+  Real sigmaT_; // Scattering cross section. Units of cm^2
+  Real apm_;    // Mean molecular weight. Units of g
 };
 
 } // namespace photons
 } // namespace singularity
 
-#endif // SINGULARITY_OPAC_PHOTONS_GRAY_S_OPACITY_PHOTONS_
+#endif // SINGULARITY_OPAC_PHOTONS_THOMSON_S_OPACITY_PHOTONS_

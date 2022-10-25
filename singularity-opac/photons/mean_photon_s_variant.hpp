@@ -76,8 +76,7 @@ class MeanSVariant {
   PlanckMeanTotalScatteringCoefficient(const Real rho, const Real temp) const {
     return mpark::visit(
         [=](const auto &s_opac) {
-          return s_opac.PlanckMeanTotalScatteringCoefficient(rho, temp
-                                                             );
+          return s_opac.PlanckMeanTotalScatteringCoefficient(rho, temp);
         },
         s_opac_);
   }
@@ -85,8 +84,7 @@ class MeanSVariant {
       const Real rho, const Real temp) const {
     return mpark::visit(
         [=](const auto &s_opac) {
-          return s_opac.RosselandMeanTotalScatteringCoefficient(rho, temp
-                                                                );
+          return s_opac.RosselandMeanTotalScatteringCoefficient(rho, temp);
         },
         s_opac_);
   }
