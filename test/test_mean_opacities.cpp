@@ -32,7 +32,9 @@
 #include <singularity-opac/neutrinos/opac_neutrinos.hpp>
 #include <singularity-opac/neutrinos/s_opac_neutrinos.hpp>
 #include <singularity-opac/photons/mean_opacity_photons.hpp>
+#include <singularity-opac/photons/mean_s_opacity_photons.hpp>
 #include <singularity-opac/photons/opac_photons.hpp>
+#include <singularity-opac/photons/s_opac_photons.hpp>
 
 using namespace singularity;
 
@@ -517,6 +519,161 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
                 rho / rho_unit, temp / temp_unit);
             Real alphaRosselandFunny =
                 funny_units.RosselandMeanAbsorptionCoefficient(
+                    rho / rho_unit, temp / temp_unit);
+            if (FractionalDifference(alphaPlanck, alphaPlanckFunny /
+                                                      length_unit) > EPS_TEST) {
+              n_wrong_d() += 1;
+            }
+            if (FractionalDifference(alphaRosseland,
+                                     alphaRosselandFunny / length_unit) >
+                EPS_TEST) {
+              n_wrong_d() += 1;
+            }
+          });
+
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+      Kokkos::deep_copy(n_wrong_h, n_wrong_d);
+#endif
+      REQUIRE(n_wrong_h == 0);
+    }
+
+    opac.Finalize();
+  }
+}
+
+TEST_CASE("Mean photon scattering opacities", "[MeanPhotonS]") {
+  const std::string grayname = "mean_gray_s.sp5";
+
+  WHEN("We initialize a mean photon scattering opacity") {
+    constexpr Real MeV2K = 1e6 * pc::eV / pc::kb;
+    constexpr Real MeV2Hz = 1e6 * pc::eV / pc::h;
+    constexpr Real rho = 1e0;   // g/cc
+    constexpr Real temp = 1.e5; // K
+    constexpr Real nu = 1.e15;  // Hz
+
+    constexpr int nT = 10;
+    constexpr Real lRhoMin = std::log10(0.1 * rho);
+    constexpr Real lRhoMax = std::log10(10. * rho);
+    constexpr int NRho = 2;
+    constexpr Real lTMin = std::log10(0.1 * temp);
+    constexpr Real lTMax = std::log10(10. * temp);
+    constexpr int NT = 10;
+
+    constexpr Real sigma = 1.e-20;
+
+    constexpr Real avg_particle_mass = pc::mp / 2.;
+
+    photons::GrayS opac_host(sigma, avg_particle_mass);
+    photons::SOpacity opac = opac_host.GetOnDevice();
+
+    photons::MeanSOpacityCGS mean_opac_host(opac_host, lRhoMin, lRhoMax, NRho,
+                                            lTMin, lTMax, NT);
+    auto mean_opac = mean_opac_host.GetOnDevice();
+
+    THEN("The emissivity per nu omega is consistent with the emissity per nu") {
+      int n_wrong_h = 0;
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+      Kokkos::View<int, atomic_view> n_wrong_d("wrong");
+#else
+      PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
+#endif
+
+      portableFor(
+          "calc mean opacities", 0, 100, PORTABLE_LAMBDA(const int &i) {
+            Real alphaPlanck =
+                mean_opac.PlanckMeanTotalScatteringCoefficient(rho, temp);
+            Real alphaRosseland =
+                mean_opac.PlanckMeanTotalScatteringCoefficient(rho, temp);
+            if (FractionalDifference(sigma * rho / avg_particle_mass,
+                                     alphaPlanck) > EPS_TEST) {
+              n_wrong_d() += 1;
+            }
+            if (FractionalDifference(sigma * rho / avg_particle_mass,
+                                     alphaRosseland) > EPS_TEST) {
+              n_wrong_d() += 1;
+            }
+          });
+
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+      Kokkos::deep_copy(n_wrong_h, n_wrong_d);
+#endif
+      REQUIRE(n_wrong_h == 0);
+    }
+
+#ifdef SPINER_USE_HDF
+    THEN("We can save to disk and reload") {
+      mean_opac.Save(grayname);
+      photons::MeanSOpacityCGS mean_opac_host_load(grayname);
+      AND_THEN("The reloaded table matches the gray opacities") {
+
+        auto mean_opac_load = mean_opac_host_load.GetOnDevice();
+
+        int n_wrong = 0;
+        portableReduce(
+            "rebuilt table vs gray", 0, NRho, 0, NT, 0, 0,
+            PORTABLE_LAMBDA(const int iRho, const int iT, const int igarbage, int &accumulate) {
+              const Real lRho =
+                  lRhoMin + (lRhoMax - lRhoMin) / (NRho - 1) * iRho;
+              const Real rho = std::pow(10, lRho);
+              const Real lT = lTMin + (lTMax - lTMin) / (NT - 1) * iT;
+              const Real T = std::pow(10, lT);
+
+              const Real kappaPgray =
+                  mean_opac.PlanckMeanTotalScatteringCoefficient(rho, T);
+              const Real kappaPload =
+                  mean_opac_load.PlanckMeanTotalScatteringCoefficient(rho, T);
+
+              const Real kappaRgray =
+                  mean_opac.RosselandMeanTotalScatteringCoefficient(rho, T);
+              const Real kappaRload =
+                  mean_opac_load.RosselandMeanTotalScatteringCoefficient(rho,
+                                                                         T);
+
+              if (IsWrong(kappaPgray, kappaPload)) {
+                accumulate += 1;
+              }
+              if (IsWrong(kappaRgray, kappaRload)) {
+                accumulate += 1;
+              }
+            },
+            n_wrong);
+        REQUIRE(n_wrong == 0);
+      }
+    }
+#endif
+
+    THEN("We can create an opacity object with funny units") {
+      constexpr Real time_unit = 123;
+      constexpr Real mass_unit = 456;
+      constexpr Real length_unit = 789;
+      constexpr Real temp_unit = 276;
+      constexpr Real rho_unit =
+          mass_unit / (length_unit * length_unit * length_unit);
+
+      auto funny_units_host = photons::MeanNonCGSUnitsS<photons::MeanSOpacity>(
+          std::forward<photons::MeanSOpacity>(mean_opac_host), time_unit,
+          mass_unit, length_unit, temp_unit);
+
+      auto funny_units = funny_units_host.GetOnDevice();
+
+      int n_wrong_h = 0;
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+      Kokkos::View<int, atomic_view> n_wrong_d("wrong");
+#else
+      PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
+#endif
+
+      portableFor(
+          "compare different units", 0, 100, PORTABLE_LAMBDA(const int &i) {
+            Real alphaPlanck =
+                mean_opac.PlanckMeanTotalScatteringCoefficient(rho, temp);
+            Real alphaRosseland =
+                mean_opac.RosselandMeanTotalScatteringCoefficient(rho, temp);
+            Real alphaPlanckFunny =
+                funny_units.PlanckMeanTotalScatteringCoefficient(
+                    rho / rho_unit, temp / temp_unit);
+            Real alphaRosselandFunny =
+                funny_units.RosselandMeanTotalScatteringCoefficient(
                     rho / rho_unit, temp / temp_unit);
             if (FractionalDifference(alphaPlanck, alphaPlanckFunny /
                                                       length_unit) > EPS_TEST) {
