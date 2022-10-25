@@ -20,6 +20,7 @@
 
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
+#include <singularity-opac/base/robust_utils.hpp>
 #include <singularity-opac/base/sp5.hpp>
 #include <singularity-opac/constants/constants.hpp>
 #include <spiner/databox.hpp>
@@ -79,14 +80,16 @@ class MeanSOpacity {
               const Real lnu = lnuMin + inu * dlnu;
               const Real nu = fromLog_(lnu);
               kappaPlanckNum +=
-                  s_opac.TotalScatteringCoefficient(rho, T, Ye, type, nu, lambda) /
+                  s_opac.TotalScatteringCoefficient(rho, T, Ye, type, nu,
+                                                    lambda) /
                   rho * dist.ThermalDistributionOfTNu(T, type, nu) * nu * dlnu;
               kappaPlanckDenom +=
                   dist.ThermalDistributionOfTNu(T, type, nu) * nu * dlnu;
 
               kappaRosselandNum +=
-                  rho /
-                  s_opac.TotalScatteringCoefficient(rho, T, Ye, type, nu, lambda) *
+                  singularity_opac::robust::ratio(
+                      rho, s_opac.TotalScatteringCoefficient(rho, T, Ye, type,
+                                                             nu, lambda)) *
                   dist.DThermalDistributionOfTNuDT(T, type, nu) * nu * dlnu;
               kappaRosselandDenom +=
                   dist.DThermalDistributionOfTNuDT(T, type, nu) * nu * dlnu;
@@ -97,9 +100,11 @@ class MeanSOpacity {
             const Real nu1 = fromLog_(lnuMax);
             kappaPlanckNum -=
                 0.5 * 1. / rho *
-                (s_opac.TotalScatteringCoefficient(rho, T, Ye, type, nu0, lambda) *
+                (s_opac.TotalScatteringCoefficient(rho, T, Ye, type, nu0,
+                                                   lambda) *
                      dist.ThermalDistributionOfTNu(T, type, nu0) * nu0 +
-                 s_opac.TotalScatteringCoefficient(rho, T, Ye, type, nu1, lambda) *
+                 s_opac.TotalScatteringCoefficient(rho, T, Ye, type, nu1,
+                                                   lambda) *
                      dist.ThermalDistributionOfTNu(T, type, nu1) * nu1) *
                 dlnu;
             kappaPlanckDenom -=
@@ -109,13 +114,13 @@ class MeanSOpacity {
                 dlnu;
             kappaRosselandNum -=
                 0.5 * rho *
-                (1. /
-                     s_opac.TotalScatteringCoefficient(rho, T, Ye, type, nu0,
-                                                  lambda) *
+                (singularity_opac::robust::ratio(
+                     1., s_opac.TotalScatteringCoefficient(rho, T, Ye, type,
+                                                           nu0, lambda)) *
                      dist.DThermalDistributionOfTNuDT(T, type, nu0) * nu0 +
-                 1. /
-                     s_opac.TotalScatteringCoefficient(rho, T, Ye, type, nu1,
-                                                  lambda) *
+                 singularity_opac::robust::ratio(
+                     1., s_opac.TotalScatteringCoefficient(rho, T, Ye, type,
+                                                           nu1, lambda)) *
                      dist.DThermalDistributionOfTNuDT(T, type, nu1) * nu1) *
                 dlnu;
             kappaRosselandDenom -=
@@ -124,9 +129,10 @@ class MeanSOpacity {
                  dist.DThermalDistributionOfTNuDT(T, type, nu1) * nu1) *
                 dlnu;
 
-            Real lkappaPlanck = toLog_(kappaPlanckNum / kappaPlanckDenom);
-            Real lkappaRosseland =
-                toLog_(1. / (kappaRosselandNum / kappaRosselandDenom));
+            Real lkappaPlanck = toLog_(singularity_opac::robust::ratio(
+                kappaPlanckNum, kappaPlanckDenom));
+            Real lkappaRosseland = toLog_(singularity_opac::robust::ratio(
+                kappaRosselandDenom, kappaRosselandNum));
             lkappaPlanck_(iRho, iT, iYe, idx) = lkappaPlanck;
             lkappaRosseland_(iRho, iT, iYe, idx) = lkappaRosseland;
             if (std::isnan(lkappaPlanck_(iRho, iT, iYe, idx)) ||
@@ -187,8 +193,8 @@ class MeanSOpacity {
 
   PORTABLE_INLINE_FUNCTION
   Real PlanckMeanTotalScatteringCoefficient(const Real rho, const Real temp,
-                                       const Real Ye,
-                                       const RadiationType type) const {
+                                            const Real Ye,
+                                            const RadiationType type) const {
     Real lRho = toLog_(rho);
     Real lT = toLog_(temp);
     int idx = RadType2Idx(type);
@@ -197,8 +203,8 @@ class MeanSOpacity {
 
   PORTABLE_INLINE_FUNCTION
   Real RosselandMeanTotalScatteringCoefficient(const Real rho, const Real temp,
-                                          const Real Ye,
-                                          const RadiationType type) const {
+                                               const Real Ye,
+                                               const RadiationType type) const {
     Real lRho = toLog_(rho);
     Real lT = toLog_(temp);
     int idx = RadType2Idx(type);
