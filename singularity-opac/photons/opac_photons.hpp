@@ -16,6 +16,7 @@
 #ifndef SINGULARITY_OPAC_PHOTONS_OPAC_PHOTONS_
 #define SINGULARITY_OPAC_PHOTONS_OPAC_PHOTONS_
 
+#include <singularity-opac/photons/epbremsstrahlung_opacity_photons.hpp>
 #include <singularity-opac/photons/gray_opacity_photons.hpp>
 #include <singularity-opac/photons/non_cgs_photons.hpp>
 #include <singularity-opac/photons/photon_variant.hpp>
@@ -28,8 +29,10 @@ namespace photons {
 
 using ScaleFree = GrayOpacity<PhysicalConstantsUnity>;
 using Gray = GrayOpacity<PhysicalConstantsCGS>;
+using EPBremss = EPBremsstrahlungOpacity<PhysicalConstantsCGS>;
 
-using Opacity = impl::Variant<ScaleFree, Gray, NonCGSUnits<Gray>>;
+using Opacity = impl::Variant<ScaleFree, Gray, EPBremss, NonCGSUnits<Gray>,
+                              NonCGSUnits<EPBremss>>;
 
 } // namespace photons
 } // namespace singularity
