@@ -27,6 +27,8 @@
 namespace singularity {
 namespace photons {
 
+// Expression for specific emissivity from Rybicki & Lightman 1979
+
 template <typename pc = PhysicalConstantsCGS>
 class EPBremsstrahlungOpacity {
  public:
