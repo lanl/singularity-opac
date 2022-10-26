@@ -58,9 +58,10 @@ class MeanOpacity {
   }
 
   template <typename Opacity, bool AUTOFREQ>
-  MeanOpacity(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
-              const int NRho, const Real lTMin, const Real lTMax, const int NT,
-              Real lNuMin, Real lNuMax, const int NNu, Real *lambda = nullptr) {
+  MeanOpacityImpl(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
+                  const int NRho, const Real lTMin, const Real lTMax,
+                  const int NT, Real lNuMin, Real lNuMax, const int NNu,
+                  Real *lambda = nullptr) {
     lkappaPlanck_.resize(NRho, NT);
     lkappaPlanck_.setRange(0, lTMin, lTMax, NT);
     lkappaPlanck_.setRange(1, lRhoMin, lRhoMax, NRho);
@@ -102,10 +103,12 @@ class MeanOpacity {
           }
         }
 
-        Real kappaPlanck = (
+        Real kappaPlanck =
             singularity_opac::robust::ratio(kappaPlanckNum, kappaPlanckDenom);
-        Real kappaRosseland = kappaPlanck > singularity_opac::robust::SMALL() ? singularity_opac::robust::ratio(
-            kappaRosselandDenom, kappaRosselandNum) : 0.;
+        Real kappaRosseland = kappaPlanck > singularity_opac::robust::SMALL()
+                                  ? singularity_opac::robust::ratio(
+                                        kappaRosselandDenom, kappaRosselandNum)
+                                  : 0.;
         lkappaPlanck_(iRho, iT) = toLog_(kappaPlanck);
         lkappaRosseland_(iRho, iT) = toLog_(kappaRosseland);
         if (std::isnan(lkappaPlanck_(iRho, iT)) ||

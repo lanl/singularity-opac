@@ -49,18 +49,21 @@ class MeanSOpacity {
     MeanSOpacityImpl<SOpacity, true>(s_opac, lRhoMin, lRhoMax, NRho, lTMin,
                                      lTMax, NT, -1., -1., 100, lambda);
   }
+
   template <typename SOpacity>
-  MeanSOpacity(const SOpacity &s_opac, const Real lRhoMin, const Real lRhoMax,
-               const int NRho, const Real lTMin, const Real lTMax, const int NT,
-               Real lNuMin, lNuMax, NNu, Real *lambda = nullptr) {
-    MeanSOpacityImpl<SOpacity, false>(s_opac, lRhoMin, lRhoMax, NRho, lTMin,
-                                      lTMax, NT, lNuMin, lNuMax, NNu, lambda);
-  }
-  template <typename SOpacity, bool AUTOFREQ>
   MeanSOpacity(const SOpacity &s_opac, const Real lRhoMin, const Real lRhoMax,
                const int NRho, const Real lTMin, const Real lTMax, const int NT,
                Real lNuMin, Real lNuMax, const int NNu,
                Real *lambda = nullptr) {
+    MeanSOpacityImpl<SOpacity, false>(s_opac, lRhoMin, lRhoMax, NRho, lTMin,
+                                      lTMax, NT, lNuMin, lNuMax, NNu, lambda);
+  }
+
+  template <typename SOpacity, bool AUTOFREQ>
+  MeanSOpacityImpl(const SOpacity &s_opac, const Real lRhoMin,
+                   const Real lRhoMax, const int NRho, const Real lTMin,
+                   const Real lTMax, const int NT, Real lNuMin, Real lNuMax,
+                   const int NNu, Real *lambda = nullptr) {
     ThermalDistribution dist;
 
     lkappaPlanck_.resize(NRho, NT);
@@ -105,12 +108,12 @@ class MeanSOpacity {
           }
         }
 
-        kappaPlanck =
+        Real kappaPlanck =
             singularity_opac::robust::ratio(kappaPlanckNum, kappaPlanckDenom);
-        kappaRosseland = kappaPlanck > singularity_opac::robust::SMALL()
-                             ? singularity_opac::robust::ratio(
-                                   kappaRosselandDenom, kappaRosselandNum)
-                             : 0.;
+        Real kappaRosseland = kappaPlanck > singularity_opac::robust::SMALL()
+                                  ? singularity_opac::robust::ratio(
+                                        kappaRosselandDenom, kappaRosselandNum)
+                                  : 0.;
         lkappaPlanck_(iRho, iT) = toLog_(kappaPlanck);
         lkappaRosseland_(iRho, iT) = toLog_(kappaRosseland);
         if (std::isnan(lkappaPlanck_(iRho, iT)) ||
