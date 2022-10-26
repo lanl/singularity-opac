@@ -46,6 +46,14 @@ class MeanOpacity {
               const int NRho, const Real lTMin, const Real lTMax, const int NT,
               const Real YeMin, const Real YeMax, const int NYe,
               Real *lambda = nullptr) {
+    MeanOpacity(opac, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, YeMin, YeMax,
+                NYe, -1., -1., 100, lambda);
+  }
+  template <typename Opacity>
+  MeanOpacity(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
+              const int NRho, const Real lTMin, const Real lTMax, const int NT,
+              const Real YeMin, const Real YeMax, const int NYe, Real lNuMin,
+              Real lNuMax, const int NNu, Real *lambda = nullptr) {
     lkappaPlanck_.resize(NRho, NT, NYe, NEUTRINO_NTYPES);
     // index 0 is the species and is not interpolatable
     lkappaPlanck_.setRange(1, YeMin, YeMax, NYe);
@@ -68,68 +76,45 @@ class MeanOpacity {
             Real kappaPlanckDenom = 0.;
             Real kappaRosselandNum = 0.;
             Real kappaRosselandDenom = 0.;
+            // Choose default temperature-specific frequency grid if frequency grid not specified
+            if (lNuMin < 0. || lNuMax < 0.) {
+              lNuMin = toLog_(1.e-3 * pc::kb * fromLog_(lTMin) / pc::h);
+              lNuMax = toLog_(1.e3 * pc::kb * fromLog_(lTMax) / pc::h);
+            }
+            const Real dlnu = (lNuMax - lNuMin) / (NNu - 1);
             // Integrate over frequency
-            const int nnu = 100;
-            const Real lnuMin =
-                toLog_(1.e-3 * pc::kb * fromLog_(lTMin) / pc::h);
-            const Real lnuMax = toLog_(1.e3 * pc::kb * fromLog_(lTMax) / pc::h);
-            const Real dlnu = (lnuMax - lnuMin) / (nnu - 1);
-            for (int inu = 0; inu < nnu; ++inu) {
-              const Real lnu = lnuMin + inu * dlnu;
+            for (int inu = 0; inu < NNu; ++inu) {
+              const Real weight =
+                  (inu == 0 || inu == NNu - 1) ? 0.5 : 1.; // Trapezoidal rule
+              const Real lnu = lNuMin + inu * dlnu;
               const Real nu = fromLog_(lnu);
-              kappaPlanckNum +=
-                  opac.AbsorptionCoefficient(rho, T, Ye, type, nu, lambda) /
-                  rho * opac.ThermalDistributionOfTNu(T, type, nu) * nu * dlnu;
-              kappaPlanckDenom +=
-                  opac.ThermalDistributionOfTNu(T, type, nu) * nu * dlnu;
+              const Real alpha =
+                  opac.AbsorptionCoefficient(rho, T, Ye, type, nu, lambda);
+              const Real B = opac.ThermalDistributionOfTNu(T, type, nu);
+              const Real dBdT = opac.DThermalDistributionOfTNuDT(T, type, nu);
+              kappaPlanckNum += weight * alpha / rho * B * nu * dlnu;
+              kappaPlanckDenom += weight * B * nu * dlnu;
 
-              kappaRosselandNum +=
-                  singularity_opac::robust::ratio(
-                      rho, opac.AbsorptionCoefficient(rho, T, Ye, type, nu,
-                                                      lambda)) *
-                  opac.DThermalDistributionOfTNuDT(T, type, nu) * nu * dlnu;
-              kappaRosselandDenom +=
-                  opac.DThermalDistributionOfTNuDT(T, type, nu) * nu * dlnu;
+              // Only contributions to integral from non-zero kappa
+              if (alpha > singularity_opac::robust::SMALL()) {
+                kappaRosselandNum +=
+                    weight * singularity_opac::robust::ratio(rho, alpha) *
+                    dBdT * nu * dlnu;
+                kappaRosselandDenom += weight * dBdT * nu * dlnu;
+              }
             }
 
-            // Trapezoidal rule
-            const Real nu0 = fromLog_(lnuMin);
-            const Real nu1 = fromLog_(lnuMax);
-            kappaPlanckNum -=
-                0.5 * 1. / rho *
-                (opac.AbsorptionCoefficient(rho, T, Ye, type, nu0, lambda) *
-                     opac.ThermalDistributionOfTNu(T, type, nu0) * nu0 +
-                 opac.AbsorptionCoefficient(rho, T, Ye, type, nu1, lambda) *
-                     opac.ThermalDistributionOfTNu(T, type, nu1) * nu1) *
-                dlnu;
-            kappaPlanckDenom -=
-                0.5 *
-                (opac.ThermalDistributionOfTNu(T, type, nu0) * nu0 +
-                 opac.ThermalDistributionOfTNu(T, type, nu1) * nu1) *
-                dlnu;
-            kappaRosselandNum -=
-                0.5 * rho *
-                (singularity_opac::robust::ratio(
-                     1., opac.AbsorptionCoefficient(rho, T, Ye, type, nu0,
-                                                    lambda)) *
-                     opac.DThermalDistributionOfTNuDT(T, type, nu0) * nu0 +
-                 singularity_opac::robust::ratio(
-                     1., opac.AbsorptionCoefficient(rho, T, Ye, type, nu1,
-                                                    lambda)) *
-                     opac.DThermalDistributionOfTNuDT(T, type, nu1) * nu1) *
-                dlnu;
-            kappaRosselandDenom -=
-                0.5 *
-                (opac.DThermalDistributionOfTNuDT(T, type, nu0) * nu0 +
-                 opac.DThermalDistributionOfTNuDT(T, type, nu1) * nu1) *
-                dlnu;
+            Real kappaPlanck = singularity_opac::robust::ratio(
+                kappaPlanckNum, kappaPlanckDenom);
+            Real kappaRosseland =
+                kappaPlanck > singularity_opac::robust::SMALL()
+                    ? singularity_opac::robust::ratio(kappaRosselandDenom,
+                                                      kappaRosselandNum)
+                    : 0.;
+            printf("kappas: %e %e\n", kappaPlanck, kappaRosseland);
 
-            Real lkappaPlanck = toLog_(singularity_opac::robust::ratio(
-                kappaPlanckNum, kappaPlanckDenom));
-            Real lkappaRosseland = toLog_(singularity_opac::robust::ratio(
-                kappaRosselandDenom, kappaRosselandNum));
-            lkappaPlanck_(iRho, iT, iYe, idx) = lkappaPlanck;
-            lkappaRosseland_(iRho, iT, iYe, idx) = lkappaRosseland;
+            lkappaPlanck_(iRho, iT, iYe, idx) = toLog_(kappaPlanck);
+            lkappaRosseland_(iRho, iT, iYe, idx) = toLog_(kappaRosseland);
             if (std::isnan(lkappaPlanck_(iRho, iT, iYe, idx)) ||
                 std::isnan(lkappaRosseland_(iRho, iT, iYe, idx))) {
               OPAC_ERROR("neutrinos::MeanOpacity: NAN in opacity evaluations");
