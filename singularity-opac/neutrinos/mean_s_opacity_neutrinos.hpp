@@ -176,7 +176,7 @@ class MeanSOpacity {
 #endif
 
   PORTABLE_INLINE_FUNCTION void PrintParams() const {
-    printf("Mean opacity\n");
+    printf("Mean scattering opacity\n");
   }
 
   MeanSOpacity GetOnDevice() {

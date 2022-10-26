@@ -13,8 +13,8 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef SINGULARITY_OPAC_PHOTONS_MEAN_OPACITY_PHOTONS_
-#define SINGULARITY_OPAC_PHOTONS_MEAN_OPACITY_PHOTONS_
+#ifndef SINGULARITY_OPAC_PHOTONS_MEAN_S_OPACITY_PHOTONS_
+#define SINGULARITY_OPAC_PHOTONS_MEAN_S_OPACITY_PHOTONS_
 
 #include <cmath>
 
@@ -25,7 +25,8 @@
 #include <singularity-opac/constants/constants.hpp>
 #include <spiner/databox.hpp>
 
-#include <singularity-opac/photons/mean_photon_variant.hpp>
+#include <singularity-opac/photons/mean_photon_s_variant.hpp>
+#include <singularity-opac/photons/thermal_distributions_photons.hpp>
 
 namespace singularity {
 namespace photons {
@@ -36,15 +37,17 @@ namespace impl {
 // TODO(BRR) Note: It is assumed that lambda is constant for all densities and
 // temperatures
 
-template <typename pc = PhysicalConstantsCGS>
-class MeanOpacity {
+template <typename ThermalDistribution, typename pc = PhysicalConstantsCGS>
+class MeanSOpacity {
 
  public:
-  MeanOpacity() = default;
-  template <typename Opacity>
-  MeanOpacity(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
-              const int NRho, const Real lTMin, const Real lTMax, const int NT,
-              Real *lambda = nullptr) {
+  MeanSOpacity() = default;
+  template <typename SOpacity>
+  MeanSOpacity(const SOpacity &s_opac, const Real lRhoMin, const Real lRhoMax,
+               const int NRho, const Real lTMin, const Real lTMax, const int NT,
+               Real *lambda = nullptr) {
+    ThermalDistribution dist;
+
     lkappaPlanck_.resize(NRho, NT);
     lkappaPlanck_.setRange(0, lTMin, lTMax, NT);
     lkappaPlanck_.setRange(1, lRhoMin, lRhoMax, NRho);
@@ -69,45 +72,46 @@ class MeanOpacity {
         for (int inu = 0; inu < nnu; ++inu) {
           const Real lnu = lnuMin + inu * dlnu;
           const Real nu = fromLog_(lnu);
-          kappaPlanckNum += opac.AbsorptionCoefficient(rho, T, nu, lambda) /
-                            rho * opac.ThermalDistributionOfTNu(T, nu) * nu *
-                            dlnu;
-          kappaPlanckDenom += opac.ThermalDistributionOfTNu(T, nu) * nu * dlnu;
+          kappaPlanckNum +=
+              s_opac.TotalScatteringCoefficient(rho, T, nu, lambda) / rho *
+              dist.ThermalDistributionOfTNu(T, nu) * nu * dlnu;
+          kappaPlanckDenom += dist.ThermalDistributionOfTNu(T, nu) * nu * dlnu;
 
           kappaRosselandNum +=
               singularity_opac::robust::ratio(
-                  rho, opac.AbsorptionCoefficient(rho, T, nu, lambda)) *
-              opac.DThermalDistributionOfTNuDT(T, nu) * nu * dlnu;
+                  rho, s_opac.TotalScatteringCoefficient(rho, T, nu, lambda)) *
+              dist.DThermalDistributionOfTNuDT(T, nu) * nu * dlnu;
           kappaRosselandDenom +=
-              opac.DThermalDistributionOfTNuDT(T, nu) * nu * dlnu;
+              dist.DThermalDistributionOfTNuDT(T, nu) * nu * dlnu;
         }
 
         // Trapezoidal rule
         const Real nu0 = fromLog_(lnuMin);
         const Real nu1 = fromLog_(lnuMax);
-        kappaPlanckNum -= 0.5 * 1. / rho *
-                          (opac.AbsorptionCoefficient(rho, T, nu0, lambda) *
-                               opac.ThermalDistributionOfTNu(T, nu0) * nu0 +
-                           opac.AbsorptionCoefficient(rho, T, nu1, lambda) *
-                               opac.ThermalDistributionOfTNu(T, nu1) * nu1) *
-                          dlnu;
+        kappaPlanckNum -=
+            0.5 * 1. / rho *
+            (s_opac.TotalScatteringCoefficient(rho, T, nu0, lambda) *
+                 dist.ThermalDistributionOfTNu(T, nu0) * nu0 +
+             s_opac.TotalScatteringCoefficient(rho, T, nu1, lambda) *
+                 dist.ThermalDistributionOfTNu(T, nu1) * nu1) *
+            dlnu;
         kappaPlanckDenom -= 0.5 *
-                            (opac.ThermalDistributionOfTNu(T, nu0) * nu0 +
-                             opac.ThermalDistributionOfTNu(T, nu1) * nu1) *
+                            (dist.ThermalDistributionOfTNu(T, nu0) * nu0 +
+                             dist.ThermalDistributionOfTNu(T, nu1) * nu1) *
                             dlnu;
         kappaRosselandNum -=
             0.5 * rho *
             (singularity_opac::robust::ratio(
-                 1., opac.AbsorptionCoefficient(rho, T, nu0, lambda)) *
-                 opac.DThermalDistributionOfTNuDT(T, nu0) * nu0 +
+                 1., s_opac.TotalScatteringCoefficient(rho, T, nu0, lambda)) *
+                 dist.DThermalDistributionOfTNuDT(T, nu0) * nu0 +
              singularity_opac::robust::ratio(
-                 1., opac.AbsorptionCoefficient(rho, T, nu1, lambda)) *
-                 opac.DThermalDistributionOfTNuDT(T, nu1) * nu1) *
+                 1., s_opac.TotalScatteringCoefficient(rho, T, nu1, lambda)) *
+                 dist.DThermalDistributionOfTNuDT(T, nu1) * nu1) *
             dlnu;
         kappaRosselandDenom -=
             0.5 *
-            (opac.DThermalDistributionOfTNuDT(T, nu0) * nu0 +
-             opac.DThermalDistributionOfTNuDT(T, nu1) * nu1) *
+            (dist.DThermalDistributionOfTNuDT(T, nu0) * nu0 +
+             dist.DThermalDistributionOfTNuDT(T, nu1) * nu1) *
             dlnu;
 
         Real lkappaPlanck = toLog_(
@@ -118,23 +122,23 @@ class MeanOpacity {
         lkappaRosseland_(iRho, iT) = lkappaRosseland;
         if (std::isnan(lkappaPlanck_(iRho, iT)) ||
             std::isnan(lkappaRosseland_(iRho, iT))) {
-          OPAC_ERROR("photons::MeanOpacity: NAN in opacity evaluations");
+          OPAC_ERROR("photons::MeanSOpacity: NAN in opacity evaluations");
         }
       }
     }
   }
 
 #ifdef SPINER_USE_HDF
-  MeanOpacity(const std::string &filename) : filename_(filename.c_str()) {
+  MeanSOpacity(const std::string &filename) : filename_(filename.c_str()) {
     herr_t status = H5_SUCCESS;
     hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-    status += lkappaPlanck_.loadHDF(file, SP5::MeanOpac::PlanckMeanOpacity);
+    status += lkappaPlanck_.loadHDF(file, SP5::MeanSOpac::PlanckMeanSOpacity);
     status +=
-        lkappaRosseland_.loadHDF(file, SP5::MeanOpac::RosselandMeanOpacity);
+        lkappaRosseland_.loadHDF(file, SP5::MeanSOpac::RosselandMeanSOpacity);
     status += H5Fclose(file);
 
     if (status != H5_SUCCESS) {
-      OPAC_ERROR("photons::MeanOpacity: HDF5 error\n");
+      OPAC_ERROR("photons::MeanSOpacity: HDF5 error\n");
     }
   }
 
@@ -142,23 +146,23 @@ class MeanOpacity {
     herr_t status = H5_SUCCESS;
     hid_t file =
         H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    status += lkappaPlanck_.saveHDF(file, SP5::MeanOpac::PlanckMeanOpacity);
+    status += lkappaPlanck_.saveHDF(file, SP5::MeanSOpac::PlanckMeanSOpacity);
     status +=
-        lkappaRosseland_.saveHDF(file, SP5::MeanOpac::RosselandMeanOpacity);
+        lkappaRosseland_.saveHDF(file, SP5::MeanSOpac::RosselandMeanSOpacity);
     status += H5Fclose(file);
 
     if (status != H5_SUCCESS) {
-      OPAC_ERROR("photons::MeanOpacity: HDF5 error\n");
+      OPAC_ERROR("photons::MeanSOpacity: HDF5 error\n");
     }
   }
 #endif
 
   PORTABLE_INLINE_FUNCTION void PrintParams() const {
-    printf("Mean opacity\n");
+    printf("Mean scattering opacity\n");
   }
 
-  MeanOpacity GetOnDevice() {
-    MeanOpacity other;
+  MeanSOpacity GetOnDevice() {
+    MeanSOpacity other;
     other.lkappaPlanck_ = Spiner::getOnDeviceDataBox(lkappaPlanck_);
     other.lkappaRosseland_ = Spiner::getOnDeviceDataBox(lkappaRosseland_);
     return other;
@@ -170,15 +174,16 @@ class MeanOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
+  Real PlanckMeanTotalScatteringCoefficient(const Real rho,
+                                            const Real temp) const {
     Real lRho = toLog_(rho);
     Real lT = toLog_(temp);
     return rho * fromLog_(lkappaPlanck_.interpToReal(lRho, lT));
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real RosselandMeanAbsorptionCoefficient(const Real rho,
-                                          const Real temp) const {
+  Real RosselandMeanTotalScatteringCoefficient(const Real rho,
+                                               const Real temp) const {
     Real lRho = toLog_(rho);
     Real lT = toLog_(temp);
     return rho * fromLog_(lkappaRosseland_.interpToReal(lRho, lT));
@@ -200,11 +205,15 @@ class MeanOpacity {
 
 } // namespace impl
 
-using MeanOpacityScaleFree = impl::MeanOpacity<PhysicalConstantsUnity>;
-using MeanOpacityCGS = impl::MeanOpacity<PhysicalConstantsCGS>;
-using MeanOpacity = impl::MeanVariant<MeanOpacityScaleFree, MeanOpacityCGS>;
+using MeanSOpacityScaleFree =
+    impl::MeanSOpacity<PlanckDistribution<PhysicalConstantsUnity>,
+                       PhysicalConstantsUnity>;
+using MeanSOpacityCGS =
+    impl::MeanSOpacity<PlanckDistribution<PhysicalConstantsCGS>,
+                       PhysicalConstantsCGS>;
+using MeanSOpacity = impl::MeanSVariant<MeanSOpacityScaleFree, MeanSOpacityCGS>;
 
 } // namespace photons
 } // namespace singularity
 
-#endif // SINGULARITY_OPAC_PHOTONS_MEAN_OPACITY_PHOTONS__
+#endif // SINGULARITY_OPAC_PHOTONS_MEAN_S_OPACITY_PHOTONS__

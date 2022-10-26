@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2021. Triad National Security, LLC. All rights reserved.  This
+// © 2022. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -13,28 +13,27 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef SINGULARITY_OPAC_PHOTONS_OPAC_PHOTONS_
-#define SINGULARITY_OPAC_PHOTONS_OPAC_PHOTONS_
+#ifndef SINGULARITY_OPAC_PHOTONS_S_OPAC_PHOTONS_
+#define SINGULARITY_OPAC_PHOTONS_S_OPAC_PHOTONS_
 
-#include <singularity-opac/photons/epbremsstrahlung_opacity_photons.hpp>
-#include <singularity-opac/photons/gray_opacity_photons.hpp>
-#include <singularity-opac/photons/non_cgs_photons.hpp>
-#include <singularity-opac/photons/photon_variant.hpp>
-#include <singularity-opac/photons/thermal_distributions_photons.hpp>
+#include <variant/include/mpark/variant.hpp>
 
-#include <singularity-opac/photons/mean_opacity_photons.hpp>
+#include <singularity-opac/photons/gray_s_opacity_photons.hpp>
+#include <singularity-opac/photons/non_cgs_s_photons.hpp>
+#include <singularity-opac/photons/photon_s_variant.hpp>
+#include <singularity-opac/photons/thomson_s_opacity_photons.hpp>
 
 namespace singularity {
 namespace photons {
 
-using ScaleFree = GrayOpacity<PhysicalConstantsUnity>;
-using Gray = GrayOpacity<PhysicalConstantsCGS>;
-using EPBremss = EPBremsstrahlungOpacity<PhysicalConstantsCGS>;
+using ScaleFreeS = GraySOpacity<PhysicalConstantsUnity>;
+using GrayS = GraySOpacity<>;
+using ThomsonS = ThomsonSOpacity<>;
 
-using Opacity = impl::Variant<ScaleFree, Gray, EPBremss, NonCGSUnits<Gray>,
-                              NonCGSUnits<EPBremss>>;
+using SOpacity = impl::S_Variant<ScaleFreeS, GrayS, ThomsonS,
+                                 NonCGSUnitsS<GrayS>, NonCGSUnitsS<ThomsonS>>;
 
 } // namespace photons
 } // namespace singularity
 
-#endif // SINGULARITY_OPAC_PHOTONS_OPAC_PHOTONS_
+#endif // SINGULARITY_OPAC_PHOTONS_S_OPAC_PHOTONS_
