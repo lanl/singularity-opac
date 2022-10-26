@@ -46,8 +46,9 @@ class MeanSOpacity {
                const int NRho, const Real lTMin, const Real lTMax, const int NT,
                const Real YeMin, const Real YeMax, const int NYe,
                Real *lambda = nullptr) {
-    MeanSOpacityImpl<SOpacity, true>(s_opac, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, YeMin, YeMax,
-                 NYe, -1., -1., 100, lambda);
+    MeanSOpacityImpl<SOpacity, true>(s_opac, lRhoMin, lRhoMax, NRho, lTMin,
+                                     lTMax, NT, YeMin, YeMax, NYe, -1., -1.,
+                                     100, lambda);
   }
 
   template <typename SOpacity>
@@ -55,15 +56,17 @@ class MeanSOpacity {
                const int NRho, const Real lTMin, const Real lTMax, const int NT,
                const Real YeMin, const Real YeMax, const int NYe, Real lNuMin,
                Real lNuMax, const int NNu, Real *lambda = nullptr) {
-    MeanSOpacityImpl<SOpacity, false>(s_opac, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, YeMin, YeMax,
-                 NYe, lNuMin, lNuMax, 100, lambda);
+    MeanSOpacityImpl<SOpacity, false>(s_opac, lRhoMin, lRhoMax, NRho, lTMin,
+                                      lTMax, NT, YeMin, YeMax, NYe, lNuMin,
+                                      lNuMax, 100, lambda);
   }
 
   template <typename SOpacity, bool AUTOFREQ>
-  MeanSOpacityImpl(const SOpacity &s_opac, const Real lRhoMin, const Real lRhoMax,
-               const int NRho, const Real lTMin, const Real lTMax, const int NT,
-               const Real YeMin, const Real YeMax, const int NYe, Real lNuMin,
-               Real lNuMax, const int NNu, Real *lambda = nullptr) {
+  void MeanSOpacityImpl(const SOpacity &s_opac, const Real lRhoMin,
+                        const Real lRhoMax, const int NRho, const Real lTMin,
+                        const Real lTMax, const int NT, const Real YeMin,
+                        const Real YeMax, const int NYe, Real lNuMin,
+                        Real lNuMax, const int NNu, Real *lambda = nullptr) {
     ThermalDistribution dist;
 
     lkappaPlanck_.resize(NRho, NT, NYe, NEUTRINO_NTYPES);
@@ -137,81 +140,81 @@ class MeanSOpacity {
   }
 
 #ifdef SPINER_USE_HDF
-    MeanSOpacity(const std::string &filename) : filename_(filename.c_str()) {
-      herr_t status = H5_SUCCESS;
-      hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-      status += lkappaPlanck_.loadHDF(file, SP5::MeanSOpac::PlanckMeanSOpacity);
-      status +=
-          lkappaRosseland_.loadHDF(file, SP5::MeanSOpac::RosselandMeanSOpacity);
-      status += H5Fclose(file);
+  MeanSOpacity(const std::string &filename) : filename_(filename.c_str()) {
+    herr_t status = H5_SUCCESS;
+    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    status += lkappaPlanck_.loadHDF(file, SP5::MeanSOpac::PlanckMeanSOpacity);
+    status +=
+        lkappaRosseland_.loadHDF(file, SP5::MeanSOpac::RosselandMeanSOpacity);
+    status += H5Fclose(file);
 
-      if (status != H5_SUCCESS) {
-        OPAC_ERROR("neutrinos::MeanSOpacity: HDF5 error\n");
-      }
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("neutrinos::MeanSOpacity: HDF5 error\n");
     }
+  }
 
-    void Save(const std::string &filename) const {
-      herr_t status = H5_SUCCESS;
-      hid_t file =
-          H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-      status += lkappaPlanck_.saveHDF(file, SP5::MeanSOpac::PlanckMeanSOpacity);
-      status +=
-          lkappaRosseland_.saveHDF(file, SP5::MeanSOpac::RosselandMeanSOpacity);
-      status += H5Fclose(file);
+  void Save(const std::string &filename) const {
+    herr_t status = H5_SUCCESS;
+    hid_t file =
+        H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    status += lkappaPlanck_.saveHDF(file, SP5::MeanSOpac::PlanckMeanSOpacity);
+    status +=
+        lkappaRosseland_.saveHDF(file, SP5::MeanSOpac::RosselandMeanSOpacity);
+    status += H5Fclose(file);
 
-      if (status != H5_SUCCESS) {
-        OPAC_ERROR("neutrinos::MeanSOpacity: HDF5 error\n");
-      }
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("neutrinos::MeanSOpacity: HDF5 error\n");
     }
+  }
 #endif
 
   PORTABLE_INLINE_FUNCTION void PrintParams() const {
     printf("Mean scattering opacity\n");
   }
 
-    MeanSOpacity GetOnDevice() {
-      MeanSOpacity other;
-      other.lkappaPlanck_ = Spiner::getOnDeviceDataBox(lkappaPlanck_);
-      other.lkappaRosseland_ = Spiner::getOnDeviceDataBox(lkappaRosseland_);
-      return other;
-    }
+  MeanSOpacity GetOnDevice() {
+    MeanSOpacity other;
+    other.lkappaPlanck_ = Spiner::getOnDeviceDataBox(lkappaPlanck_);
+    other.lkappaRosseland_ = Spiner::getOnDeviceDataBox(lkappaRosseland_);
+    return other;
+  }
 
-    void Finalize() {
-      lkappaPlanck_.finalize();
-      lkappaRosseland_.finalize();
-    }
+  void Finalize() {
+    lkappaPlanck_.finalize();
+    lkappaRosseland_.finalize();
+  }
 
-    PORTABLE_INLINE_FUNCTION
-    Real PlanckMeanTotalScatteringCoefficient(const Real rho, const Real temp,
-                                              const Real Ye,
-                                              const RadiationType type) const {
-      Real lRho = toLog_(rho);
-      Real lT = toLog_(temp);
-      int idx = RadType2Idx(type);
-      return rho * fromLog_(lkappaPlanck_.interpToReal(lRho, lT, Ye, idx));
-    }
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckMeanTotalScatteringCoefficient(const Real rho, const Real temp,
+                                            const Real Ye,
+                                            const RadiationType type) const {
+    Real lRho = toLog_(rho);
+    Real lT = toLog_(temp);
+    int idx = RadType2Idx(type);
+    return rho * fromLog_(lkappaPlanck_.interpToReal(lRho, lT, Ye, idx));
+  }
 
-    PORTABLE_INLINE_FUNCTION
-    Real RosselandMeanTotalScatteringCoefficient(
-        const Real rho, const Real temp, const Real Ye,
-        const RadiationType type) const {
-      Real lRho = toLog_(rho);
-      Real lT = toLog_(temp);
-      int idx = RadType2Idx(type);
-      return rho * fromLog_(lkappaRosseland_.interpToReal(lRho, lT, Ye, idx));
-    }
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandMeanTotalScatteringCoefficient(const Real rho, const Real temp,
+                                               const Real Ye,
+                                               const RadiationType type) const {
+    Real lRho = toLog_(rho);
+    Real lT = toLog_(temp);
+    int idx = RadType2Idx(type);
+    return rho * fromLog_(lkappaRosseland_.interpToReal(lRho, lT, Ye, idx));
+  }
 
-   private:
-    PORTABLE_INLINE_FUNCTION Real toLog_(const Real x) const {
-      return std::log10(std::abs(x) + EPS);
-    }
-    PORTABLE_INLINE_FUNCTION Real fromLog_(const Real lx) const {
-      return std::pow(10., lx);
-    }
-    Spiner::DataBox lkappaPlanck_;
-    Spiner::DataBox lkappaRosseland_;
-    const char *filename_;
-  };
+ private:
+  PORTABLE_INLINE_FUNCTION Real toLog_(const Real x) const {
+    return std::log10(std::abs(x) + EPS);
+  }
+  PORTABLE_INLINE_FUNCTION Real fromLog_(const Real lx) const {
+    return std::pow(10., lx);
+  }
+  Spiner::DataBox lkappaPlanck_;
+  Spiner::DataBox lkappaRosseland_;
+  const char *filename_;
+};
 
 #undef EPS
 
@@ -224,7 +227,7 @@ using MeanSOpacityCGS =
     impl::MeanSOpacity<FermiDiracDistributionNoMu<3>, PhysicalConstantsCGS>;
 using MeanSOpacity = impl::MeanSVariant<MeanSOpacityScaleFree, MeanSOpacityCGS>;
 
-} // namespace impl
 } // namespace neutrinos
+} // namespace singularity
 
 #endif // SINGULARITY_OPAC_NEUTRINOS_MEAN_OPACITY_S_NEUTRINOS__

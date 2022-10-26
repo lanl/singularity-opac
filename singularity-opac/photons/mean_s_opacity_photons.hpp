@@ -60,10 +60,10 @@ class MeanSOpacity {
   }
 
   template <typename SOpacity, bool AUTOFREQ>
-  MeanSOpacityImpl(const SOpacity &s_opac, const Real lRhoMin,
-                   const Real lRhoMax, const int NRho, const Real lTMin,
-                   const Real lTMax, const int NT, Real lNuMin, Real lNuMax,
-                   const int NNu, Real *lambda = nullptr) {
+  void MeanSOpacityImpl(const SOpacity &s_opac, const Real lRhoMin,
+                        const Real lRhoMax, const int NRho, const Real lTMin,
+                        const Real lTMax, const int NT, Real lNuMin,
+                        Real lNuMax, const int NNu, Real *lambda = nullptr) {
     ThermalDistribution dist;
 
     lkappaPlanck_.resize(NRho, NT);

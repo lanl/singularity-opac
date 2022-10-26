@@ -46,8 +46,9 @@ class MeanOpacity {
               const int NRho, const Real lTMin, const Real lTMax, const int NT,
               const Real YeMin, const Real YeMax, const int NYe,
               Real *lambda = nullptr) {
-    MeanOpacityImpl<Opacity, true>(opac, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, YeMin, YeMax,
-                NYe, -1., -1., 100, lambda);
+    MeanOpacityImpl<Opacity, true>(opac, lRhoMin, lRhoMax, NRho, lTMin, lTMax,
+                                   NT, YeMin, YeMax, NYe, -1., -1., 100,
+                                   lambda);
   }
 
   template <typename Opacity>
@@ -55,15 +56,17 @@ class MeanOpacity {
               const int NRho, const Real lTMin, const Real lTMax, const int NT,
               const Real YeMin, const Real YeMax, const int NYe, Real lNuMin,
               Real lNuMax, const int NNu, Real *lambda = nullptr) {
-    MeanOpacityImpl<Opacity, false>(opac, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, YeMin, YeMax,
-                NYe, lNuMin, lNuMax, NNu, lambda);
+    MeanOpacityImpl<Opacity, false>(opac, lRhoMin, lRhoMax, NRho, lTMin, lTMax,
+                                    NT, YeMin, YeMax, NYe, lNuMin, lNuMax, NNu,
+                                    lambda);
   }
 
   template <typename Opacity, bool AUTOFREQ>
-  MeanOpacityImpl(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
-              const int NRho, const Real lTMin, const Real lTMax, const int NT,
-              const Real YeMin, const Real YeMax, const int NYe, Real lNuMin,
-              Real lNuMax, const int NNu, Real *lambda = nullptr) {
+  void MeanOpacityImpl(const Opacity &opac, const Real lRhoMin,
+                       const Real lRhoMax, const int NRho, const Real lTMin,
+                       const Real lTMax, const int NT, const Real YeMin,
+                       const Real YeMax, const int NYe, Real lNuMin,
+                       Real lNuMax, const int NNu, Real *lambda = nullptr) {
     lkappaPlanck_.resize(NRho, NT, NYe, NEUTRINO_NTYPES);
     // index 0 is the species and is not interpolatable
     lkappaPlanck_.setRange(1, YeMin, YeMax, NYe);
@@ -86,7 +89,8 @@ class MeanOpacity {
             Real kappaPlanckDenom = 0.;
             Real kappaRosselandNum = 0.;
             Real kappaRosselandDenom = 0.;
-            // Choose default temperature-specific frequency grid if frequency grid not specified
+            // Choose default temperature-specific frequency grid if frequency
+            // grid not specified
             if (AUTOFREQ) {
               lNuMin = toLog_(1.e-3 * pc::kb * fromLog_(lTMin) / pc::h);
               lNuMax = toLog_(1.e3 * pc::kb * fromLog_(lTMax) / pc::h);
@@ -121,7 +125,6 @@ class MeanOpacity {
                     ? singularity_opac::robust::ratio(kappaRosselandDenom,
                                                       kappaRosselandNum)
                     : 0.;
-            printf("kappas: %e %e\n", kappaPlanck, kappaRosseland);
 
             lkappaPlanck_(iRho, iT, iYe, idx) = toLog_(kappaPlanck);
             lkappaRosseland_(iRho, iT, iYe, idx) = toLog_(kappaRosseland);

@@ -58,10 +58,10 @@ class MeanOpacity {
   }
 
   template <typename Opacity, bool AUTOFREQ>
-  MeanOpacityImpl(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
-                  const int NRho, const Real lTMin, const Real lTMax,
-                  const int NT, Real lNuMin, Real lNuMax, const int NNu,
-                  Real *lambda = nullptr) {
+  void MeanOpacityImpl(const Opacity &opac, const Real lRhoMin,
+                       const Real lRhoMax, const int NRho, const Real lTMin,
+                       const Real lTMax, const int NT, Real lNuMin, Real lNuMax,
+                       const int NNu, Real *lambda = nullptr) {
     lkappaPlanck_.resize(NRho, NT);
     lkappaPlanck_.setRange(0, lTMin, lTMax, NT);
     lkappaPlanck_.setRange(1, lRhoMin, lRhoMax, NRho);
