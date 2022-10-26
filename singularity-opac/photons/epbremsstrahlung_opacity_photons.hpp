@@ -180,9 +180,9 @@ class EPBremsstrahlungOpacity {
       (pc::mp + pc::me) /
       (2. * pc::mp); // Neutral fully ionized electron-proton gas
   static constexpr Real gff_ = 1.2;
-  static constexpr Real prefac_ = 8. * std::pow(pc::qe, 6) /
-                                  (3. * std::pow(pc::me * pc::c * pc::c, 2)) *
-                                  std::sqrt(2. * M_PI / 3.);
+  Real prefac_ = 8. * std::pow(pc::qe, 6) /
+                 (3. * std::pow(pc::me * pc::c * pc::c, 2)) *
+                 std::sqrt(2. * M_PI / 3.);
 };
 
 } // namespace photons

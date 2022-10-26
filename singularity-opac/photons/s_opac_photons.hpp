@@ -26,7 +26,6 @@
 namespace singularity {
 namespace photons {
 
-// TODO(JMM): Include chemical potential
 using ScaleFreeS = GraySOpacity<PhysicalConstantsUnity>;
 using GrayS = GraySOpacity<>;
 using ThomsonS = ThomsonSOpacity<>;
