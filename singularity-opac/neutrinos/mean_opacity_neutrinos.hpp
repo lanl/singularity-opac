@@ -46,9 +46,9 @@ class MeanOpacity {
               const int NRho, const Real lTMin, const Real lTMax, const int NT,
               const Real YeMin, const Real YeMax, const int NYe,
               Real *lambda = nullptr) {
-    MeanOpacityImpl<Opacity, true>(opac, lRhoMin, lRhoMax, NRho, lTMin, lTMax,
-                                   NT, YeMin, YeMax, NYe, -1., -1., 100,
-                                   lambda);
+    MeanOpacityImpl_<Opacity, true>(opac, lRhoMin, lRhoMax, NRho, lTMin, lTMax,
+                                    NT, YeMin, YeMax, NYe, -1., -1., 100,
+                                    lambda);
   }
 
   template <typename Opacity>
@@ -56,17 +56,83 @@ class MeanOpacity {
               const int NRho, const Real lTMin, const Real lTMax, const int NT,
               const Real YeMin, const Real YeMax, const int NYe, Real lNuMin,
               Real lNuMax, const int NNu, Real *lambda = nullptr) {
-    MeanOpacityImpl<Opacity, false>(opac, lRhoMin, lRhoMax, NRho, lTMin, lTMax,
-                                    NT, YeMin, YeMax, NYe, lNuMin, lNuMax, NNu,
-                                    lambda);
+    MeanOpacityImpl_<Opacity, false>(opac, lRhoMin, lRhoMax, NRho, lTMin, lTMax,
+                                     NT, YeMin, YeMax, NYe, lNuMin, lNuMax, NNu,
+                                     lambda);
   }
 
+#ifdef SPINER_USE_HDF
+  MeanOpacity(const std::string &filename) : filename_(filename.c_str()) {
+    herr_t status = H5_SUCCESS;
+    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    status += lkappaPlanck_.loadHDF(file, SP5::MeanOpac::PlanckMeanOpacity);
+    status +=
+        lkappaRosseland_.loadHDF(file, SP5::MeanOpac::RosselandMeanOpacity);
+    status += H5Fclose(file);
+
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("neutrinos::MeanOpacity: HDF5 error\n");
+    }
+  }
+
+  void Save(const std::string &filename) const {
+    herr_t status = H5_SUCCESS;
+    hid_t file =
+        H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    status += lkappaPlanck_.saveHDF(file, SP5::MeanOpac::PlanckMeanOpacity);
+    status +=
+        lkappaRosseland_.saveHDF(file, SP5::MeanOpac::RosselandMeanOpacity);
+    status += H5Fclose(file);
+
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("neutrinos::MeanOpacity: HDF5 error\n");
+    }
+  }
+#endif
+
+  PORTABLE_INLINE_FUNCTION void PrintParams() const {
+    printf("Mean opacity\n");
+  }
+
+  MeanOpacity GetOnDevice() {
+    MeanOpacity other;
+    other.lkappaPlanck_ = Spiner::getOnDeviceDataBox(lkappaPlanck_);
+    other.lkappaRosseland_ = Spiner::getOnDeviceDataBox(lkappaRosseland_);
+    return other;
+  }
+
+  void Finalize() {
+    lkappaPlanck_.finalize();
+    lkappaRosseland_.finalize();
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp,
+                                       const Real Ye,
+                                       const RadiationType type) const {
+    Real lRho = toLog_(rho);
+    Real lT = toLog_(temp);
+    int idx = RadType2Idx(type);
+    return rho * fromLog_(lkappaPlanck_.interpToReal(lRho, lT, Ye, idx));
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandMeanAbsorptionCoefficient(const Real rho, const Real temp,
+                                          const Real Ye,
+                                          const RadiationType type) const {
+    Real lRho = toLog_(rho);
+    Real lT = toLog_(temp);
+    int idx = RadType2Idx(type);
+    return rho * fromLog_(lkappaRosseland_.interpToReal(lRho, lT, Ye, idx));
+  }
+
+ private:
   template <typename Opacity, bool AUTOFREQ>
-  void MeanOpacityImpl(const Opacity &opac, const Real lRhoMin,
-                       const Real lRhoMax, const int NRho, const Real lTMin,
-                       const Real lTMax, const int NT, const Real YeMin,
-                       const Real YeMax, const int NYe, Real lNuMin,
-                       Real lNuMax, const int NNu, Real *lambda = nullptr) {
+  void MeanOpacityImpl_(const Opacity &opac, const Real lRhoMin,
+                        const Real lRhoMax, const int NRho, const Real lTMin,
+                        const Real lTMax, const int NT, const Real YeMin,
+                        const Real YeMax, const int NYe, Real lNuMin,
+                        Real lNuMax, const int NNu, Real *lambda = nullptr) {
     lkappaPlanck_.resize(NRho, NT, NYe, NEUTRINO_NTYPES);
     // index 0 is the species and is not interpolatable
     lkappaPlanck_.setRange(1, YeMin, YeMax, NYe);
@@ -137,73 +203,6 @@ class MeanOpacity {
       }
     }
   }
-
-#ifdef SPINER_USE_HDF
-  MeanOpacity(const std::string &filename) : filename_(filename.c_str()) {
-    herr_t status = H5_SUCCESS;
-    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-    status += lkappaPlanck_.loadHDF(file, SP5::MeanOpac::PlanckMeanOpacity);
-    status +=
-        lkappaRosseland_.loadHDF(file, SP5::MeanOpac::RosselandMeanOpacity);
-    status += H5Fclose(file);
-
-    if (status != H5_SUCCESS) {
-      OPAC_ERROR("neutrinos::MeanOpacity: HDF5 error\n");
-    }
-  }
-
-  void Save(const std::string &filename) const {
-    herr_t status = H5_SUCCESS;
-    hid_t file =
-        H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    status += lkappaPlanck_.saveHDF(file, SP5::MeanOpac::PlanckMeanOpacity);
-    status +=
-        lkappaRosseland_.saveHDF(file, SP5::MeanOpac::RosselandMeanOpacity);
-    status += H5Fclose(file);
-
-    if (status != H5_SUCCESS) {
-      OPAC_ERROR("neutrinos::MeanOpacity: HDF5 error\n");
-    }
-  }
-#endif
-
-  PORTABLE_INLINE_FUNCTION void PrintParams() const {
-    printf("Mean opacity\n");
-  }
-
-  MeanOpacity GetOnDevice() {
-    MeanOpacity other;
-    other.lkappaPlanck_ = Spiner::getOnDeviceDataBox(lkappaPlanck_);
-    other.lkappaRosseland_ = Spiner::getOnDeviceDataBox(lkappaRosseland_);
-    return other;
-  }
-
-  void Finalize() {
-    lkappaPlanck_.finalize();
-    lkappaRosseland_.finalize();
-  }
-
-  PORTABLE_INLINE_FUNCTION
-  Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp,
-                                       const Real Ye,
-                                       const RadiationType type) const {
-    Real lRho = toLog_(rho);
-    Real lT = toLog_(temp);
-    int idx = RadType2Idx(type);
-    return rho * fromLog_(lkappaPlanck_.interpToReal(lRho, lT, Ye, idx));
-  }
-
-  PORTABLE_INLINE_FUNCTION
-  Real RosselandMeanAbsorptionCoefficient(const Real rho, const Real temp,
-                                          const Real Ye,
-                                          const RadiationType type) const {
-    Real lRho = toLog_(rho);
-    Real lT = toLog_(temp);
-    int idx = RadType2Idx(type);
-    return rho * fromLog_(lkappaRosseland_.interpToReal(lRho, lT, Ye, idx));
-  }
-
- private:
   PORTABLE_INLINE_FUNCTION Real toLog_(const Real x) const {
     return std::log10(std::abs(x) + EPS);
   }
