@@ -25,7 +25,6 @@
 namespace singularity {
 namespace neutrinos {
 
-// TODO(JMM): Include chemical potential
 using ScaleFreeS = GraySOpacity<PhysicalConstantsUnity>;
 using GrayS = GraySOpacity<>;
 
