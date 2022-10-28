@@ -38,7 +38,10 @@ class NonCGSUnits {
         freq_unit_(1. / time_unit_),
         inv_emiss_unit_(length_unit_ * time_unit_ * time_unit_ / mass_unit_),
         inv_num_emiss_unit_(length_unit_ * length_unit_ * length_unit_ *
-                            time_unit_) {}
+                            time_unit_),
+        inv_intensity_unit_(time_unit_ * time_unit_ / mass_unit_),
+        inv_energy_dens_unit_(time_unit_ * time_unit_ * length_unit_ /
+                              mass_unit_) {}
 
   auto GetOnDevice() {
     return NonCGSUnits<Opac>(opac_.GetOnDevice(), time_unit_, mass_unit_,
