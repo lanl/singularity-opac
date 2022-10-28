@@ -32,7 +32,7 @@ struct PlanckDistribution {
                                 Real *lambda = nullptr) const {
     Real x = pc::h * nu / (pc::kb * temp);
     Real Bnu =
-        (2. * pc::h * nu * nu * nu / (pc::c * pc::c)) * 1. / (std::exp(x) - 1.);
+        (2. * pc::h * nu * nu * nu / (pc::c * pc::c)) * 1. / std::expm1(x);
     return Bnu;
   }
   PORTABLE_INLINE_FUNCTION
@@ -41,7 +41,7 @@ struct PlanckDistribution {
     Real x = pc::h * nu / (pc::kb * temp);
     Real dBnudT = (2. * pc::h * pc::h * nu * nu * nu * nu /
                    (temp * temp * pc::c * pc::c * pc::kb)) *
-                  1. / (std::exp(x) + -1.);
+                  1. / std::expm1(x);
     return dBnudT;
   }
   PORTABLE_INLINE_FUNCTION
