@@ -42,8 +42,7 @@ class MeanSVariant {
   PORTABLE_FUNCTION MeanSVariant(Choice &&choice)
       : s_opac_(std::forward<Choice>(choice)) {}
 
-  PORTABLE_FUNCTION
-  MeanSVariant() noexcept = default;
+  MeanSVariant() = default;
 
   template <
       typename Choice,

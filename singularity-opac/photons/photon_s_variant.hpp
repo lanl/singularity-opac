@@ -44,8 +44,7 @@ class S_Variant {
   PORTABLE_FUNCTION S_Variant(Choice &&choice)
       : s_opac_(std::forward<Choice>(choice)) {}
 
-  PORTABLE_FUNCTION
-  S_Variant() noexcept = default;
+  S_Variant() = default;
 
   template <
       typename Choice,

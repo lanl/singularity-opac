@@ -42,8 +42,7 @@ class MeanVariant {
   PORTABLE_FUNCTION MeanVariant(Choice &&choice)
       : opac_(std::forward<Choice>(choice)) {}
 
-  PORTABLE_FUNCTION
-  MeanVariant() noexcept = default;
+  MeanVariant() = default;
 
   template <
       typename Choice,
@@ -71,7 +70,8 @@ class MeanVariant {
   }
 
   PORTABLE_INLINE_FUNCTION Real PlanckMeanAbsorptionCoefficient(
-      const Real rho, const Real temp, const Real Ye, const RadiationType type) const {
+      const Real rho, const Real temp, const Real Ye,
+      const RadiationType type) const {
     return mpark::visit(
         [=](const auto &opac) {
           return opac.PlanckMeanAbsorptionCoefficient(rho, temp, Ye, type);
@@ -79,7 +79,8 @@ class MeanVariant {
         opac_);
   }
   PORTABLE_INLINE_FUNCTION Real RosselandMeanAbsorptionCoefficient(
-      const Real rho, const Real temp, const Real Ye, const RadiationType type) const {
+      const Real rho, const Real temp, const Real Ye,
+      const RadiationType type) const {
     return mpark::visit(
         [=](const auto &opac) {
           return opac.RosselandMeanAbsorptionCoefficient(rho, temp, Ye, type);
@@ -90,11 +91,10 @@ class MeanVariant {
   inline void Finalize() noexcept {
     return mpark::visit([](auto &opac) { return opac.Finalize(); }, opac_);
   }
-
 };
 
-} // impl
-}
-}
+} // namespace impl
+} // namespace neutrinos
+} // namespace singularity
 
 #endif // SINGULARITY_OPAC_NEUTRINOS_MEAN_NEUTRINO_VARIANT_

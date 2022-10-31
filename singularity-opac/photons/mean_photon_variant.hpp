@@ -42,8 +42,7 @@ class MeanVariant {
   PORTABLE_FUNCTION MeanVariant(Choice &&choice)
       : opac_(std::forward<Choice>(choice)) {}
 
-  PORTABLE_FUNCTION
-  MeanVariant() noexcept = default;
+  MeanVariant() = default;
 
   template <
       typename Choice,
