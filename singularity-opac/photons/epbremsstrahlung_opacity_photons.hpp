@@ -177,8 +177,7 @@ class EPBremsstrahlungOpacity {
   Real mass_ion_;
   PlanckDistribution<pc> dist_;
   static constexpr Real mmw_ =
-      (pc::mp + pc::me) /
-      (2. * pc::mp); // Neutral fully ionized electron-proton gas
+      (pc::mp + pc::me) / 2.; // Neutral fully ionized electron-proton gas (g)
   static constexpr Real gff_ = 1.2;
   Real prefac_ = 8. * std::pow(pc::qe, 6) /
                  (3. * std::pow(pc::me * pc::c * pc::c, 2)) *
