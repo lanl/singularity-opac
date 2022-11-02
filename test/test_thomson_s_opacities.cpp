@@ -70,8 +70,8 @@ TEST_CASE("Thomson photon scattering opacities", "[ThomsonSPhotons]") {
           "calc s opacities", 0, 100, PORTABLE_LAMBDA(const int &i) {
             Real kappa = opac.TotalScatteringCoefficient(rho, temp, nu);
             Real sigma = opac.TotalCrossSection(rho, temp, nu);
-            if (FractionalDifference(kappa, rho / avg_particle_mass * sigma) >
-                EPS_TEST) {
+            if (FractionalDifference(kappa, (rho / avg_particle_mass) / 2 *
+                                                sigma) > EPS_TEST) {
               n_wrong_d() += 1;
             }
             if (FractionalDifference(sigma, sigmaT) > EPS_TEST) {
