@@ -84,7 +84,7 @@ class EPBremsstrahlungOpacity {
                             Real *lambda = nullptr) const {
     const Real thetaE = pc::kb * temp / (pc::me * pc::c * pc::c);
     const Real x = pc::h * nu / (pc::kb * temp);
-    const Real ne = rho / mmw_;
+    const Real ne = rho / mmw_ / 2.;
     const Real ni = ne;
     return prefac_ / std::sqrt(thetaE) * ne * ni * std::exp(-x) * gff_;
   }
@@ -120,7 +120,7 @@ class EPBremsstrahlungOpacity {
                   Real *lambda = nullptr) const {
 
     const Real thetaE = pc::kb * temp / (pc::me * pc::c * pc::c);
-    const Real ne = rho / mmw_;
+    const Real ne = rho / mmw_ / 2.;
     const Real ni = ne;
     return 4. * M_PI * pc::kb * temp / pc::h * prefac_ / std::sqrt(thetaE) *
            ne * ni * gff_;

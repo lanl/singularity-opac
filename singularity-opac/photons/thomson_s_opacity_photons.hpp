@@ -59,7 +59,8 @@ class ThomsonSOpacity {
   PORTABLE_INLINE_FUNCTION
   Real TotalScatteringCoefficient(const Real rho, const Real temp,
                                   const Real nu, Real *lambda = nullptr) const {
-    return (rho / apm_) * sigmaT_;
+    const Real ne = (rho / apm_) / 2.;
+    return ne * sigmaT_;
   }
 
  private:
