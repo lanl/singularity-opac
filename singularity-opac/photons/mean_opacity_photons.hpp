@@ -196,7 +196,8 @@ class MeanOpacity {
 
 using MeanOpacityScaleFree = impl::MeanOpacity<PhysicalConstantsUnity>;
 using MeanOpacityCGS = impl::MeanOpacity<PhysicalConstantsCGS>;
-using MeanOpacity = impl::MeanVariant<MeanOpacityScaleFree, MeanOpacityCGS>;
+using MeanOpacity = impl::MeanVariant < MeanOpacityScaleFree, MeanOpacityCGS,
+      MeanNonCGSUnits<MeanOpacity<CGS>>;
 
 } // namespace photons
 } // namespace singularity

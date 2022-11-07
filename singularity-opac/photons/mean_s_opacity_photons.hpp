@@ -206,7 +206,8 @@ using MeanSOpacityScaleFree =
 using MeanSOpacityCGS =
     impl::MeanSOpacity<PlanckDistribution<PhysicalConstantsCGS>,
                        PhysicalConstantsCGS>;
-using MeanSOpacity = impl::MeanSVariant<MeanSOpacityScaleFree, MeanSOpacityCGS>;
+using MeanSOpacity = impl::MeanSVariant<MeanSOpacityScaleFree, MeanSOpacityCGS,
+                                        MeanNonCGSUnitsS<MeanSOpacityCGS>>;
 
 } // namespace photons
 } // namespace singularity

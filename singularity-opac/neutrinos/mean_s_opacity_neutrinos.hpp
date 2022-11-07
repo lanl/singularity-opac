@@ -26,6 +26,7 @@
 #include <spiner/databox.hpp>
 
 #include <singularity-opac/neutrinos/mean_neutrino_s_variant.hpp>
+#include <singularity-opac/neutrinos/non_cgs_s_neutrinos.hpp>
 #include <singularity-opac/neutrinos/thermal_distributions_neutrinos.hpp>
 
 namespace singularity {
@@ -224,7 +225,8 @@ using MeanSOpacityScaleFree =
                        PhysicalConstantsUnity>;
 using MeanSOpacityCGS =
     impl::MeanSOpacity<FermiDiracDistributionNoMu<3>, PhysicalConstantsCGS>;
-using MeanSOpacity = impl::MeanSVariant<MeanSOpacityScaleFree, MeanSOpacityCGS>;
+using MeanSOpacity = impl::MeanSVariant<MeanSOpacityScaleFree, MeanSOpacityCGS,
+                                        MeanNonCGSUnitsS<MeanSOpacityCGS>>;
 
 } // namespace neutrinos
 } // namespace singularity
