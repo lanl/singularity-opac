@@ -26,6 +26,7 @@
 #include <spiner/databox.hpp>
 
 #include <singularity-opac/photons/mean_photon_s_variant.hpp>
+#include <singularity-opac/photons/non_cgs_s_photons.hpp>
 #include <singularity-opac/photons/thermal_distributions_photons.hpp>
 
 namespace singularity {
