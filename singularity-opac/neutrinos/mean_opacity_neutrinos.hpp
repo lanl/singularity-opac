@@ -26,6 +26,7 @@
 #include <spiner/databox.hpp>
 
 #include <singularity-opac/neutrinos/mean_neutrino_variant.hpp>
+#include <singularity-opac/neutrinos/non_cgs_neutrinos.hpp>
 
 namespace singularity {
 namespace neutrinos {
@@ -220,7 +221,8 @@ class MeanOpacity {
 
 using MeanOpacityScaleFree = impl::MeanOpacity<PhysicalConstantsUnity>;
 using MeanOpacityCGS = impl::MeanOpacity<PhysicalConstantsCGS>;
-using MeanOpacity = impl::MeanVariant<MeanOpacityScaleFree, MeanOpacityCGS>;
+using MeanOpacity = impl::MeanVariant<MeanOpacityScaleFree, MeanOpacityCGS,
+                                      MeanNonCGSUnits<MeanOpacityCGS>>;
 
 } // namespace neutrinos
 } // namespace singularity
