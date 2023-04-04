@@ -69,7 +69,6 @@ class SpinerOpacity {
   static constexpr Real MeV2K = 1.e9 * MeV2GK;
   static constexpr Real K2MeV = 1. / MeV2K;
 
-
   SpinerOpacity() = default;
 
   // Testing constructor that fills the tables with gray opacities
