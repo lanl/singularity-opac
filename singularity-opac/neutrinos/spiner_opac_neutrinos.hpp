@@ -64,6 +64,11 @@ class SpinerOpacity {
   static constexpr Real EPS = 10.0 * std::numeric_limits<Real>::min();
   static constexpr Real Hz2MeV = pc::h / (1e6 * pc::eV);
   static constexpr Real MeV2Hz = 1 / Hz2MeV;
+  static constexpr Real MeV2GK = 11.604525006;
+  static constexpr Real GK2MeV = 1. / MeV2GK;
+  static constexpr Real MeV2K = 1.e9 * MeV2GK;
+  static constexpr Real K2MeV = 1. / MeV2K;
+
 
   SpinerOpacity() = default;
 
@@ -360,11 +365,6 @@ class SpinerOpacity {
   }
 
  private:
-  static constexpr Real MeV2GK_ = 11.604525006;
-  static constexpr Real GK2MeV_ = 1. / MeV2GK_;
-  static constexpr Real MeV2K_ = 1.e9 * MeV2GK_;
-  static constexpr Real K2MeV_ = 1. / MeV2K_;
-
   // TODO(JMM): Offsets probably not necessary
   PORTABLE_INLINE_FUNCTION Real toLog_(const Real x, const Real offset) const {
     return std::log10(std::abs(std::max(x, -offset) + offset) + EPS);
@@ -383,7 +383,7 @@ class SpinerOpacity {
                                         RadiationType type, Real &lRho,
                                         Real &lT, int &idx) const {
     lRho = toLog_(rho);
-    lT = toLog_(temp * K2MeV_);
+    lT = toLog_(temp * K2MeV);
     idx = RadType2Idx(type);
   }
   const char *filename_;
