@@ -77,6 +77,8 @@ class SpinerOpacity {
                 Real lTMax, int NT, Real YeMin, Real YeMax, int NYe, Real leMin,
                 Real leMax, int Ne)
       : filename_("none"), memoryStatus_(impl::DataStatus::OnHost) {
+    lTMin += std::log10(K2MeV);
+    lTMax += std::log10(K2MeV);
     // Set metadata for lalphanu and ljnu
     lalphanu_.resize(NRho, NT, NYe, NEUTRINO_NTYPES, Ne);
     lalphanu_.setRange(0, leMin, leMax, Ne);
@@ -104,10 +106,10 @@ class SpinerOpacity {
           Real Ye = lalphanu_.range(2).x(iYe);
           for (int idx = 0; idx < NEUTRINO_NTYPES; ++idx) {
             RadiationType type = Idx2RadType(idx);
-            Real J = std::max(opac.Emissivity(rho, T, Ye, type), 0.0);
+            Real J = std::max(opac.Emissivity(rho, T * MeV2K, Ye, type), 0.0);
             Real lJ = toLog_(J);
             lJ_(iRho, iT, iYe, idx) = lJ;
-            Real JYe = std::max(opac.NumberEmissivity(rho, T, Ye, type), 0.0);
+            Real JYe = std::max(opac.NumberEmissivity(rho, T * MeV2K, Ye, type), 0.0);
             lJYe_(iRho, iT, iYe, idx) = toLog_(JYe);
             for (int ie = 0; ie < Ne; ++ie) {
               Real lE = lalphanu_.range(0).x(ie);
@@ -116,7 +118,7 @@ class SpinerOpacity {
               Real alpha = std::max(
                   opac.AbsorptionCoefficient(rho, T, Ye, type, nu), 0.0);
               lalphanu_(iRho, iT, iYe, idx, ie) = toLog_(alpha);
-              Real j = std::max(opac.EmissivityPerNuOmega(rho, T, Ye, type, nu),
+              Real j = std::max(opac.EmissivityPerNuOmega(rho, T * MeV2K, Ye, type, nu),
                                 0.0);
               ljnu_(iRho, iT, iYe, idx, ie) = toLog_(j);
             }
