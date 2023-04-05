@@ -64,6 +64,10 @@ class SpinerOpacity {
   static constexpr Real EPS = 10.0 * std::numeric_limits<Real>::min();
   static constexpr Real Hz2MeV = pc::h / (1e6 * pc::eV);
   static constexpr Real MeV2Hz = 1 / Hz2MeV;
+  static constexpr Real MeV2GK = 11.604525006;
+  static constexpr Real GK2MeV = 1. / MeV2GK;
+  static constexpr Real MeV2K = 1.e9 * MeV2GK;
+  static constexpr Real K2MeV = 1. / MeV2K;
 
   SpinerOpacity() = default;
 
@@ -73,6 +77,8 @@ class SpinerOpacity {
                 Real lTMax, int NT, Real YeMin, Real YeMax, int NYe, Real leMin,
                 Real leMax, int Ne)
       : filename_("none"), memoryStatus_(impl::DataStatus::OnHost) {
+    lTMin += std::log10(K2MeV);
+    lTMax += std::log10(K2MeV);
     // Set metadata for lalphanu and ljnu
     lalphanu_.resize(NRho, NT, NYe, NEUTRINO_NTYPES, Ne);
     lalphanu_.setRange(0, leMin, leMax, Ne);
@@ -100,10 +106,10 @@ class SpinerOpacity {
           Real Ye = lalphanu_.range(2).x(iYe);
           for (int idx = 0; idx < NEUTRINO_NTYPES; ++idx) {
             RadiationType type = Idx2RadType(idx);
-            Real J = std::max(opac.Emissivity(rho, T, Ye, type), 0.0);
+            Real J = std::max(opac.Emissivity(rho, T * MeV2K, Ye, type), 0.0);
             Real lJ = toLog_(J);
             lJ_(iRho, iT, iYe, idx) = lJ;
-            Real JYe = std::max(opac.NumberEmissivity(rho, T, Ye, type), 0.0);
+            Real JYe = std::max(opac.NumberEmissivity(rho, T * MeV2K, Ye, type), 0.0);
             lJYe_(iRho, iT, iYe, idx) = toLog_(JYe);
             for (int ie = 0; ie < Ne; ++ie) {
               Real lE = lalphanu_.range(0).x(ie);
@@ -112,7 +118,7 @@ class SpinerOpacity {
               Real alpha = std::max(
                   opac.AbsorptionCoefficient(rho, T, Ye, type, nu), 0.0);
               lalphanu_(iRho, iT, iYe, idx, ie) = toLog_(alpha);
-              Real j = std::max(opac.EmissivityPerNuOmega(rho, T, Ye, type, nu),
+              Real j = std::max(opac.EmissivityPerNuOmega(rho, T * MeV2K, Ye, type, nu),
                                 0.0);
               ljnu_(iRho, iT, iYe, idx, ie) = toLog_(j);
             }
@@ -378,7 +384,7 @@ class SpinerOpacity {
                                         RadiationType type, Real &lRho,
                                         Real &lT, int &idx) const {
     lRho = toLog_(rho);
-    lT = toLog_(temp);
+    lT = toLog_(temp * K2MeV);
     idx = RadType2Idx(type);
   }
   const char *filename_;
