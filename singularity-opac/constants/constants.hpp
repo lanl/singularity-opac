@@ -18,14 +18,6 @@
 
 #include <ports-of-call/portability.hpp>
 
-#ifdef SINGULARITY_ENABLE_EXCEPTIONS
-#include <stdexcept>
-#define CONSTANTS_ERROR(x) (throw std::runtime_error(x))
-#else
-#define CONSTANTS_ERROR(x) printf("%s", x)
-#endif
-#define UNDEFINED_ERROR CONSTANTS_ERROR("DEFINE ME\n")
-
 namespace singularity {
 
 struct BaseUnity {
@@ -210,8 +202,5 @@ using PhysicalConstantsCGS =
     PhysicalConstants<BaseSICODATA2010, UnitConversionSIToCGS>;
 
 } // namespace singularity
-
-#undef CONSTANTS_ERROR
-#undef UNDEFINED_ERROR
 
 #endif // SINGULARITY_OPAC_CONSTANTS_CONSTANTS_
