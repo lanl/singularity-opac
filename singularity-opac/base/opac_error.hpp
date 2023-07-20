@@ -27,7 +27,6 @@ namespace singularity {
   printf("%s", x);                                                             \
   std::exit(1)
 #endif
-#define UNDEFINED_ERROR OPAC_ERROR("DEFINE ME\n")
 
 } // namespace singularity
 
