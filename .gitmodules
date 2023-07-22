@@ -1,6 +1,9 @@
 [submodule "utils/spiner"]
 	path = utils/spiner
-	url = https://github.com/lanl/spiner.git
+  url = https://github.com/lanl/spiner.git
+[submodule "utils/ports-of-call"]
+	path = utils/ports-of-call
+	url = https://github.com/lanl/ports-of-call.git
 [submodule "utils/variant"]
 	path = utils/variant
 	url = https://github.com/mpark/variant.git
