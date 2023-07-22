@@ -20,8 +20,8 @@ jobs:
           run: export DEBIAN_FRONTEND=noninteractive
         - name: install dependencies
           run: |
-	    sudo apt-get update -y -qq
-	    sudo apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages -qq build-essential libhdf5-serial-dev
+            sudo apt-get update -y -qq
+            sudo apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages -qq build-essential libhdf5-serial-dev
         - name: build and run tests
           run: |
             mkdir -p bin
