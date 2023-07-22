@@ -25,7 +25,7 @@ if(NOT TARGET Kokkos::kokkos)
 else()
   message(status "Kokkos::kokkos provided by parent package")
 endif()
-target_link_libraries(singularigy-opac INTERFACE Kokkos::kokkos)
+target_link_libraries(singularity-opac INTERFACE Kokkos::kokkos)
 
 # =======================================
 # Find HDF5 - cmake@3.20+ provides HDF5::HDF5, but prior versions do not
@@ -41,7 +41,7 @@ find_package(
 if(HDF5_FOUND)
   target_compile_definitions(singularity-opac INTERFACE SPINER_USE_HDF)
   set_target_properties(
-    singularigy-opac
+    singularity-opac
     PROPERTIES INTERFACE_LINK_LIBRARIES "${HDF5_LIBRARIES};${HDF5_HL_LIBRARIES}"
                INTERFACE_COMPILE_DEFINITIONS
                "SINGULARITY_USE_HDF5;SPINER_USE_HDF"
@@ -65,7 +65,7 @@ if(HDF5_FOUND)
     else()
       message("MPI::MPI_CXX provided by parent package")
     endif()
-    target_link_libraries(singularigy-opac INTERFACE MPI::MPI_CXX)
+    target_link_libraries(singularity-opac INTERFACE MPI::MPI_CXX)
   endif()
 endif()
 
