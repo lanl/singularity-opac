@@ -16,9 +16,9 @@
 #ifndef SINGULARITY_OPAC_BASE_INDEXERS_
 #define SINGULARITY_OPAC_BASE_INDEXERS_
 
-#include <fast-math/logs.hpp>
+#include "fast-math/logs.hpp"
 #include <spiner/databox.hpp>
-#include <variant/include/mpark/variant.hpp>
+// #include <variant/include/mpark/variant.hpp>
 
 #include <singularity-opac/chebyshev/chebyshev.hpp>
 
@@ -30,6 +30,8 @@
 
 namespace singularity {
 namespace indexers {
+
+using DataBox = Spiner::DataBox<Real>;
 
 template <typename T>
 struct Identity {
@@ -58,8 +60,8 @@ class Linear {
     SetRange_(numin, numax, N);
   }
 
-  PORTABLE_INLINE_FUNCTION Linear(const Spiner::DataBox &data, Real numin,
-                                  Real numax, int N)
+  PORTABLE_INLINE_FUNCTION Linear(const DataBox &data, Real numin, Real numax,
+                                  int N)
       : data_(data) {
     SetRange_(numin, numax, N);
   }
@@ -79,7 +81,7 @@ class Linear {
   void SetRange_(Real numin, Real numax, int N) {
     data_.setRange(0, numin, numax, N);
   }
-  Spiner::DataBox data_;
+  DataBox data_;
 };
 
 class LogLinear {
@@ -97,8 +99,7 @@ class LogLinear {
   }
 
   PORTABLE_INLINE_FUNCTION
-  LogLinear(const Spiner::DataBox &data, Real numin, Real numax, int N)
-      : data_(data) {
+  LogLinear(const DataBox &data, Real numin, Real numax, int N) : data_(data) {
     SetRange_(numin, numax, N);
   }
 
@@ -111,15 +112,15 @@ class LogLinear {
 
   PORTABLE_INLINE_FUNCTION
   Real operator()(const Real nu) {
-    return data_.interpToReal(BDMath::log10(nu));
+    return data_.interpToReal(FastMath::log10(nu));
   }
 
  private:
   PORTABLE_INLINE_FUNCTION
   void SetRange_(Real numin, Real numax, int N) {
-    data_.setRange(0, BDMath::log10(numin), BDMath::log10(numax), N);
+    data_.setRange(0, FastMath::log10(numin), FastMath::log10(numax), N);
   }
-  Spiner::DataBox data_;
+  DataBox data_;
 };
 
 template <int N, typename Data_t>
@@ -129,8 +130,8 @@ class LogCheb {
   PORTABLE_INLINE_FUNCTION
   LogCheb(Data_t data, Data_t logdata, Data_t coeffs, Real numin, Real numax)
       : data_(data), logdata_(logdata), coeffs_(coeffs), numin_(numin),
-        numax_(numax), lnumin_(BDMath::log10(numin)),
-        lnumax_(BDMath::log10(numax)) {}
+        numax_(numax), lnumin_(FastMath::log10(numin)),
+        lnumax_(FastMath::log10(numax)) {}
 
   PORTABLE_INLINE_FUNCTION
   Real &operator[](const int i) { return data_[i]; }
@@ -140,14 +141,14 @@ class LogCheb {
   template <typename Vandermonde_t>
   PORTABLE_INLINE_FUNCTION void SetInterpCoeffs(const Vandermonde_t &v) {
     for (int i = 0; i < N; ++i) {
-      logdata_[i] = BDMath::log10(std::abs(data_[i]) + 1e-20);
+      logdata_[i] = FastMath::log10(std::abs(data_[i]) + 1e-20);
     }
     chebyshev::MatMultiply(v, logdata_, coeffs_, N);
   }
 
   PORTABLE_INLINE_FUNCTION
   Real operator()(const Real nu) {
-    Real lnu = BDMath::log10(nu);
+    Real lnu = FastMath::log10(nu);
     return std::pow(
         10, chebyshev::InterpFromCoeffs(lnu, lnumin_, lnumax_, coeffs_, N));
   }

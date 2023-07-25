@@ -32,6 +32,7 @@
 using namespace singularity;
 
 using pc = PhysicalConstantsCGS;
+using DataBox = Spiner::DataBox<Real>;
 
 #ifdef PORTABILITY_STRATEGY_KOKKOS
 using atomic_view = Kokkos::MemoryTraits<Kokkos::Atomic>;

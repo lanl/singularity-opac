@@ -60,8 +60,8 @@ TEST_CASE("Spiner opacities, filled with gray data",
   constexpr Real lRhoMin = 8;
   constexpr Real lRhoMax = 12;
   constexpr int NRho = 32;
-  constexpr Real lTMin = -2 + std::log10(MeV2K);
-  constexpr Real lTMax = 2 + std::log10(MeV2K);
+  const Real lTMin = -2 + std::log10(MeV2K);
+  const Real lTMax = 2 + std::log10(MeV2K);
   constexpr int NT = 32;
   constexpr Real YeMin = 0.1;
   constexpr Real YeMax = 0.5;
@@ -73,7 +73,7 @@ TEST_CASE("Spiner opacities, filled with gray data",
   const std::string grayname = "gray.sp5";
 
   WHEN("We initialize a gray neutrino opacity and tabulate it") {
-    using Grid_t = Spiner::RegularGrid1D;
+    using Grid_t = Spiner::RegularGrid1D<Real>;
 
     // Offset the frequencies to hopefully get over the point
     // where the power laws transition

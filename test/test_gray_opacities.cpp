@@ -37,6 +37,8 @@ using pc = PhysicalConstantsCGS;
 using atomic_view = Kokkos::MemoryTraits<Kokkos::Atomic>;
 #endif
 
+using DataBox = Spiner::DataBox<Real>;
+
 template <typename T>
 PORTABLE_INLINE_FUNCTION T FractionalDifference(const T &a, const T &b) {
   return 2 * std::abs(b - a) / (std::abs(a) + std::abs(b) + 1e-20);
@@ -167,7 +169,7 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
                                                     nu_coeffs, nu_min, nu_max);
             opac.EmissivityPerNu(rho, temp, Ye, type, nu_bins, J_cheb, nbins);
             Real Jtrue = opac.EmissivityPerNu(rho, temp, Ye, type, nu);
-            J_cheb.SetInterpCoeffs(Spiner::DataBox(vm9, 9, 9));
+            J_cheb.SetInterpCoeffs(DataBox(vm9, 9, 9));
             if (std::isnan(J_cheb(nu)) ||
                 ((std::abs(Jtrue) >= 1e-14 || J_cheb(nu) >= 1e-14) &&
                  FractionalDifference(J_cheb(nu), Jtrue) > EPS_TEST)) {
@@ -282,8 +284,7 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
 
       Real *nu_bins = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
       Real *temp_bins = (Real *)PORTABLE_MALLOC(ntemps * sizeof(Real));
-      Spiner::DataBox loglin_bins(Spiner::AllocationTarget::Device, ntemps,
-                                  nbins);
+      DataBox loglin_bins(Spiner::AllocationTarget::Device, ntemps, nbins);
 
       portableFor(
           "set nu bins", 0, nbins, PORTABLE_LAMBDA(const int &i) {

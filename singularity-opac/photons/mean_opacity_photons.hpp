@@ -30,6 +30,8 @@
 
 namespace singularity {
 namespace photons {
+
+using DataBox = Spiner::DataBox<Real>;
 namespace impl {
 
 #define EPS (10.0 * std::numeric_limits<Real>::min())
@@ -186,8 +188,8 @@ class MeanOpacity {
   PORTABLE_INLINE_FUNCTION Real fromLog_(const Real lx) const {
     return std::pow(10., lx);
   }
-  Spiner::DataBox lkappaPlanck_;
-  Spiner::DataBox lkappaRosseland_;
+  DataBox lkappaPlanck_;
+  DataBox lkappaRosseland_;
   const char *filename_;
 };
 
