@@ -21,12 +21,12 @@
 #include <cstdio>
 #include <string>
 
-#include <fast-math/logs.hpp>
 #include <ports-of-call/portability.hpp>
 #include <spiner/databox.hpp>
 #include <spiner/interpolation.hpp>
 #include <spiner/spiner_types.hpp>
 
+#include <singularity-opac/base/fast-math/logs.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
 #include <singularity-opac/base/sp5.hpp>
@@ -49,6 +49,8 @@
 
 namespace singularity {
 namespace neutrinos {
+
+using DataBox = Spiner::DataBox<Real>;
 
 namespace impl {
 enum class DataStatus { Deallocated, OnDevice, OnHost };
@@ -109,7 +111,8 @@ class SpinerOpacity {
             Real J = std::max(opac.Emissivity(rho, T * MeV2K, Ye, type), 0.0);
             Real lJ = toLog_(J);
             lJ_(iRho, iT, iYe, idx) = lJ;
-            Real JYe = std::max(opac.NumberEmissivity(rho, T * MeV2K, Ye, type), 0.0);
+            Real JYe =
+                std::max(opac.NumberEmissivity(rho, T * MeV2K, Ye, type), 0.0);
             lJYe_(iRho, iT, iYe, idx) = toLog_(JYe);
             for (int ie = 0; ie < Ne; ++ie) {
               Real lE = lalphanu_.range(0).x(ie);
@@ -118,8 +121,8 @@ class SpinerOpacity {
               Real alpha = std::max(
                   opac.AbsorptionCoefficient(rho, T, Ye, type, nu), 0.0);
               lalphanu_(iRho, iT, iYe, idx, ie) = toLog_(alpha);
-              Real j = std::max(opac.EmissivityPerNuOmega(rho, T * MeV2K, Ye, type, nu),
-                                0.0);
+              Real j = std::max(
+                  opac.EmissivityPerNuOmega(rho, T * MeV2K, Ye, type, nu), 0.0);
               ljnu_(iRho, iT, iYe, idx, ie) = toLog_(j);
             }
           }
@@ -130,8 +133,8 @@ class SpinerOpacity {
 
   // DataBox constructor. Note that this constructor *shallow* copies
   // the databoxes, so they must be managed externally.
-  SpinerOpacity(const Spiner::DataBox &lalphanu, const Spiner::DataBox ljnu,
-                const Spiner::DataBox lJ, const Spiner::DataBox lJYe)
+  SpinerOpacity(const DataBox &lalphanu, const DataBox ljnu, const DataBox lJ,
+                const DataBox lJYe)
       : memoryStatus_(impl::DataStatus::OnHost), lalphanu_(lalphanu),
         ljnu_(ljnu), lJ_(lJ), lJYe_(lJYe) {}
 
@@ -391,7 +394,7 @@ class SpinerOpacity {
   impl::DataStatus memoryStatus_ = impl::DataStatus::Deallocated;
   // TODO(JMM): Integrating J and JYe seems wise.
   // We can add more things here as needed.
-  Spiner::DataBox lalphanu_, ljnu_, lJ_, lJYe_;
+  DataBox lalphanu_, ljnu_, lJ_, lJYe_;
   // TODO(JMM): Should we add table bounds? Given they're recorded in
   // each spiner table, I lean towards no, but could be convinced
   // otherwise if we need to do extrapolation, etc.

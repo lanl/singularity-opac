@@ -46,13 +46,13 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 # simplier interface, but note it may make things more convoluted as the project
 # grows in size. For now, this is fine, but may want to split flags if more
 # source is added.
-add_library(singularity-opac INTERFACE IMPORTED GLOBAL)
+add_library(singularity-opac INTERFACE)
 # so we can use with add_subdirectory
 add_library(singularity-opac::singularity-opac ALIAS singularity-opac)
 
 target_include_directories(
-  singularity-opac INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
-                             $<INSTALL_INTERFACE:install/)
+  singularity-opac INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+                             $<INSTALL_INTERFACE:include>)
 
 include(SetupDeps)
 include(SetupOptions)

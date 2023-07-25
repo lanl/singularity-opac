@@ -16,7 +16,7 @@
 #ifndef SINGULARITY_OPAC_PHOTONS_S_OPAC_PHOTONS_
 #define SINGULARITY_OPAC_PHOTONS_S_OPAC_PHOTONS_
 
-#include <variant/include/mpark/variant.hpp>
+#include <mpark/variant.hpp>
 
 #include <singularity-opac/photons/gray_s_opacity_photons.hpp>
 #include <singularity-opac/photons/non_cgs_s_photons.hpp>

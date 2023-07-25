@@ -18,10 +18,10 @@
 
 #include <utility>
 
+#include <mpark/variant.hpp>
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
-#include <variant/include/mpark/variant.hpp>
 
 namespace singularity {
 namespace neutrinos {

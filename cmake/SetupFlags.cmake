@@ -20,14 +20,11 @@ target_compile_options(
 target_link_options(singularity-opac INTERFACE $<${cxx_xl}:
                     "-std=c++1y;-qxflag=disable__cplusplusOverride" >)
 
-# Base Include directories
-target_include_directories(
-  singularity-opac
-  INTERFACE $<${without_kokkos}:
-            $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/utils/herumi-fmath>
-            >
-            $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/utils>
-            $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
+# Base Include directories target_include_directories( singularity-opac
+# INTERFACE $<${without_kokkos}:
+# $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/utils/herumi-fmath> >
+# $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/utils>
+# $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
 
 target_compile_options(
   singularity-opac

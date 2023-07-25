@@ -31,7 +31,7 @@
 using namespace singularity;
 
 using pc = PhysicalConstantsCGS;
-
+using DataBox = Spiner::DataBox<Real>;
 #ifdef PORTABILITY_STRATEGY_KOKKOS
 using atomic_view = Kokkos::MemoryTraits<Kokkos::Atomic>;
 #endif
@@ -132,8 +132,7 @@ TEST_CASE("E-P bremsstrahlung photon opacities", "[EPBremsstrahlungPhotons]") {
 
       Real *nu_bins = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
       Real *temp_bins = (Real *)PORTABLE_MALLOC(ntemps * sizeof(Real));
-      Spiner::DataBox loglin_bins(Spiner::AllocationTarget::Device, ntemps,
-                                  nbins);
+      DataBox loglin_bins(Spiner::AllocationTarget::Device, ntemps, nbins);
 
       portableFor(
           "set nu bins", 0, nbins, PORTABLE_LAMBDA(const int &i) {

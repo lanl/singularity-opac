@@ -8,6 +8,10 @@ else()
   message(status "CUDA::toolkit provided by parent package")
 endif()
 
+if(NOT TARGET mpark_variant)
+  add_subdirectory(utils/variant)
+endif()
+target_link_libraries(singularity-opac INTERFACE mpark_variant)
 # =======================================
 # Setup ports of call - provides PortsofCall::PortsofCall
 # =======================================
@@ -17,15 +21,26 @@ if(NOT ports-of-call_FOUND)
 endif()
 target_link_libraries(singularity-opac INTERFACE ports-of-call::ports-of-call)
 
+find_package(spiner QUIET)
+if(NOT spiner_FOUND)
+  add_subdirectory(utils/spiner)
+endif()
+target_link_libraries(singularity-opac INTERFACE spiner::spiner)
+
 # =======================================
 # Setup Kokkos - provides Kokkos::kokkos
 # =======================================
 if(NOT TARGET Kokkos::kokkos)
   find_package(Kokkos QUIET)
 else()
-  message(status "Kokkos::kokkos provided by parent package")
+  message(STATUS "Kokkos::kokkos provided by parent package")
 endif()
-target_link_libraries(singularity-opac INTERFACE Kokkos::kokkos)
+
+if(NOT TARGET Kokkos::kokkos OR Kokkos_NOTFOUND)
+  message(STATUS "Kokkos not found, will not include in build requirements")
+else()
+  target_link_libraries(singularity-opac INTERFACE Kokkos::kokkos)
+endif()
 
 # =======================================
 # Find HDF5 - cmake@3.20+ provides HDF5::HDF5, but prior versions do not
@@ -39,13 +54,11 @@ find_package(
 
 # findpackage doesnt export an interface for HDF5, so create one
 if(HDF5_FOUND)
-  target_compile_definitions(singularity-opac INTERFACE SPINER_USE_HDF)
-  set_target_properties(
-    singularity-opac
-    PROPERTIES INTERFACE_LINK_LIBRARIES "${HDF5_LIBRARIES};${HDF5_HL_LIBRARIES}"
-               INTERFACE_COMPILE_DEFINITIONS
-               "SINGULARITY_USE_HDF5;SPINER_USE_HDF"
-               INTERFACE_INCLUDE_DIRECTORIES "${HDF5_INCLUDE_DIRS}")
+  target_compile_definitions(singularity-opac
+                             INTERFACE "SINGULARITY_USE_HDF5;SPINER_USE_HDF")
+  target_include_directories(singularity-opac INTERFACE "${HDF5_INCLUDE_DIRS}")
+  target_link_libraries(singularity-opac
+                        INTERFACE "${HDF5_LIBRARIES};${HDF5_HL_LIBRARIES}")
 
   # if HDF5 is parallel, also get MPI libraries
   if(HDF5_IS_PARALLEL)

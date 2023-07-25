@@ -72,11 +72,11 @@ TEST_CASE("Mean neutrino opacities", "[MeanNeutrinos]") {
     constexpr Real nu = 1.25 * MeV2Hz; // 1 MeV
 
     constexpr int nT = 10;
-    constexpr Real lRhoMin = std::log10(0.1 * rho);
-    constexpr Real lRhoMax = std::log10(10. * rho);
+    const Real lRhoMin = std::log10(0.1 * rho);
+    const Real lRhoMax = std::log10(10. * rho);
     constexpr int NRho = 2;
-    constexpr Real lTMin = std::log10(0.1 * temp);
-    constexpr Real lTMax = std::log10(10. * temp);
+    const Real lTMin = std::log10(0.1 * temp);
+    const Real lTMax = std::log10(10. * temp);
     constexpr int NT = 10;
     constexpr Real YeMin = 0.1;
     constexpr Real YeMax = 0.5;
@@ -234,11 +234,12 @@ TEST_CASE("Mean neutrino scattering opacities", "[MeanNeutrinosS]") {
     constexpr Real nu = 1.25 * MeV2Hz; // 1 MeV
 
     constexpr int nT = 10;
-    constexpr Real lRhoMin = std::log10(0.1 * rho);
-    constexpr Real lRhoMax = std::log10(10. * rho);
+    // please stop copy-pasting code
+    const Real lRhoMin = std::log10(0.1 * rho);
+    const Real lRhoMax = std::log10(10. * rho);
     constexpr int NRho = 2;
-    constexpr Real lTMin = std::log10(0.1 * temp);
-    constexpr Real lTMax = std::log10(10. * temp);
+    const Real lTMin = std::log10(0.1 * temp);
+    const Real lTMax = std::log10(10. * temp);
     constexpr int NT = 10;
     constexpr Real YeMin = 0.1;
     constexpr Real YeMax = 0.5;
@@ -402,11 +403,11 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
     constexpr Real nu = 1.e15;  // Hz
 
     constexpr int nT = 10;
-    constexpr Real lRhoMin = std::log10(0.1 * rho);
-    constexpr Real lRhoMax = std::log10(10. * rho);
+    const Real lRhoMin = std::log10(0.1 * rho);
+    const Real lRhoMax = std::log10(10. * rho);
     constexpr int NRho = 2;
-    constexpr Real lTMin = std::log10(0.1 * temp);
-    constexpr Real lTMax = std::log10(10. * temp);
+    const Real lTMin = std::log10(0.1 * temp);
+    const Real lTMax = std::log10(10. * temp);
     constexpr int NT = 10;
 
     constexpr Real kappa = 1.e-20;
@@ -552,11 +553,11 @@ TEST_CASE("Mean photon scattering opacities", "[MeanPhotonS]") {
     constexpr Real nu = 1.e15;  // Hz
 
     constexpr int nT = 10;
-    constexpr Real lRhoMin = std::log10(0.1 * rho);
-    constexpr Real lRhoMax = std::log10(10. * rho);
+    const Real lRhoMin = std::log10(0.1 * rho);
+    const Real lRhoMax = std::log10(10. * rho);
     constexpr int NRho = 2;
-    constexpr Real lTMin = std::log10(0.1 * temp);
-    constexpr Real lTMax = std::log10(10. * temp);
+    const Real lTMin = std::log10(0.1 * temp);
+    const Real lTMax = std::log10(10. * temp);
     constexpr int NT = 10;
 
     constexpr Real sigma = 1.e-20;
@@ -611,7 +612,8 @@ TEST_CASE("Mean photon scattering opacities", "[MeanPhotonS]") {
         int n_wrong = 0;
         portableReduce(
             "rebuilt table vs gray", 0, NRho, 0, NT, 0, 0,
-            PORTABLE_LAMBDA(const int iRho, const int iT, const int igarbage, int &accumulate) {
+            PORTABLE_LAMBDA(const int iRho, const int iT, const int igarbage,
+                            int &accumulate) {
               const Real lRho =
                   lRhoMin + (lRhoMax - lRhoMin) / (NRho - 1) * iRho;
               const Real rho = std::pow(10, lRho);
