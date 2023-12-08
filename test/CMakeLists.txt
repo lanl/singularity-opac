@@ -29,6 +29,8 @@ message(STATUS "Configuring unit tests")
 add_library(catch2_define)
 target_sources(catch2_define PUBLIC catch2_define.cpp)
 target_link_libraries(catch2_define PUBLIC
+                      ${PROJECT_NAME}
+                      singularity-opac::flags
                       Catch2::Catch2)
 
 add_executable(${PROJECT_NAME}_unit_tests)
@@ -50,7 +52,8 @@ PRIVATE
 target_link_libraries(${PROJECT_NAME}_unit_tests
 PRIVATE
   catch2_define
-  ${PROJECT_NAME})
+  ${PROJECT_NAME}
+  singularity-opac::flags)
 
 # Ensure code works with C++11 and earlier
 # TODO(MM): Remove this later when it's not needed.
