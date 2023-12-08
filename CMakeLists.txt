@@ -1,4 +1,4 @@
-# © 2021. Triad National Security, LLC. All rights reserved.  This
+# © 2023. Triad National Security, LLC. All rights reserved.  This
 # program was produced under U.S. Government contract
 # 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 # is operated by Triad National Security, LLC for the U.S.  Department
@@ -12,6 +12,7 @@
 # publicly, and to permit others to do so.
 
 cmake_minimum_required(VERSION 3.14)
+set(CMAKE_CXX_STANDARD 17 CACHE BOOL "")
 
 project("singularity-opac"
       VERSION 0.0.1
@@ -53,10 +54,20 @@ target_include_directories(singularity-opac::flags
                            INTERFACE
                            $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
 
-include (SetupDeps)
 include (SetupOptions)
+include (SetupDeps)
 include (SetupCompilers)
 include (SetupFlags)
+
+if (SINGULARITY_USE_HDF5)
+  message(STATUS "HDF5 enabled. Requesting it in spiner")
+  set(SPINER_USE_HDF ON CACHE BOOL "")
+else()
+  message(STATUS "HDF5 not enabled. Turning it off in spiner")
+  set(SPINER_USE_HDF OFF CACHE BOOL "")
+endif()
+add_subdirectory(utils/spiner)
+target_link_libraries(singularity-opac::flags INTERFACE spiner)
 
 include(GNUInstallDirs)
 include(CTest)

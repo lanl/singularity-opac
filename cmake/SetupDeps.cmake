@@ -33,6 +33,9 @@ endif()
 #=======================================
 # Can't play the target games above unless using
 # cmake 3.20+, so leave this one for now.
+# JMM: DO NOT SEARCH FOR HDF5 IF WE DON'T NEED IT
+# HDF5 WILL SUCK US ALL INTO HELL
+if (SPINER_USE_HDF)
 find_package(HDF5 COMPONENTS C HL QUIET)
 
 # findpackage doesnt export an interface for HDF5,
@@ -65,6 +68,7 @@ if (HDF5_FOUND)
 	message("MPI::MPI_CXX provided by parent package")
       endif()
     endif()
+endif()
 endif()
 
 #=======================================

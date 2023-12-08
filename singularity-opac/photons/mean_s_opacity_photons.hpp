@@ -42,6 +42,8 @@ template <typename ThermalDistribution, typename pc = PhysicalConstantsCGS>
 class MeanSOpacity {
 
  public:
+  using DataBox = Spiner::DataBox<Real>;
+
   MeanSOpacity() = default;
   template <typename SOpacity>
   MeanSOpacity(const SOpacity &s_opac, const Real lRhoMin, const Real lRhoMax,
@@ -192,8 +194,8 @@ class MeanSOpacity {
   PORTABLE_INLINE_FUNCTION Real fromLog_(const Real lx) const {
     return std::pow(10., lx);
   }
-  Spiner::DataBox lkappaPlanck_;
-  Spiner::DataBox lkappaRosseland_;
+  DataBox lkappaPlanck_;
+  DataBox lkappaRosseland_;
   const char *filename_;
 };
 
