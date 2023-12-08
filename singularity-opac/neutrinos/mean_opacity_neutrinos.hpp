@@ -210,8 +210,8 @@ class MeanOpacity {
   PORTABLE_INLINE_FUNCTION Real fromLog_(const Real lx) const {
     return std::pow(10., lx);
   }
-  Spiner::DataBox lkappaPlanck_;
-  Spiner::DataBox lkappaRosseland_;
+  Spiner::DataBox<Real> lkappaPlanck_;
+  Spiner::DataBox<Real> lkappaRosseland_;
   const char *filename_;
 };
 
