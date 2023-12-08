@@ -13,13 +13,15 @@ jobs:
 
       steps:
         - name: Checkout code
-          uses: actions/checkout@v2
+          uses: actions/checkout@v3
           with:
             submodules: true
         - name: Set system to non-interactive mode
           run: export DEBIAN_FRONTEND=noninteractive
         - name: install dependencies
-          run: sudo apt-get install -y --force-yes -qq build-essential libhdf5-serial-dev
+          run: |
+            sudo apt-get update -y -qq
+            sudo apt-get install -y --force-yes -qq build-essential libhdf5-serial-dev
         - name: build and run tests
           run: |
             mkdir -p bin
