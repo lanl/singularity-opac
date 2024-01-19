@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2021. Triad National Security, LLC. All rights reserved.  This
+// © 2021-2024. Triad National Security, LLC. All rights reserved. This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -65,7 +65,7 @@ class NonCGSUnits {
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION Real AbsorptionCoefficient(
+  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficient(
       const Real rho, const Real temp, FrequencyIndexer &nu_bins,
       DataIndexer &coeffs, const int nbins, Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
