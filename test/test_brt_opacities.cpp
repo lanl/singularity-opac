@@ -32,6 +32,7 @@
 using namespace singularity;
 
 using pc = PhysicalConstantsCGS;
+using DataBox = Spiner::DataBox<Real>;
 
 #ifdef PORTABILITY_STRATEGY_KOKKOS
 using atomic_view = Kokkos::MemoryTraits<Kokkos::Atomic>;
@@ -169,7 +170,7 @@ TEST_CASE("BRT neutrino opacities", "[BRTNeutrinos]") {
                                                     nu_coeffs, nu_min, nu_max);
             opac.EmissivityPerNu(rho, temp, Ye, type, nu_bins, J_cheb, nbins);
             Real Jtrue = opac.EmissivityPerNu(rho, temp, Ye, type, nu);
-            J_cheb.SetInterpCoeffs(Spiner::DataBox(vm9, 9, 9));
+            J_cheb.SetInterpCoeffs(DataBox(vm9, 9, 9));
             if (std::isnan(J_cheb(nu)) ||
                 ((std::abs(Jtrue) >= 1e-14 || J_cheb(nu) >= 1e-14) &&
                  FractionalDifference(J_cheb(nu), Jtrue) > EPS_TEST)) {

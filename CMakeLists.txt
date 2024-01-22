@@ -1,4 +1,4 @@
-# © 2021. Triad National Security, LLC. All rights reserved.  This
+# © 2021-2023. Triad National Security, LLC. All rights reserved.  This
 # program was produced under U.S. Government contract
 # 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 # is operated by Triad National Security, LLC for the U.S.  Department
@@ -53,10 +53,20 @@ target_include_directories(singularity-opac::flags
                            INTERFACE
                            $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
 
-include (SetupDeps)
 include (SetupOptions)
+include (SetupDeps)
 include (SetupCompilers)
 include (SetupFlags)
+
+if (SINGULARITY_USE_HDF5)
+  message(STATUS "HDF5 enabled. Requesting it in spiner")
+  set(SPINER_USE_HDF ON CACHE BOOL "")
+else()
+  message(STATUS "HDF5 not enabled. Turning it off in spiner")
+  set(SPINER_USE_HDF OFF CACHE BOOL "")
+endif()
+add_subdirectory(utils/spiner)
+target_link_libraries(singularity-opac::flags INTERFACE spiner)
 
 include(GNUInstallDirs)
 include(CTest)

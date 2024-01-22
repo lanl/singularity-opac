@@ -61,6 +61,7 @@ enum class DataStatus { Deallocated, OnDevice, OnHost };
 template <typename ThermalDistribution, typename pc = PhysicalConstantsCGS>
 class SpinerOpacity {
  public:
+  using DataBox = Spiner::DataBox<Real>;
   static constexpr Real EPS = 10.0 * std::numeric_limits<Real>::min();
   static constexpr Real Hz2MeV = pc::h / (1e6 * pc::eV);
   static constexpr Real MeV2Hz = 1 / Hz2MeV;
@@ -130,8 +131,8 @@ class SpinerOpacity {
 
   // DataBox constructor. Note that this constructor *shallow* copies
   // the databoxes, so they must be managed externally.
-  SpinerOpacity(const Spiner::DataBox &lalphanu, const Spiner::DataBox ljnu,
-                const Spiner::DataBox lJ, const Spiner::DataBox lJYe)
+  SpinerOpacity(const DataBox &lalphanu, const DataBox ljnu,
+                const DataBox lJ, const DataBox lJYe)
       : memoryStatus_(impl::DataStatus::OnHost), lalphanu_(lalphanu),
         ljnu_(ljnu), lJ_(lJ), lJYe_(lJYe) {}
 
@@ -391,7 +392,7 @@ class SpinerOpacity {
   impl::DataStatus memoryStatus_ = impl::DataStatus::Deallocated;
   // TODO(JMM): Integrating J and JYe seems wise.
   // We can add more things here as needed.
-  Spiner::DataBox lalphanu_, ljnu_, lJ_, lJYe_;
+  DataBox lalphanu_, ljnu_, lJ_, lJYe_;
   // TODO(JMM): Should we add table bounds? Given they're recorded in
   // each spiner table, I lean towards no, but could be convinced
   // otherwise if we need to do extrapolation, etc.

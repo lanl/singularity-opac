@@ -13,7 +13,7 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#include "../utils/ports-of-call/portability.hpp"
+#include <ports-of-call/portability.hpp>
 
 #define CATCH_CONFIG_RUNNER
 #include <catch2/catch.hpp>

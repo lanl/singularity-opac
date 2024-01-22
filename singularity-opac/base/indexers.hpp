@@ -46,6 +46,7 @@ struct Identity {
 
 class Linear {
  public:
+  using DataBox = Spiner::DataBox<Real>;
   Linear() = default;
 
   PORTABLE_INLINE_FUNCTION
@@ -58,7 +59,7 @@ class Linear {
     SetRange_(numin, numax, N);
   }
 
-  PORTABLE_INLINE_FUNCTION Linear(const Spiner::DataBox &data, Real numin,
+  PORTABLE_INLINE_FUNCTION Linear(const DataBox &data, Real numin,
                                   Real numax, int N)
       : data_(data) {
     SetRange_(numin, numax, N);
@@ -79,11 +80,12 @@ class Linear {
   void SetRange_(Real numin, Real numax, int N) {
     data_.setRange(0, numin, numax, N);
   }
-  Spiner::DataBox data_;
+  DataBox data_;
 };
 
 class LogLinear {
  public:
+  using DataBox = Spiner::DataBox<Real>;
   LogLinear() = default;
 
   PORTABLE_INLINE_FUNCTION
@@ -97,7 +99,7 @@ class LogLinear {
   }
 
   PORTABLE_INLINE_FUNCTION
-  LogLinear(const Spiner::DataBox &data, Real numin, Real numax, int N)
+  LogLinear(const DataBox &data, Real numin, Real numax, int N)
       : data_(data) {
     SetRange_(numin, numax, N);
   }
@@ -119,7 +121,7 @@ class LogLinear {
   void SetRange_(Real numin, Real numax, int N) {
     data_.setRange(0, BDMath::log10(numin), BDMath::log10(numax), N);
   }
-  Spiner::DataBox data_;
+  DataBox data_;
 };
 
 template <int N, typename Data_t>

@@ -23,6 +23,8 @@
 #include <singularity-opac/chebyshev/chebyshev.hpp>
 using namespace singularity::chebyshev;
 
+using DataBox = Spiner::DataBox<Real>;
+
 #ifdef PORTABILITY_STRATEGY_KOKKOS
 using atomic_view = Kokkos::MemoryTraits<Kokkos::Atomic>;
 #endif
@@ -62,7 +64,7 @@ TEST_CASE("Chebyshev Polynomials", "[Chebyshev]") {
         Real *ycoeffs = (Real *)PORTABLE_MALLOC(sizeof(Real) * N);
         portableFor(
             "Compute Cheb polynomial", 0, 1, PORTABLE_LAMBDA(const int &i) {
-              MatMultiply(Spiner::DataBox(vm9, 9, 9), y, ycoeffs, N);
+              MatMultiply(DataBox(vm9, 9, 9), y, ycoeffs, N);
             });
         AND_THEN("The chebyshev polynomials fit") {
           int n_wrong_h = 0;
