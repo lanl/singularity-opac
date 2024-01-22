@@ -41,6 +41,7 @@ template <typename pc = PhysicalConstantsCGS>
 class MeanOpacity {
 
  public:
+  using DataBox = Spiner::DataBox<Real>;
   MeanOpacity() = default;
   template <typename Opacity>
   MeanOpacity(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
@@ -186,8 +187,8 @@ class MeanOpacity {
   PORTABLE_INLINE_FUNCTION Real fromLog_(const Real lx) const {
     return std::pow(10., lx);
   }
-  Spiner::DataBox<Real> lkappaPlanck_;
-  Spiner::DataBox<Real> lkappaRosseland_;
+  DataBox lkappaPlanck_;
+  DataBox lkappaRosseland_;
   const char *filename_;
 };
 
