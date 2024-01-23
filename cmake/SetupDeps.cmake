@@ -1,4 +1,5 @@
 include(FeatureSummary)
+include(CMakeDependentOption)
 #=======================================
 # Setup CUDAToolkit
 # - provideds CUDA::toolkit
