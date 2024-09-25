@@ -46,19 +46,20 @@ PORTABLE_INLINE_FUNCTION Real CalcFrequency(const int n, const Real nu_min,
 
 constexpr Real EPS_TEST = 1e-3;
 
+constexpr Real rho_exp = 2.;
+constexpr Real temp_exp = 2.5;
+
 TEST_CASE("Scale free power law photon opacities",
           "[PowerLawScaleFreePhotonOpacities]") {
   WHEN("We initialize a scale-free power law photon opacity") {
-    constexpr Real rho = 1.e0;
-    constexpr Real temp = 1.e0;
+    constexpr Real rho = 1.5e0;
+    constexpr Real temp = 3.2e0;
     constexpr Real nu_min = 1.e-1;
     constexpr Real nu_max = 1.e1;
     constexpr int n_nu = 100;
     constexpr Real kappa0 = 1.5;
-    constexpr Real A = 2.;
-    constexpr Real B = 2.5;
 
-    photons::PowerLawScaleFree opac_host(kappa0, A, B);
+    photons::PowerLawScaleFree opac_host(kappa0, rho_exp, temp_exp);
     photons::Opacity opac = opac_host.GetOnDevice();
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
@@ -74,7 +75,8 @@ TEST_CASE("Scale free power law photon opacities",
             const Real nu = CalcFrequency(i, nu_min, nu_max, n_nu);
             const Real jnu = opac.EmissivityPerNuOmega(rho, temp, nu);
             const Real Jnu = opac.EmissivityPerNu(rho, temp, nu);
-            const Real kappa = kappa0 * std::pow(rho, A) * std::pow(temp, B);
+            const Real kappa =
+                kappa0 * std::pow(rho, rho_exp) * std::pow(temp, temp_exp);
             if (FractionalDifference(jnu, rho * kappa *
                                               opac.ThermalDistributionOfTNu(
                                                   temp, nu)) > EPS_TEST) {
@@ -96,17 +98,15 @@ TEST_CASE("Scale free power law photon opacities",
 }
 
 TEST_CASE("CGS power law photon opacities", "[PowerLawCGSPhotonOpacities]") {
-  constexpr Real rho = 1.e0;     // g/cc
+  constexpr Real rho = 1.5e0;    // g/cc
   constexpr Real temp = 1.e3;    // K
   constexpr Real nu_min = 1.e10; // Hz
   constexpr Real nu_max = 1.e14; // Hz
   constexpr int n_nu = 100;
   constexpr Real kappa0 = 1.5; // cm^2 / g
-  constexpr Real A = 2.;
-  constexpr Real B = 2.5;
 
   WHEN("We initialize a CGS power law photon opacity") {
-    photons::PowerLaw opac_host(kappa0, A, B);
+    photons::PowerLaw opac_host(kappa0, rho_exp, temp_exp);
     photons::Opacity opac = opac_host.GetOnDevice();
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
@@ -122,7 +122,8 @@ TEST_CASE("CGS power law photon opacities", "[PowerLawCGSPhotonOpacities]") {
             const Real nu = CalcFrequency(i, nu_min, nu_max, n_nu);
             const Real jnu = opac.EmissivityPerNuOmega(rho, temp, nu);
             const Real Jnu = opac.EmissivityPerNu(rho, temp, nu);
-            const Real kappa = kappa0 * std::pow(rho, A) * std::pow(temp, B);
+            const Real kappa =
+                kappa0 * std::pow(rho, rho_exp) * std::pow(temp, temp_exp);
             if (FractionalDifference(jnu, rho * kappa *
                                               opac.ThermalDistributionOfTNu(
                                                   temp, nu)) > EPS_TEST) {
@@ -152,10 +153,10 @@ TEST_CASE("CGS power law photon opacities", "[PowerLawCGSPhotonOpacities]") {
     constexpr Real j_unit = mass_unit / (length_unit * time_unit * time_unit);
 
     photons::NonCGSUnits<photons::PowerLaw> opac_host(
-        photons::PowerLaw(kappa0, A, B), time_unit, mass_unit, length_unit,
-        temp_unit);
+        photons::PowerLaw(kappa0, rho_exp, temp_exp), time_unit, mass_unit,
+        length_unit, temp_unit);
     photons::Opacity opac = opac_host.GetOnDevice();
-    photons::PowerLaw opac_cgs_host(kappa0, A, B);
+    photons::PowerLaw opac_cgs_host(kappa0, rho_exp, temp_exp);
     photons::Opacity opac_cgs = opac_cgs_host.GetOnDevice();
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
@@ -173,7 +174,8 @@ TEST_CASE("CGS power law photon opacities", "[PowerLawCGSPhotonOpacities]") {
                 rho / rho_unit, temp / temp_unit, nu * time_unit);
             const Real Jnu = opac.EmissivityPerNu(
                 rho / rho_unit, temp / temp_unit, nu * time_unit);
-            const Real kappa = kappa0 * std::pow(rho, A) * std::pow(temp, B);
+            const Real kappa =
+                kappa0 * std::pow(rho, rho_exp) * std::pow(temp, temp_exp);
             if (FractionalDifference(
                     jnu * j_unit,
                     opac_cgs.EmissivityPerNuOmega(rho, temp, nu)) > EPS_TEST) {

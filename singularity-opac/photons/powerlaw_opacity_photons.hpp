@@ -31,18 +31,19 @@ template <typename pc = PhysicalConstantsCGS>
 class PowerLawOpacity {
  public:
   PowerLawOpacity() = default;
-  PowerLawOpacity(const Real kappa0, const Real A, const Real B)
-      : kappa0_(kappa0), A_(A), B_(B) {}
+  PowerLawOpacity(const Real kappa0, const Real rho_exp, const Real temp_exp)
+      : kappa0_(kappa0), rho_exp_(rho_exp), temp_exp_(temp_exp) {}
   PowerLawOpacity(const PlanckDistribution<pc> &dist, const Real kappa0,
-                  const Real A, const Real B)
-      : dist_(dist), kappa0_(kappa0), A_(A), B_(B) {}
+                  const Real rho_exp, const Real temp_exp)
+      : dist_(dist), kappa0_(kappa0), rho_exp_(rho_exp), temp_exp_(temp_exp) {}
 
   PowerLawOpacity GetOnDevice() { return *this; }
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return 0; }
   PORTABLE_INLINE_FUNCTION
   void PrintParams() const noexcept {
-    printf("Power law opacity. kappa0 = %g A = %g B = %g\n", kappa0_, A_, B_);
+    printf("Power law opacity. kappa0 = %g rho_exp = %g temp_exp = %g\n",
+           kappa0_, rho_exp_, temp_exp_);
   }
   inline void Finalize() noexcept {}
 
@@ -85,7 +86,9 @@ class PowerLawOpacity {
   Real EmissivityPerNuOmega(const Real rho, const Real temp, const Real nu,
                             Real *lambda = nullptr) const {
     Real Bnu = dist_.ThermalDistributionOfTNu(temp, nu, lambda);
-    return rho * (kappa0_ * std::pow(rho, A_) * std::pow(temp, B_)) * Bnu;
+    return rho *
+           (kappa0_ * std::pow(rho, rho_exp_) * std::pow(temp, temp_exp_)) *
+           Bnu;
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
@@ -118,13 +121,14 @@ class PowerLawOpacity {
   Real Emissivity(const Real rho, const Real temp,
                   Real *lambda = nullptr) const {
     Real B = dist_.ThermalDistributionOfT(temp, lambda);
-    return rho * (kappa0_ * std::pow(rho, A_) * std::pow(temp, B_)) * B;
+    return rho *
+           (kappa0_ * std::pow(rho, rho_exp_) * std::pow(temp, temp_exp_)) * B;
   }
 
   PORTABLE_INLINE_FUNCTION
   Real NumberEmissivity(const Real rho, const Real temp,
                         Real *lambda = nullptr) const {
-    return (kappa0_ * std::pow(rho, A_) * std::pow(temp, B_)) *
+    return (kappa0_ * std::pow(rho, rho_exp_) * std::pow(temp, temp_exp_)) *
            dist_.ThermalNumberDistributionOfT(temp, lambda);
   }
 
@@ -169,9 +173,9 @@ class PowerLawOpacity {
   }
 
  private:
-  Real kappa0_; // Opacity scale. Units of cm^2/g
-  Real A_;      // Power law index of density
-  Real B_;      // Power law index of temperature
+  Real kappa0_;   // Opacity scale. Units of cm^2/g
+  Real rho_exp_;  // Power law index of density
+  Real temp_exp_; // Power law index of temperature
   PlanckDistribution<pc> dist_;
 };
 
