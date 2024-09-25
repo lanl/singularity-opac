@@ -37,7 +37,7 @@ class PowerLawOpacity {
                   const Real A, const Real B)
       : dist_(dist), kappa0_(kappa0), A_(A), B_(B) {}
 
-  GrayOpacity GetOnDevice() { return *this; }
+  PowerLawOpacity GetOnDevice() { return *this; }
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return 0; }
   PORTABLE_INLINE_FUNCTION
@@ -85,7 +85,7 @@ class PowerLawOpacity {
   Real EmissivityPerNuOmega(const Real rho, const Real temp, const Real nu,
                             Real *lambda = nullptr) const {
     Real Bnu = dist_.ThermalDistributionOfTNu(temp, nu, lambda);
-    return rho * (kappa0_ * std::pow(rho, A_) * std::pow(temp, B_) * Bnu;
+    return rho * (kappa0_ * std::pow(rho, A_) * std::pow(temp, B_)) * Bnu;
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
