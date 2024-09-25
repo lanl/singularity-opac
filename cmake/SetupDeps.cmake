@@ -14,8 +14,6 @@ endif()
 # Setup ports of call
 # - provides PortsofCall::PortsofCall
 #=======================================
-get_target_property(defs ${PROJECT_NAME} INTERFACE_COMPILE_DEFINITIONS)
-message(STATUS "POC Compile Definitions for ${PROJECT_NAME}: ${defs}")
 find_package(PortsofCall REQUIRED)
 target_link_libraries(singularity-opac::flags INTERFACE PortsofCall::PortsofCall)
 
@@ -94,4 +92,3 @@ if (NOT TARGET Catch2::Catch2)
   find_package(Catch2 QUIET)
 endif()
 
-message(STATUS "NOW Compile Definitions for ${PROJECT_NAME}: ${defs}")

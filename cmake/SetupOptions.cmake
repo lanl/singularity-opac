@@ -53,5 +53,7 @@ if(SINGULARITY_USE_CUDA)
 endif()
 
 if(NOT SINGULARITY_USE_KOKKOS)
-  message(FATAL_ERROR "For unknown reasons PORTABILITY_STRATEGY_KOKKOS will always be provided to ports-of-call. For now you must use Kokkos with singularity-opac.")
+  message(FATAL_ERROR
+    "For unknown reasons PORTABILITY_STRATEGY_KOKKOS will always be provided to ports-of-call. "
+    "For now you must use Kokkos with singularity-opac.")
 endif()

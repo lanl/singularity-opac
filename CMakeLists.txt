@@ -53,10 +53,10 @@ target_include_directories(singularity-opac::flags
                            INTERFACE
                            $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
 
-include (SetupOptions)
-include (SetupFlags)
 include (SetupDeps)
+include (SetupOptions)
 include (SetupCompilers)
+include (SetupFlags)
 
 if (SINGULARITY_USE_HDF5)
   message(STATUS "HDF5 enabled. Requesting it in spiner")
