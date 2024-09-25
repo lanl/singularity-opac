@@ -51,9 +51,3 @@ if(SINGULARITY_USE_CUDA)
     message(FATAL_ERROR "Cuda without kokkos is not currently supported")
   endif()
 endif()
-
-if(NOT SINGULARITY_USE_KOKKOS)
-  message(FATAL_ERROR
-    "For unknown reasons PORTABILITY_STRATEGY_KOKKOS will always be provided to ports-of-call. "
-    "For now you must use Kokkos with singularity-opac.")
-endif()
