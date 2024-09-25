@@ -14,6 +14,8 @@ endif()
 # Setup ports of call
 # - provides PortsofCall::PortsofCall
 #=======================================
+get_target_property(defs ${PROJECT_NAME} INTERFACE_COMPILE_DEFINITIONS)
+message(STATUS "POC Compile Definitions for ${PROJECT_NAME}: ${defs}")
 find_package(PortsofCall REQUIRED)
 target_link_libraries(singularity-opac::flags INTERFACE PortsofCall::PortsofCall)
 
@@ -21,13 +23,11 @@ target_link_libraries(singularity-opac::flags INTERFACE PortsofCall::PortsofCall
 # Setup Kokkos
 # - provides Kokkos::kokkos
 #=======================================
-if (SINGULARITY_USE_KOKKOS)
-  if (NOT TARGET Kokkos::kokkos)
-    add_subdirectory(utils/kokkos)
-    find_package(Kokkos QUIET)
-  else()
-    message(status "Kokkos::kokkos provided by parent package")
-  endif()
+if (NOT TARGET Kokkos::kokkos)
+  add_subdirectory(utils/kokkos)
+  find_package(Kokkos QUIET)
+else()
+  message(status "Kokkos::kokkos provided by parent package")
 endif()
 
 #=======================================
