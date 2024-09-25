@@ -63,13 +63,11 @@ INTERFACE
     > # with_kokkos
 )
 
-get_target_property(defs ${PROJECT_NAME} INTERFACE_COMPILE_DEFINITIONS)
-message(STATUS "BEFORE compile Definitions for ${PROJECT_NAME}: ${defs}")
 target_compile_definitions(${PROJECT_NAME}
 INTERFACE
-  #$<${with_kokkos}:
-  #  PORTABILITY_STRATEGY_KOKKOS
-  #>
+  $<${with_kokkos}:
+    PORTABILITY_STRATEGY_KOKKOS
+  >
   $<${without_kokkos}:
     $<${with_fmath}:
       SINGULARITY_USE_FMATH
@@ -77,8 +75,6 @@ INTERFACE
     PORTABILITY_STRATEGY_NONE
   >
 )
-get_target_property(defs ${PROJECT_NAME} INTERFACE_COMPILE_DEFINITIONS)
-message(STATUS "Compile Definitions for ${PROJECT_NAME}: ${defs}")
 
 # target_link_libraries brings in compile flags, compile defs, link flags.
 target_link_libraries(${PROJECT_NAME}
