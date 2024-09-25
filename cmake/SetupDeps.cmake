@@ -91,4 +91,3 @@ cmake_dependent_option(SINGULARITY_USE_MPI
 if (NOT TARGET Catch2::Catch2)
   find_package(Catch2 QUIET)
 endif()
-
