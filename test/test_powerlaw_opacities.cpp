@@ -96,16 +96,16 @@ TEST_CASE("Scale free power law photon opacities",
 }
 
 TEST_CASE("CGS power law photon opacities", "[PowerLawCGSPhotonOpacities]") {
-  WHEN("We initialize a CGS power law photon opacity") {
-    constexpr Real rho = 1.e0;     // g/cc
-    constexpr Real temp = 1.e3;    // K
-    constexpr Real nu_min = 1.e10; // Hz
-    constexpr Real nu_max = 1.e14; // Hz
-    constexpr int n_nu = 100;
-    constexpr Real kappa0 = 1.5; // cm^2 / g
-    constexpr Real A = 2.;
-    constexpr Real B = 2.5;
+  constexpr Real rho = 1.e0;     // g/cc
+  constexpr Real temp = 1.e3;    // K
+  constexpr Real nu_min = 1.e10; // Hz
+  constexpr Real nu_max = 1.e14; // Hz
+  constexpr int n_nu = 100;
+  constexpr Real kappa0 = 1.5; // cm^2 / g
+  constexpr Real A = 2.;
+  constexpr Real B = 2.5;
 
+  WHEN("We initialize a CGS power law photon opacity") {
     photons::PowerLaw opac_host(kappa0, A, B);
     photons::Opacity opac = opac_host.GetOnDevice();
 
@@ -126,6 +126,57 @@ TEST_CASE("CGS power law photon opacities", "[PowerLawCGSPhotonOpacities]") {
             if (FractionalDifference(jnu, rho * kappa *
                                               opac.ThermalDistributionOfTNu(
                                                   temp, nu)) > EPS_TEST) {
+              n_wrong_d() += 1;
+            }
+            if (FractionalDifference(Jnu, 4 * M_PI * jnu) > EPS_TEST) {
+              n_wrong_d() += 1;
+            }
+          });
+
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+      Kokkos::deep_copy(n_wrong_h, n_wrong_d);
+#endif
+      REQUIRE(n_wrong_h == 0);
+    }
+
+    opac.Finalize();
+  }
+
+  WHEN("We initialize a CGS power law photon opacity with non-CGS units") {
+    constexpr Real time_unit = 123.;
+    constexpr Real mass_unit = 456.;
+    constexpr Real length_unit = 789.;
+    constexpr Real temp_unit = 276.;
+    constexpr Real rho_unit =
+        mass_unit / (length_unit * length_unit * length_unit);
+    constexpr Real j_unit = mass_unit / (length_unit * time_unit * time_unit);
+
+    photons::NonCGSUnits<photons::PowerLaw> opac_host(
+        photons::PowerLaw(kappa0, A, B), time_unit, mass_unit, length_unit,
+        temp_unit);
+    photons::Opacity opac = opac_host.GetOnDevice();
+    photons::PowerLaw opac_cgs_host(kappa0, A, B);
+    photons::Opacity opac_cgs = opac_cgs_host.GetOnDevice();
+
+    THEN("The emissivity per nu omega is consistent with the emissity per nu") {
+      int n_wrong_h = 0;
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+      Kokkos::View<int, atomic_view> n_wrong_d("wrong");
+#else
+      PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
+#endif
+
+      portableFor(
+          "calc emissivities", 0, n_nu, PORTABLE_LAMBDA(const int &i) {
+            const Real nu = CalcFrequency(i, nu_min, nu_max, n_nu);
+            const Real jnu = opac.EmissivityPerNuOmega(
+                rho / rho_unit, temp / temp_unit, nu * time_unit);
+            const Real Jnu = opac.EmissivityPerNu(
+                rho / rho_unit, temp / temp_unit, nu * time_unit);
+            const Real kappa = kappa0 * std::pow(rho, A) * std::pow(temp, B);
+            if (FractionalDifference(
+                    jnu * j_unit,
+                    opac_cgs.EmissivityPerNuOmega(rho, temp, nu)) > EPS_TEST) {
               n_wrong_d() += 1;
             }
             if (FractionalDifference(Jnu, 4 * M_PI * jnu) > EPS_TEST) {

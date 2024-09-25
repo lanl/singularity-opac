@@ -34,9 +34,9 @@ using PowerLawScaleFree = PowerLawOpacity<PhysicalConstantsUnity>;
 using PowerLaw = PowerLawOpacity<PhysicalConstantsCGS>;
 using EPBremss = EPBremsstrahlungOpacity<PhysicalConstantsCGS>;
 
-using Opacity =
-    impl::Variant<ScaleFree, Gray, PowerLawScaleFree, PowerLaw, EPBremss,
-                  NonCGSUnits<Gray>, NonCGSUnits<EPBremss>>;
+using Opacity = impl::Variant<ScaleFree, Gray, PowerLawScaleFree, PowerLaw,
+                              EPBremss, NonCGSUnits<Gray>,
+                              NonCGSUnits<PowerLaw>, NonCGSUnits<EPBremss>>;
 
 } // namespace photons
 } // namespace singularity
