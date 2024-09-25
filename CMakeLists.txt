@@ -123,4 +123,3 @@ feature_summary(WHAT ALL
                 DESCRIPTION "Enabled Features:"
                 VAR enabledFeaturesText)
 message(STATUS "${enabledFeaturesText}")
-message(STATUS "NOW 127 Compile Definitions for ${PROJECT_NAME}: ${defs}")
