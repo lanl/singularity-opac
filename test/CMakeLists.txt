@@ -39,9 +39,10 @@ PRIVATE
   test_thermal_dist.cpp
   test_scalefree_opacities.cpp
   test_gray_opacities.cpp
-  test_epbremsstrahlung_opacities.cpp
   test_gray_s_opacities.cpp
+  test_epbremsstrahlung_opacities.cpp
   test_brt_opacities.cpp
+  test_powerlaw_opacities.cpp
   test_thomson_s_opacities.cpp
   test_chebyshev.cpp
   test_spiner_opac_neutrinos.cpp
