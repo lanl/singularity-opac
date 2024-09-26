@@ -72,7 +72,6 @@ INTERFACE
     $<${with_fmath}:
       SINGULARITY_USE_FMATH
     >
-    PORTABILITY_STRATEGY_NONE
   >
 )
 
