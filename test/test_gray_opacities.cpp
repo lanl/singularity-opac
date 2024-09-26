@@ -57,6 +57,9 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
     neutrinos::Gray opac_host(1);
     neutrinos::Opacity opac = opac_host.GetOnDevice();
 
+    auto constants = opac_host.GetPhysicalConstants();
+    printf("cl: %e\n", constants.c);
+
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
       int n_wrong_h = 0;
 #ifdef PORTABILITY_STRATEGY_KOKKOS
@@ -283,8 +286,7 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
 
       Real *nu_bins = (Real *)PORTABLE_MALLOC(nbins * sizeof(Real));
       Real *temp_bins = (Real *)PORTABLE_MALLOC(ntemps * sizeof(Real));
-      DataBox loglin_bins(Spiner::AllocationTarget::Device, ntemps,
-                                  nbins);
+      DataBox loglin_bins(Spiner::AllocationTarget::Device, ntemps, nbins);
 
       portableFor(
           "set nu bins", 0, nbins, PORTABLE_LAMBDA(const int &i) {

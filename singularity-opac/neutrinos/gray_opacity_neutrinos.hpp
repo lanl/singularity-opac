@@ -173,6 +173,9 @@ class GrayOpacity {
     return dist_.NumberDensityFromTemperature(temp, type, lambda);
   }
 
+  PORTABLE_INLINE_FUNCTION
+  pc GetPhysicalConstants() const { return pc(); }
+
  private:
   Real kappa_; // Opacity. Units of cm^2/g
   ThermalDistribution dist_;

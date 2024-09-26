@@ -119,6 +119,9 @@ class MeanOpacity {
     return rho * fromLog_(lkappaRosseland_.interpToReal(lRho, lT));
   }
 
+  PORTABLE_INLINE_FUNCTION
+  pc GetPhysicalConstants() const { return pc(); }
+
  private:
   template <typename Opacity, bool AUTOFREQ>
   void MeanOpacityImpl_(const Opacity &opac, const Real lRhoMin,

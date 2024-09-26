@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2022. Triad National Security, LLC. All rights reserved.  This
+// © 2022-2024. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -46,7 +46,7 @@ using atomic_view = Kokkos::MemoryTraits<Kokkos::Atomic>;
 
 template <typename T>
 PORTABLE_INLINE_FUNCTION T FractionalDifference(const T &a, const T &b) {
-  return 2 * std::abs(b - a) / (std::abs(a) + std::abs(b) + 1e-20);
+  return 2 * std::abs(b - a) / (std::abs(a) + std::abs(b) + 1e-100);
 }
 constexpr Real EPS_TEST = 1e-3;
 template <typename T>
@@ -89,8 +89,23 @@ TEST_CASE("Mean neutrino opacities", "[MeanNeutrinos]") {
 
     neutrinos::MeanOpacityCGS mean_opac_host(
         opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, YeMin, YeMax, NYe);
-    // neutrinos::MeanOpacity mean_opac = mean_opac_host.GetOnDevice();
     auto mean_opac = mean_opac_host.GetOnDevice();
+
+    // Check constants from mean opacity
+    THEN("Check constants from mean opacity for consistency") {
+      auto constants = mean_opac_host.GetPhysicalConstants();
+      int n_wrong = 0;
+      if (FractionalDifference(pc::eV, constants.eV) > EPS_TEST) {
+        n_wrong += 1;
+      }
+      if (FractionalDifference(pc::kb, constants.kb) > EPS_TEST) {
+        n_wrong += 1;
+      }
+      if (FractionalDifference(pc::h, constants.h) > EPS_TEST) {
+        n_wrong += 1;
+      }
+      REQUIRE(n_wrong == 0);
+    }
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
       int n_wrong_h = 0;
@@ -611,7 +626,8 @@ TEST_CASE("Mean photon scattering opacities", "[MeanPhotonS]") {
         int n_wrong = 0;
         portableReduce(
             "rebuilt table vs gray", 0, NRho, 0, NT, 0, 0,
-            PORTABLE_LAMBDA(const int iRho, const int iT, const int igarbage, int &accumulate) {
+            PORTABLE_LAMBDA(const int iRho, const int iT, const int igarbage,
+                            int &accumulate) {
               const Real lRho =
                   lRhoMin + (lRhoMax - lRhoMin) / (NRho - 1) * iRho;
               const Real rho = std::pow(10, lRho);

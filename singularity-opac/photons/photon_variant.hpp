@@ -30,7 +30,7 @@ namespace impl {
 template <typename... Ts>
 using opac_variant = mpark::variant<Ts...>;
 
-template <typename... Opacs>
+template <typename CONSTANTS, typename... Opacs>
 class Variant {
  private:
   opac_variant<Opacs...> opac_;
@@ -272,6 +272,11 @@ class Variant {
   PORTABLE_INLINE_FUNCTION
   void PrintParams() const noexcept {
     return mpark::visit([](const auto &opac) { return opac.PrintParams(); },
+                        opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION CONSTANTS GetPhysicalConstants() const {
+    return mpark::visit([](auto &opac) { return opac.GetPhysicalConstants(); },
                         opac_);
   }
 

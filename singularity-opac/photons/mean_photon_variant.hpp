@@ -28,7 +28,7 @@ namespace singularity {
 namespace photons {
 namespace impl {
 
-template <typename... Opacs>
+template <typename CONSTANTS, typename... Opacs>
 class MeanVariant {
  private:
   opac_variant<Opacs...> opac_;
@@ -84,6 +84,11 @@ class MeanVariant {
           return opac.RosselandMeanAbsorptionCoefficient(rho, temp);
         },
         opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION CONSTANTS GetPhysicalConstants() const {
+    return mpark::visit([](auto &opac) { return opac.GetPhysicalConstants(); },
+                        opac_);
   }
 
   inline void Finalize() noexcept {
