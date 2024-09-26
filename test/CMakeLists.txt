@@ -39,9 +39,10 @@ PRIVATE
   test_thermal_dist.cpp
   test_scalefree_opacities.cpp
   test_gray_opacities.cpp
-  test_epbremsstrahlung_opacities.cpp
   test_gray_s_opacities.cpp
+  test_epbremsstrahlung_opacities.cpp
   test_brt_opacities.cpp
+  test_powerlaw_opacities.cpp
   test_thomson_s_opacities.cpp
   test_chebyshev.cpp
   test_spiner_opac_neutrinos.cpp
@@ -58,7 +59,7 @@ PRIVATE
 # Ensure code works with C++11 and earlier
 # TODO(MM): Remove this later when it's not needed.
 set_target_properties(${PROJECT_NAME}_unit_tests
-  PROPERTIES CXX_STANDARD 14
+  PROPERTIES CXX_STANDARD 17
   CXX_STANDARD_REQUIRED YES
   CXX_EXTENSIONS NO)
 

@@ -57,6 +57,7 @@ A number of options are avaialable for compiling:
 | --------------------------------- | ------- | ------------------------------------------------------------------------------------ |
 | SINGULARITY_BUILD_TESTS           | OFF     | Build test infrastructure.                                                           |
 | SINGULARITY_USE_HDF5              | ON      | Enables HDF5. Required for Spiner opacities.                                         |
+| SINGULARITY_KOKKOS_IN_TREE        | OFF     | Force cmake to use Kokkos source included in tree.                                   |
 
 ## Copyright
 
