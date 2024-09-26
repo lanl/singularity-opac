@@ -45,6 +45,10 @@ class PowerLawOpacity {
     printf("Power law opacity. kappa0 = %g rho_exp = %g temp_exp = %g\n",
            kappa0_, rho_exp_, temp_exp_);
   }
+
+  PORTABLE_INLINE_FUNCTION
+  pc GetPhysicalConstants() const { return pc(); }
+
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION

@@ -46,6 +46,10 @@ class TophatEmissivity {
     printf("Tophat emissivity. C, numin, numax = %g, %g, %g\n", C_, numin_,
            numax_);
   }
+
+  PORTABLE_INLINE_FUNCTION
+  pc GetPhysicalConstants() const { return pc(); }
+
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION

@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2021. Triad National Security, LLC. All rights reserved.  This
+// © 2021-2024. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -57,8 +57,21 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
     neutrinos::Gray opac_host(1);
     neutrinos::Opacity opac = opac_host.GetOnDevice();
 
-    auto constants = opac_host.GetPhysicalConstants();
-    printf("cl: %e\n", constants.c);
+    // Check constants from mean opacity
+    THEN("Check constants from mean opacity for consistency") {
+      auto constants = opac_host.GetPhysicalConstants();
+      int n_wrong = 0;
+      if (FractionalDifference(pc::eV, constants.eV) > EPS_TEST) {
+        n_wrong += 1;
+      }
+      if (FractionalDifference(pc::kb, constants.kb) > EPS_TEST) {
+        n_wrong += 1;
+      }
+      if (FractionalDifference(pc::h, constants.h) > EPS_TEST) {
+        n_wrong += 1;
+      }
+      REQUIRE(n_wrong == 0);
+    }
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
       int n_wrong_h = 0;
@@ -206,6 +219,23 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
 
     photons::Opacity opac_host = photons::Gray(1);
     photons::Opacity opac = opac_host.GetOnDevice();
+
+    // Check constants from mean opacity
+    THEN("Check constants from mean opacity for consistency") {
+      auto constants = opac_host.GetPhysicalConstants();
+      int n_wrong = 0;
+      if (FractionalDifference(pc::eV, constants.eV) > EPS_TEST) {
+        n_wrong += 1;
+      }
+      if (FractionalDifference(pc::kb, constants.kb) > EPS_TEST) {
+        n_wrong += 1;
+      }
+      if (FractionalDifference(pc::h, constants.h) > EPS_TEST) {
+        n_wrong += 1;
+      }
+      REQUIRE(n_wrong == 0);
+    }
+
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
       int n_wrong_h = 0;
 #ifdef PORTABILITY_STRATEGY_KOKKOS

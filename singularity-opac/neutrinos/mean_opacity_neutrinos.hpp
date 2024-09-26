@@ -104,7 +104,6 @@ class MeanOpacity {
 
   PORTABLE_INLINE_FUNCTION
   pc GetPhysicalConstants() const { return pc(); }
-  // static pc GetPhysicalConstants() { return pc(); }
 
   void Finalize() {
     lkappaPlanck_.finalize();

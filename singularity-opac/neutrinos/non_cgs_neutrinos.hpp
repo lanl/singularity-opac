@@ -47,6 +47,12 @@ class NonCGSUnits {
     return NonCGSUnits<Opac>(opac_.GetOnDevice(), time_unit_, mass_unit_,
                              length_unit_, temp_unit_);
   }
+
+  template <typename T>
+  PORTABLE_INLINE_FUNCTION T GetPhysicalConstants() const {
+    return opac_.GetPhysicalConstants();
+  }
+
   inline void Finalize() noexcept { opac_.Finalize(); }
 
   PORTABLE_INLINE_FUNCTION
@@ -66,10 +72,11 @@ class NonCGSUnits {
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficient(
-      const Real rho, const Real temp, const Real Ye, RadiationType type,
-      FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
-      Real *lambda = nullptr) const {
+  PORTABLE_INLINE_FUNCTION void
+  AbsorptionCoefficient(const Real rho, const Real temp, const Real Ye,
+                        RadiationType type, FrequencyIndexer &nu_bins,
+                        DataIndexer &coeffs, const int nbins,
+                        Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
       nu_bins[i] *= freq_unit_;
     }

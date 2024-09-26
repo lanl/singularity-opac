@@ -42,6 +42,10 @@ class EPBremsstrahlungOpacity {
   void PrintParams() const noexcept {
     printf("Electron-proton bremsstrahlung opacity.\n");
   }
+
+  PORTABLE_INLINE_FUNCTION
+  pc GetPhysicalConstants() const { return pc(); }
+
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION

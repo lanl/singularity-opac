@@ -65,9 +65,10 @@ class NonCGSUnits {
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficient(
-      const Real rho, const Real temp, FrequencyIndexer &nu_bins,
-      DataIndexer &coeffs, const int nbins, Real *lambda = nullptr) const {
+  PORTABLE_INLINE_FUNCTION void
+  AbsorptionCoefficient(const Real rho, const Real temp,
+                        FrequencyIndexer &nu_bins, DataIndexer &coeffs,
+                        const int nbins, Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
       nu_bins[i] *= freq_unit_;
     }
@@ -217,6 +218,11 @@ class NonCGSUnits {
                                     Real *lambda = nullptr) const {
     Real NoH = opac_.NumberDensityFromTemperature(temp * temp_unit_, lambda);
     return NoH * mass_unit_ / rho_unit_;
+  }
+
+  template <typename T>
+  PORTABLE_INLINE_FUNCTION T GetPhysicalConstants() const {
+    return opac_.GetPhysicalConstants();
   }
 
  private:

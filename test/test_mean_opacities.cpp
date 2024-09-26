@@ -268,7 +268,6 @@ TEST_CASE("Mean neutrino scattering opacities", "[MeanNeutrinosS]") {
 
     neutrinos::MeanSOpacityCGS mean_opac_host(
         opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, YeMin, YeMax, NYe);
-    // neutrinos::MeanOpacity mean_opac = mean_opac_host.GetOnDevice();
     auto mean_opac = mean_opac_host.GetOnDevice();
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
@@ -432,6 +431,22 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
     photons::MeanOpacityCGS mean_opac_host(opac_host, lRhoMin, lRhoMax, NRho,
                                            lTMin, lTMax, NT);
     auto mean_opac = mean_opac_host.GetOnDevice();
+
+    // Check constants from mean opacity
+    THEN("Check constants from mean opacity for consistency") {
+      auto constants = mean_opac_host.GetPhysicalConstants();
+      int n_wrong = 0;
+      if (FractionalDifference(pc::eV, constants.eV) > EPS_TEST) {
+        n_wrong += 1;
+      }
+      if (FractionalDifference(pc::kb, constants.kb) > EPS_TEST) {
+        n_wrong += 1;
+      }
+      if (FractionalDifference(pc::h, constants.h) > EPS_TEST) {
+        n_wrong += 1;
+      }
+      REQUIRE(n_wrong == 0);
+    }
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
       int n_wrong_h = 0;

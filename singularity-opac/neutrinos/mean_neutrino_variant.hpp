@@ -28,7 +28,7 @@ namespace singularity {
 namespace neutrinos {
 namespace impl {
 
-template <typename CONSTANTS, typename... Opacs>
+template <typename PC, typename... Opacs>
 class MeanVariant {
  private:
   opac_variant<Opacs...> opac_;
@@ -88,15 +88,10 @@ class MeanVariant {
         opac_);
   }
 
-  PORTABLE_INLINE_FUNCTION CONSTANTS GetPhysicalConstants() const {
+  PORTABLE_INLINE_FUNCTION PC GetPhysicalConstants() const {
     return mpark::visit([](auto &opac) { return opac.GetPhysicalConstants(); },
                         opac_);
   }
-  // static CONSTANTS GetPhysicalConstants() {
-  //  return mpark::visit(
-  //      [](auto &opac) { return decltype(opac)::GetPhysicalConstants(); },
-  //     opac_);
-  // }
 
   inline void Finalize() noexcept {
     return mpark::visit([](auto &opac) { return opac.Finalize(); }, opac_);

@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2022. Triad National Security, LLC. All rights reserved.  This
+// © 2022-2024. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -28,7 +28,7 @@ namespace singularity {
 namespace photons {
 namespace impl {
 
-template <typename CONSTANTS, typename... Opacs>
+template <typename PC, typename... Opacs>
 class MeanVariant {
  private:
   opac_variant<Opacs...> opac_;
@@ -86,7 +86,7 @@ class MeanVariant {
         opac_);
   }
 
-  PORTABLE_INLINE_FUNCTION CONSTANTS GetPhysicalConstants() const {
+  PORTABLE_INLINE_FUNCTION PC GetPhysicalConstants() const {
     return mpark::visit([](auto &opac) { return opac.GetPhysicalConstants(); },
                         opac_);
   }
