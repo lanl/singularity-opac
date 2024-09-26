@@ -59,7 +59,7 @@ PRIVATE
 # Ensure code works with C++11 and earlier
 # TODO(MM): Remove this later when it's not needed.
 set_target_properties(${PROJECT_NAME}_unit_tests
-  PROPERTIES CXX_STANDARD 14
+  PROPERTIES CXX_STANDARD 17
   CXX_STANDARD_REQUIRED YES
   CXX_EXTENSIONS NO)
 
