@@ -71,6 +71,16 @@ class Variant {
         opac_);
   }
 
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return mpark::visit(
+        [=](const auto &opac) {
+          using PC = typename std::decay_t<decltype(opac)>::PC;
+          return singularity::GetRuntimePhysicalConstants(PC());
+        },
+        opac_);
+  }
+
   // Directional absorption coefficient with units of 1/length
   // Signature should be at least
   // rho, temp, Ye, type, nu, lambda
@@ -290,11 +300,12 @@ class Variant {
                         opac_);
   }
 
-  template <typename T>
-  PORTABLE_INLINE_FUNCTION T GetPhysicalConstants() const {
-    return mpark::visit([](auto &opac) { return opac.GetPhysicalConstants(); },
-                        opac_);
-  }
+  // template <typename T>
+  // PORTABLE_INLINE_FUNCTION T GetPhysicalConstants() const {
+  //  return mpark::visit([](auto &opac) { return opac.GetPhysicalConstants();
+  //  },
+  //                      opac_);
+  //}
 
   inline void Finalize() noexcept {
     return mpark::visit([](auto &opac) { return opac.Finalize(); }, opac_);

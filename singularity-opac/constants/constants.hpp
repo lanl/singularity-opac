@@ -194,6 +194,45 @@ struct PhysicalConstants {
   static constexpr Real gA = axial_vector_coupling_constant;
 };
 
+struct RuntimePhysicalConstants {
+  template <typename T>
+  RuntimePhysicalConstants(T pc)
+      : na(pc.na), alpha(pc.alpha), h(pc.h), hbar(pc.hbar), kb(pc.kb),
+        r_gas(pc.r_gas), qe(pc.qe), c(pc.c), g_newt(pc.g_newt),
+        g_accel(pc.g_accel), me(pc.me), mp(pc.mp), mn(pc.mn), amu(pc.amu),
+        sb(pc.sb), ar(pc.ar), faraday(pc.faraday), mu0(pc.mu0), eps0(pc.eps0),
+        eV(pc.eV), Fc(pc.Fc), nu_sigma0(pc.nu_sigma0), gA(pc.gA) {}
+
+  const Real na;
+  const Real alpha;
+  const Real h;
+  const Real hbar;
+  const Real kb;
+  const Real r_gas;
+  const Real qe;
+  const Real c;
+  const Real g_newt;
+  const Real g_accel;
+  const Real me;
+  const Real mp;
+  const Real mn;
+  const Real amu;
+  const Real sb;
+  const Real ar;
+  const Real faraday;
+  const Real mu0;
+  const Real eps0;
+  const Real eV;
+  const Real Fc;
+  const Real nu_sigma0;
+  const Real gA;
+};
+
+template <typename T>
+RuntimePhysicalConstants GetRuntimePhysicalConstants(T phys_constants) {
+  return RuntimePhysicalConstants(phys_constants);
+}
+
 using PhysicalConstantsUnity =
     PhysicalConstants<BaseUnity, UnitConversionDefault>;
 using PhysicalConstantsSI =

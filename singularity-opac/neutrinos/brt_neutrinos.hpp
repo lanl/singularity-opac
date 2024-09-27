@@ -32,6 +32,8 @@ namespace neutrinos {
 template <typename ThermalDistribution, typename pc = PhysicalConstantsCGS>
 class BRTOpacity {
  public:
+  using PC = pc;
+
   BRTOpacity() = default;
   BRTOpacity(const ThermalDistribution &dist) : dist_(dist) {}
   BRTOpacity GetOnDevice() { return *this; }

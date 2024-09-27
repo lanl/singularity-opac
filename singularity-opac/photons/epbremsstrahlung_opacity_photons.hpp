@@ -32,6 +32,8 @@ namespace photons {
 template <typename pc = PhysicalConstantsCGS>
 class EPBremsstrahlungOpacity {
  public:
+  using PC = pc;
+
   EPBremsstrahlungOpacity() = default;
   EPBremsstrahlungOpacity(const PlanckDistribution<pc> &dist) : dist_(dist) {}
 

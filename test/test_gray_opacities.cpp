@@ -54,12 +54,13 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
     constexpr RadiationType type = RadiationType::NU_ELECTRON;
     constexpr Real nu = 1.25 * MeV2Hz; // 1 MeV
 
-    neutrinos::Gray opac_host(1);
+    // neutrinos::Gray opac_host(1);
+    neutrinos::Opacity opac_host = neutrinos::Gray(1);
     neutrinos::Opacity opac = opac_host.GetOnDevice();
 
-    // Check constants from mean opacity
+    // Check constants from opacity
     THEN("Check constants from mean opacity for consistency") {
-      auto constants = opac_host.GetPhysicalConstants();
+      auto constants = opac_host.GetRuntimePhysicalConstants();
       int n_wrong = 0;
       if (FractionalDifference(pc::eV, constants.eV) > EPS_TEST) {
         n_wrong += 1;
@@ -222,7 +223,7 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
 
     // Check constants from mean opacity
     THEN("Check constants from mean opacity for consistency") {
-      auto constants = opac_host.GetPhysicalConstants();
+      auto constants = opac_host.GetRuntimePhysicalConstants();
       int n_wrong = 0;
       if (FractionalDifference(pc::eV, constants.eV) > EPS_TEST) {
         n_wrong += 1;

@@ -61,6 +61,7 @@ enum class DataStatus { Deallocated, OnDevice, OnHost };
 template <typename ThermalDistribution, typename pc = PhysicalConstantsCGS>
 class SpinerOpacity {
  public:
+  using PC = pc;
   using DataBox = Spiner::DataBox<Real>;
   static constexpr Real EPS = 10.0 * std::numeric_limits<Real>::min();
   static constexpr Real Hz2MeV = pc::h / (1e6 * pc::eV);
@@ -110,7 +111,8 @@ class SpinerOpacity {
             Real J = std::max(opac.Emissivity(rho, T * MeV2K, Ye, type), 0.0);
             Real lJ = toLog_(J);
             lJ_(iRho, iT, iYe, idx) = lJ;
-            Real JYe = std::max(opac.NumberEmissivity(rho, T * MeV2K, Ye, type), 0.0);
+            Real JYe =
+                std::max(opac.NumberEmissivity(rho, T * MeV2K, Ye, type), 0.0);
             lJYe_(iRho, iT, iYe, idx) = toLog_(JYe);
             for (int ie = 0; ie < Ne; ++ie) {
               Real lE = lalphanu_.range(0).x(ie);
@@ -119,8 +121,8 @@ class SpinerOpacity {
               Real alpha = std::max(
                   opac.AbsorptionCoefficient(rho, T, Ye, type, nu), 0.0);
               lalphanu_(iRho, iT, iYe, idx, ie) = toLog_(alpha);
-              Real j = std::max(opac.EmissivityPerNuOmega(rho, T * MeV2K, Ye, type, nu),
-                                0.0);
+              Real j = std::max(
+                  opac.EmissivityPerNuOmega(rho, T * MeV2K, Ye, type, nu), 0.0);
               ljnu_(iRho, iT, iYe, idx, ie) = toLog_(j);
             }
           }
@@ -131,8 +133,8 @@ class SpinerOpacity {
 
   // DataBox constructor. Note that this constructor *shallow* copies
   // the databoxes, so they must be managed externally.
-  SpinerOpacity(const DataBox &lalphanu, const DataBox ljnu,
-                const DataBox lJ, const DataBox lJYe)
+  SpinerOpacity(const DataBox &lalphanu, const DataBox ljnu, const DataBox lJ,
+                const DataBox lJYe)
       : memoryStatus_(impl::DataStatus::OnHost), lalphanu_(lalphanu),
         ljnu_(ljnu), lJ_(lJ), lJYe_(lJYe) {}
 

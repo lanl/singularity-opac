@@ -32,6 +32,8 @@ namespace neutrinos {
 template <typename ThermalDistribution, typename pc = PhysicalConstantsCGS>
 class TophatEmissivity {
  public:
+  using PC = pc;
+
   TophatEmissivity(const Real C, const Real numin, const Real numax)
       : C_(C), numin_(numin), numax_(numax) {}
   TophatEmissivity(const ThermalDistribution &dist, const Real C,

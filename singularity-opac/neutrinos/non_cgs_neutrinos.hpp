@@ -29,6 +29,8 @@ namespace neutrinos {
 template <typename Opac>
 class NonCGSUnits {
  public:
+  using PC = typename Opac::PC;
+
   NonCGSUnits() = default;
   NonCGSUnits(Opac &&opac, const Real time_unit, const Real mass_unit,
               const Real length_unit, const Real temp_unit)
@@ -46,11 +48,6 @@ class NonCGSUnits {
   auto GetOnDevice() {
     return NonCGSUnits<Opac>(opac_.GetOnDevice(), time_unit_, mass_unit_,
                              length_unit_, temp_unit_);
-  }
-
-  template <typename T>
-  PORTABLE_INLINE_FUNCTION T GetPhysicalConstants() const {
-    return opac_.GetPhysicalConstants();
   }
 
   inline void Finalize() noexcept { opac_.Finalize(); }

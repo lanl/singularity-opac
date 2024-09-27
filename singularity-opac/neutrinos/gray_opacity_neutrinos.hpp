@@ -30,6 +30,8 @@ namespace neutrinos {
 template <typename ThermalDistribution, typename pc = PhysicalConstantsCGS>
 class GrayOpacity {
  public:
+  using PC = pc;
+
   GrayOpacity() = default;
   GrayOpacity(const Real kappa) : kappa_(kappa) {}
   GrayOpacity(const ThermalDistribution &dist, const Real kappa)
@@ -42,6 +44,12 @@ class GrayOpacity {
   void PrintParams() const noexcept {
     printf("Gray opacity. kappa = %g\n", kappa_);
   }
+
+  PORTABLE_INLINE_FUNCTION
+  RuntimePhysicalConstants GetPhysicalConstants() const {
+    return GetRuntimePhysicalConstants(pc());
+  }
+
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION
@@ -173,8 +181,8 @@ class GrayOpacity {
     return dist_.NumberDensityFromTemperature(temp, type, lambda);
   }
 
-  PORTABLE_INLINE_FUNCTION
-  pc GetPhysicalConstants() const { return pc(); }
+  // PORTABLE_INLINE_FUNCTION
+  // pc GetPhysicalConstants() const { return pc(); }
 
  private:
   Real kappa_; // Opacity. Units of cm^2/g

@@ -29,6 +29,8 @@ namespace photons {
 template <typename Opac>
 class NonCGSUnits {
  public:
+  using PC = typename Opac::PC;
+
   NonCGSUnits() = default;
   NonCGSUnits(Opac &&opac, const Real time_unit, const Real mass_unit,
               const Real length_unit, const Real temp_unit)

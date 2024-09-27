@@ -30,6 +30,8 @@ namespace photons {
 template <typename pc = PhysicalConstantsCGS>
 class GrayOpacity {
  public:
+  using PC = pc;
+
   GrayOpacity() = default;
   GrayOpacity(const Real kappa) : kappa_(kappa) {}
   GrayOpacity(const PlanckDistribution<pc> &dist, const Real kappa)
