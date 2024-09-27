@@ -45,9 +45,6 @@ class BRTOpacity {
     printf("Burrows-Reddy-Thompson analytic neutrino opacity.\n");
   }
 
-  PORTABLE_INLINE_FUNCTION
-  pc GetPhysicalConstants() const { return pc(); }
-
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION

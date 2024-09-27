@@ -300,13 +300,6 @@ class Variant {
                         opac_);
   }
 
-  // template <typename T>
-  // PORTABLE_INLINE_FUNCTION T GetPhysicalConstants() const {
-  //  return mpark::visit([](auto &opac) { return opac.GetPhysicalConstants();
-  //  },
-  //                      opac_);
-  //}
-
   inline void Finalize() noexcept {
     return mpark::visit([](auto &opac) { return opac.Finalize(); }, opac_);
   }

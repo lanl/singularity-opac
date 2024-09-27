@@ -45,11 +45,6 @@ class GrayOpacity {
     printf("Gray opacity. kappa = %g\n", kappa_);
   }
 
-  PORTABLE_INLINE_FUNCTION
-  RuntimePhysicalConstants GetPhysicalConstants() const {
-    return GetRuntimePhysicalConstants(pc());
-  }
-
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION
