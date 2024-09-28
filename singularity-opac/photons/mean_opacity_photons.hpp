@@ -37,12 +37,9 @@ namespace impl {
 // TODO(BRR) Note: It is assumed that lambda is constant for all densities and
 // temperatures
 
-template <typename pc = PhysicalConstantsCGS>
 class MeanOpacity {
 
  public:
-  using PC = pc;
-
   MeanOpacity() = default;
   template <typename Opacity>
   MeanOpacity(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
@@ -126,8 +123,7 @@ class MeanOpacity {
                         const Real lRhoMax, const int NRho, const Real lTMin,
                         const Real lTMax, const int NT, Real lNuMin,
                         Real lNuMax, const int NNu, Real *lambda = nullptr) {
-    static_assert(std::is_same<PC, typename Opacity::PC>::value,
-                  "Mean opacity constants must match opacity constants");
+    using PC = typename Opacity::PC;
 
     lkappaPlanck_.resize(NRho, NT);
     lkappaPlanck_.setRange(0, lTMin, lTMax, NT);
@@ -200,10 +196,8 @@ class MeanOpacity {
 
 } // namespace impl
 
-using MeanOpacityScaleFree = impl::MeanOpacity<PhysicalConstantsUnity>;
-using MeanOpacityCGS = impl::MeanOpacity<PhysicalConstantsCGS>;
-using MeanOpacity = impl::MeanVariant<MeanOpacityScaleFree, MeanOpacityCGS,
-                                      MeanNonCGSUnits<MeanOpacityCGS>>;
+using MeanOpacity =
+    impl::MeanVariant<impl::MeanOpacity, MeanNonCGSUnits<impl::MeanOpacity>>;
 
 } // namespace photons
 } // namespace singularity

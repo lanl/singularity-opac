@@ -44,7 +44,6 @@ class GrayOpacity {
   void PrintParams() const noexcept {
     printf("Gray opacity. kappa = %g\n", kappa_);
   }
-
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION

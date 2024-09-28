@@ -54,8 +54,7 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
     constexpr RadiationType type = RadiationType::NU_ELECTRON;
     constexpr Real nu = 1.25 * MeV2Hz; // 1 MeV
 
-    // neutrinos::Gray opac_host(1);
-    neutrinos::Opacity opac_host = neutrinos::Gray(1);
+    neutrinos::Opacity opac_host = neutrinos::Gray(1.);
     neutrinos::Opacity opac = opac_host.GetOnDevice();
 
     // Check constants from opacity
