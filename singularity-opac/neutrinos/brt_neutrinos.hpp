@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2021. Triad National Security, LLC. All rights reserved.  This
+// © 2021-2024. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -32,6 +32,8 @@ namespace neutrinos {
 template <typename ThermalDistribution, typename pc = PhysicalConstantsCGS>
 class BRTOpacity {
  public:
+  using PC = pc;
+
   BRTOpacity() = default;
   BRTOpacity(const ThermalDistribution &dist) : dist_(dist) {}
   BRTOpacity GetOnDevice() { return *this; }

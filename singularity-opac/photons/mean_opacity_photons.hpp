@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2022. Triad National Security, LLC. All rights reserved.  This
+// © 2022-2024. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -37,11 +37,9 @@ namespace impl {
 // TODO(BRR) Note: It is assumed that lambda is constant for all densities and
 // temperatures
 
-template <typename pc = PhysicalConstantsCGS>
 class MeanOpacity {
 
  public:
-  using DataBox = Spiner::DataBox<Real>;
   MeanOpacity() = default;
   template <typename Opacity>
   MeanOpacity(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
@@ -125,6 +123,8 @@ class MeanOpacity {
                         const Real lRhoMax, const int NRho, const Real lTMin,
                         const Real lTMax, const int NT, Real lNuMin,
                         Real lNuMax, const int NNu, Real *lambda = nullptr) {
+    using PC = typename Opacity::PC;
+
     lkappaPlanck_.resize(NRho, NT);
     lkappaPlanck_.setRange(0, lTMin, lTMax, NT);
     lkappaPlanck_.setRange(1, lRhoMin, lRhoMax, NRho);
@@ -142,8 +142,8 @@ class MeanOpacity {
         Real kappaRosselandNum = 0.;
         Real kappaRosselandDenom = 0.;
         if (AUTOFREQ) {
-          lNuMin = toLog_(1.e-3 * pc::kb * fromLog_(lTMin) / pc::h);
-          lNuMax = toLog_(1.e3 * pc::kb * fromLog_(lTMax) / pc::h);
+          lNuMin = toLog_(1.e-3 * PC::kb * fromLog_(lTMin) / PC::h);
+          lNuMax = toLog_(1.e3 * PC::kb * fromLog_(lTMax) / PC::h);
         }
         const Real dlnu = (lNuMax - lNuMin) / (NNu - 1);
         // Integrate over frequency
@@ -187,8 +187,8 @@ class MeanOpacity {
   PORTABLE_INLINE_FUNCTION Real fromLog_(const Real lx) const {
     return std::pow(10., lx);
   }
-  DataBox lkappaPlanck_;
-  DataBox lkappaRosseland_;
+  Spiner::DataBox<Real> lkappaPlanck_;
+  Spiner::DataBox<Real> lkappaRosseland_;
   const char *filename_;
 };
 
@@ -196,10 +196,9 @@ class MeanOpacity {
 
 } // namespace impl
 
-using MeanOpacityScaleFree = impl::MeanOpacity<PhysicalConstantsUnity>;
-using MeanOpacityCGS = impl::MeanOpacity<PhysicalConstantsCGS>;
-using MeanOpacity = impl::MeanVariant<MeanOpacityScaleFree, MeanOpacityCGS,
-                                      MeanNonCGSUnits<MeanOpacityCGS>>;
+using MeanOpacityBase = impl::MeanOpacity;
+using MeanOpacity =
+    impl::MeanVariant<MeanOpacityBase, MeanNonCGSUnits<MeanOpacityBase>>;
 
 } // namespace photons
 } // namespace singularity

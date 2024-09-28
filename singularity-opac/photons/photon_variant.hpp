@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2021. Triad National Security, LLC. All rights reserved.  This
+// © 2021-2024. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -68,6 +68,16 @@ class Variant {
   Variant GetOnDevice() {
     return mpark::visit(
         [](auto &opac) { return opac_variant<Opacs...>(opac.GetOnDevice()); },
+        opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return mpark::visit(
+        [=](const auto &opac) {
+          using PC = typename std::decay_t<decltype(opac)>::PC;
+          return singularity::GetRuntimePhysicalConstants(PC());
+        },
         opac_);
   }
 

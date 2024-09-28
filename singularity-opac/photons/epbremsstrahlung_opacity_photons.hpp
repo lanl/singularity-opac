@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2022. Triad National Security, LLC. All rights reserved.  This
+// © 2022-2024. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -32,6 +32,8 @@ namespace photons {
 template <typename pc = PhysicalConstantsCGS>
 class EPBremsstrahlungOpacity {
  public:
+  using PC = pc;
+
   EPBremsstrahlungOpacity() = default;
   EPBremsstrahlungOpacity(const PlanckDistribution<pc> &dist) : dist_(dist) {}
 
@@ -42,6 +44,10 @@ class EPBremsstrahlungOpacity {
   void PrintParams() const noexcept {
     printf("Electron-proton bremsstrahlung opacity.\n");
   }
+
+  PORTABLE_INLINE_FUNCTION
+  pc GetPhysicalConstants() const { return pc(); }
+
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION

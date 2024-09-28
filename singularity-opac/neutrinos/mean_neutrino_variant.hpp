@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2021. Triad National Security, LLC. All rights reserved.  This
+// © 2021-2024. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -69,6 +69,16 @@ class MeanVariant {
         opac_);
   }
 
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return mpark::visit(
+        [=](const auto &opac) {
+          using PC = typename std::decay_t<decltype(opac)>::PC;
+          return singularity::GetRuntimePhysicalConstants(PC());
+        },
+        opac_);
+  }
+
   PORTABLE_INLINE_FUNCTION Real PlanckMeanAbsorptionCoefficient(
       const Real rho, const Real temp, const Real Ye,
       const RadiationType type) const {
@@ -91,6 +101,12 @@ class MeanVariant {
   inline void Finalize() noexcept {
     return mpark::visit([](auto &opac) { return opac.Finalize(); }, opac_);
   }
+
+#ifdef SPINER_USE_HDF
+  void Save(const std::string &filename) const {
+    return mpark::visit([=](auto &opac) { return opac.Save(filename); }, opac_);
+  }
+#endif
 };
 
 } // namespace impl

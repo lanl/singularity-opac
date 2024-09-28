@@ -30,6 +30,8 @@ namespace photons {
 template <typename pc = PhysicalConstantsCGS>
 class PowerLawOpacity {
  public:
+  using PC = pc;
+
   PowerLawOpacity() = default;
   PowerLawOpacity(const Real kappa0, const Real rho_exp, const Real temp_exp)
       : kappa0_(kappa0), rho_exp_(rho_exp), temp_exp_(temp_exp) {}

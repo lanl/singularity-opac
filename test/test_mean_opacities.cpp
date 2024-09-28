@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2022. Triad National Security, LLC. All rights reserved.  This
+// © 2022-2024. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -46,7 +46,7 @@ using atomic_view = Kokkos::MemoryTraits<Kokkos::Atomic>;
 
 template <typename T>
 PORTABLE_INLINE_FUNCTION T FractionalDifference(const T &a, const T &b) {
-  return 2 * std::abs(b - a) / (std::abs(a) + std::abs(b) + 1e-20);
+  return 2 * std::abs(b - a) / (std::abs(a) + std::abs(b) + 1e-100);
 }
 constexpr Real EPS_TEST = 1e-3;
 template <typename T>
@@ -87,9 +87,8 @@ TEST_CASE("Mean neutrino opacities", "[MeanNeutrinos]") {
     neutrinos::Gray opac_host(kappa);
     neutrinos::Opacity opac = opac_host.GetOnDevice();
 
-    neutrinos::MeanOpacityCGS mean_opac_host(
+    neutrinos::MeanOpacity mean_opac_host = neutrinos::MeanOpacityBase(
         opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, YeMin, YeMax, NYe);
-    // neutrinos::MeanOpacity mean_opac = mean_opac_host.GetOnDevice();
     auto mean_opac = mean_opac_host.GetOnDevice();
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
@@ -123,7 +122,7 @@ TEST_CASE("Mean neutrino opacities", "[MeanNeutrinos]") {
 #ifdef SPINER_USE_HDF
     THEN("We can save to disk and reload") {
       mean_opac.Save(grayname);
-      neutrinos::MeanOpacityCGS mean_opac_host_load(grayname);
+      neutrinos::MeanOpacity mean_opac_host_load(grayname);
       AND_THEN("The reloaded table matches the gray opacities") {
 
         auto mean_opac_load = mean_opac_host_load.GetOnDevice();
@@ -253,7 +252,6 @@ TEST_CASE("Mean neutrino scattering opacities", "[MeanNeutrinosS]") {
 
     neutrinos::MeanSOpacityCGS mean_opac_host(
         opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, YeMin, YeMax, NYe);
-    // neutrinos::MeanOpacity mean_opac = mean_opac_host.GetOnDevice();
     auto mean_opac = mean_opac_host.GetOnDevice();
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
@@ -414,8 +412,8 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
     photons::Gray opac_host(kappa);
     photons::Opacity opac = opac_host.GetOnDevice();
 
-    photons::MeanOpacityCGS mean_opac_host(opac_host, lRhoMin, lRhoMax, NRho,
-                                           lTMin, lTMax, NT);
+    photons::MeanOpacity mean_opac_host = photons::MeanOpacityBase(
+        opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT);
     auto mean_opac = mean_opac_host.GetOnDevice();
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
@@ -449,7 +447,8 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
 #ifdef SPINER_USE_HDF
     THEN("We can save to disk and reload") {
       mean_opac.Save(grayname);
-      photons::MeanOpacityCGS mean_opac_host_load(grayname);
+      photons::MeanOpacity mean_opac_host_load =
+          photons::MeanOpacityBase(grayname);
       AND_THEN("The reloaded table matches the gray opacities") {
 
         auto mean_opac_load = mean_opac_host_load.GetOnDevice();
@@ -611,7 +610,8 @@ TEST_CASE("Mean photon scattering opacities", "[MeanPhotonS]") {
         int n_wrong = 0;
         portableReduce(
             "rebuilt table vs gray", 0, NRho, 0, NT, 0, 0,
-            PORTABLE_LAMBDA(const int iRho, const int iT, const int igarbage, int &accumulate) {
+            PORTABLE_LAMBDA(const int iRho, const int iT, const int igarbage,
+                            int &accumulate) {
               const Real lRho =
                   lRhoMin + (lRhoMax - lRhoMin) / (NRho - 1) * iRho;
               const Real rho = std::pow(10, lRho);
