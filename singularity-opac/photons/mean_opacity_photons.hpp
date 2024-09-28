@@ -41,7 +41,8 @@ template <typename pc = PhysicalConstantsCGS>
 class MeanOpacity {
 
  public:
-  using DataBox = Spiner::DataBox<Real>;
+  using PC = pc;
+
   MeanOpacity() = default;
   template <typename Opacity>
   MeanOpacity(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
@@ -119,15 +120,15 @@ class MeanOpacity {
     return rho * fromLog_(lkappaRosseland_.interpToReal(lRho, lT));
   }
 
-  PORTABLE_INLINE_FUNCTION
-  pc GetPhysicalConstants() const { return pc(); }
-
  private:
   template <typename Opacity, bool AUTOFREQ>
   void MeanOpacityImpl_(const Opacity &opac, const Real lRhoMin,
                         const Real lRhoMax, const int NRho, const Real lTMin,
                         const Real lTMax, const int NT, Real lNuMin,
                         Real lNuMax, const int NNu, Real *lambda = nullptr) {
+    static_assert(std::is_same<PC, typename Opacity::PC>::value,
+                  "Mean opacity constants must match opacity constants");
+
     lkappaPlanck_.resize(NRho, NT);
     lkappaPlanck_.setRange(0, lTMin, lTMax, NT);
     lkappaPlanck_.setRange(1, lRhoMin, lRhoMax, NRho);
@@ -145,8 +146,8 @@ class MeanOpacity {
         Real kappaRosselandNum = 0.;
         Real kappaRosselandDenom = 0.;
         if (AUTOFREQ) {
-          lNuMin = toLog_(1.e-3 * pc::kb * fromLog_(lTMin) / pc::h);
-          lNuMax = toLog_(1.e3 * pc::kb * fromLog_(lTMax) / pc::h);
+          lNuMin = toLog_(1.e-3 * PC::kb * fromLog_(lTMin) / PC::h);
+          lNuMax = toLog_(1.e3 * PC::kb * fromLog_(lTMax) / PC::h);
         }
         const Real dlnu = (lNuMax - lNuMin) / (NNu - 1);
         // Integrate over frequency
@@ -190,8 +191,8 @@ class MeanOpacity {
   PORTABLE_INLINE_FUNCTION Real fromLog_(const Real lx) const {
     return std::pow(10., lx);
   }
-  DataBox lkappaPlanck_;
-  DataBox lkappaRosseland_;
+  Spiner::DataBox<Real> lkappaPlanck_;
+  Spiner::DataBox<Real> lkappaRosseland_;
   const char *filename_;
 };
 

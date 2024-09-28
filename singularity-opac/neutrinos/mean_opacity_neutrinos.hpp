@@ -41,6 +41,8 @@ template <typename pc = PhysicalConstantsCGS>
 class MeanOpacity {
 
  public:
+  using PC = pc;
+
   MeanOpacity() = default;
   template <typename Opacity>
   MeanOpacity(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
@@ -102,9 +104,6 @@ class MeanOpacity {
     return other;
   }
 
-  PORTABLE_INLINE_FUNCTION
-  pc GetPhysicalConstants() const { return pc(); }
-
   void Finalize() {
     lkappaPlanck_.finalize();
     lkappaRosseland_.finalize();
@@ -137,6 +136,9 @@ class MeanOpacity {
                         const Real lTMax, const int NT, const Real YeMin,
                         const Real YeMax, const int NYe, Real lNuMin,
                         Real lNuMax, const int NNu, Real *lambda = nullptr) {
+    static_assert(std::is_same<PC, typename Opacity::PC>::value,
+                  "Mean opacity constants must match opacity constants");
+
     lkappaPlanck_.resize(NRho, NT, NYe, NEUTRINO_NTYPES);
     // index 0 is the species and is not interpolatable
     lkappaPlanck_.setRange(1, YeMin, YeMax, NYe);
@@ -162,8 +164,8 @@ class MeanOpacity {
             // Choose default temperature-specific frequency grid if frequency
             // grid not specified
             if (AUTOFREQ) {
-              lNuMin = toLog_(1.e-3 * pc::kb * fromLog_(lTMin) / pc::h);
-              lNuMax = toLog_(1.e3 * pc::kb * fromLog_(lTMax) / pc::h);
+              lNuMin = toLog_(1.e-3 * PC::kb * fromLog_(lTMin) / PC::h);
+              lNuMax = toLog_(1.e3 * PC::kb * fromLog_(lTMax) / PC::h);
             }
             const Real dlnu = (lNuMax - lNuMin) / (NNu - 1);
             // Integrate over frequency

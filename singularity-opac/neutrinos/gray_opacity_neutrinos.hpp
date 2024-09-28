@@ -44,7 +44,6 @@ class GrayOpacity {
   void PrintParams() const noexcept {
     printf("Gray opacity. kappa = %g\n", kappa_);
   }
-
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION
@@ -175,9 +174,6 @@ class GrayOpacity {
                                     Real *lambda = nullptr) const {
     return dist_.NumberDensityFromTemperature(temp, type, lambda);
   }
-
-  // PORTABLE_INLINE_FUNCTION
-  // pc GetPhysicalConstants() const { return pc(); }
 
  private:
   Real kappa_; // Opacity. Units of cm^2/g

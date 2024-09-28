@@ -44,7 +44,6 @@ class BRTOpacity {
   void PrintParams() const noexcept {
     printf("Burrows-Reddy-Thompson analytic neutrino opacity.\n");
   }
-
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION

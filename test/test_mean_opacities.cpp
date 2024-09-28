@@ -87,25 +87,9 @@ TEST_CASE("Mean neutrino opacities", "[MeanNeutrinos]") {
     neutrinos::Gray opac_host(kappa);
     neutrinos::Opacity opac = opac_host.GetOnDevice();
 
-    neutrinos::MeanOpacityCGS mean_opac_host(
+    neutrinos::MeanOpacity mean_opac_host = neutrinos::MeanOpacityCGS(
         opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, YeMin, YeMax, NYe);
     auto mean_opac = mean_opac_host.GetOnDevice();
-
-    // Check constants from mean opacity
-    THEN("Check constants from mean opacity for consistency") {
-      auto constants = mean_opac_host.GetPhysicalConstants();
-      int n_wrong = 0;
-      if (FractionalDifference(pc::eV, constants.eV) > EPS_TEST) {
-        n_wrong += 1;
-      }
-      if (FractionalDifference(pc::kb, constants.kb) > EPS_TEST) {
-        n_wrong += 1;
-      }
-      if (FractionalDifference(pc::h, constants.h) > EPS_TEST) {
-        n_wrong += 1;
-      }
-      REQUIRE(n_wrong == 0);
-    }
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
       int n_wrong_h = 0;
@@ -138,7 +122,7 @@ TEST_CASE("Mean neutrino opacities", "[MeanNeutrinos]") {
 #ifdef SPINER_USE_HDF
     THEN("We can save to disk and reload") {
       mean_opac.Save(grayname);
-      neutrinos::MeanOpacityCGS mean_opac_host_load(grayname);
+      neutrinos::MeanOpacity mean_opac_host_load(grayname);
       AND_THEN("The reloaded table matches the gray opacities") {
 
         auto mean_opac_load = mean_opac_host_load.GetOnDevice();
@@ -428,25 +412,13 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
     photons::Gray opac_host(kappa);
     photons::Opacity opac = opac_host.GetOnDevice();
 
+    // photons::MeanOpacity mean_opac_host = photons::MeanOpacityCGS(
+    //    opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT);
+    // auto mean_opac = mean_opac_host.GetOnDevice();
+
     photons::MeanOpacityCGS mean_opac_host(opac_host, lRhoMin, lRhoMax, NRho,
                                            lTMin, lTMax, NT);
     auto mean_opac = mean_opac_host.GetOnDevice();
-
-    // Check constants from mean opacity
-    THEN("Check constants from mean opacity for consistency") {
-      auto constants = mean_opac_host.GetPhysicalConstants();
-      int n_wrong = 0;
-      if (FractionalDifference(pc::eV, constants.eV) > EPS_TEST) {
-        n_wrong += 1;
-      }
-      if (FractionalDifference(pc::kb, constants.kb) > EPS_TEST) {
-        n_wrong += 1;
-      }
-      if (FractionalDifference(pc::h, constants.h) > EPS_TEST) {
-        n_wrong += 1;
-      }
-      REQUIRE(n_wrong == 0);
-    }
 
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
       int n_wrong_h = 0;
@@ -479,7 +451,7 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
 #ifdef SPINER_USE_HDF
     THEN("We can save to disk and reload") {
       mean_opac.Save(grayname);
-      photons::MeanOpacityCGS mean_opac_host_load(grayname);
+      photons::MeanOpacity mean_opac_host_load(grayname);
       AND_THEN("The reloaded table matches the gray opacities") {
 
         auto mean_opac_load = mean_opac_host_load.GetOnDevice();
@@ -526,6 +498,10 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
       constexpr Real rho_unit =
           mass_unit / (length_unit * length_unit * length_unit);
 
+      // auto funny_units_host =
+      // photons::MeanNonCGSUnits<photons::MeanOpacityCGS>(
+      //    std::forward<photons::MeanOpacityCGS>(mean_opac_host), time_unit,
+      //    mean_opac_host, time_unit, mass_unit, length_unit, temp_unit);
       auto funny_units_host = photons::MeanNonCGSUnits<photons::MeanOpacity>(
           std::forward<photons::MeanOpacity>(mean_opac_host), time_unit,
           mass_unit, length_unit, temp_unit);

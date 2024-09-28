@@ -28,7 +28,7 @@ namespace singularity {
 namespace neutrinos {
 namespace impl {
 
-template <typename PC, typename... Opacs>
+template <typename... Opacs>
 class MeanVariant {
  private:
   opac_variant<Opacs...> opac_;
@@ -69,6 +69,16 @@ class MeanVariant {
         opac_);
   }
 
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return mpark::visit(
+        [=](const auto &opac) {
+          using PC = typename std::decay_t<decltype(opac)>::PC;
+          return singularity::GetRuntimePhysicalConstants(PC());
+        },
+        opac_);
+  }
+
   PORTABLE_INLINE_FUNCTION Real PlanckMeanAbsorptionCoefficient(
       const Real rho, const Real temp, const Real Ye,
       const RadiationType type) const {
@@ -86,11 +96,6 @@ class MeanVariant {
           return opac.RosselandMeanAbsorptionCoefficient(rho, temp, Ye, type);
         },
         opac_);
-  }
-
-  PORTABLE_INLINE_FUNCTION PC GetPhysicalConstants() const {
-    return mpark::visit([](auto &opac) { return opac.GetPhysicalConstants(); },
-                        opac_);
   }
 
   inline void Finalize() noexcept {
