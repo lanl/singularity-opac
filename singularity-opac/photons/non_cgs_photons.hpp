@@ -254,6 +254,12 @@ class MeanNonCGSUnits {
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return mean_opac_.nlambda(); }
 
+#ifdef SPINER_USE_HDF
+  void Save(const std::string &filename) const {
+    return mean_opac_.Save(filename);
+  }
+#endif
+
   PORTABLE_INLINE_FUNCTION
   Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
     const Real alpha = mean_opac_.PlanckMeanAbsorptionCoefficient(

@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2021. Triad National Security, LLC. All rights reserved.  This
+// © 2021-2024. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -265,6 +265,12 @@ class MeanNonCGSUnits {
 
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return mean_opac_.nlambda(); }
+
+#ifdef SPINER_USE_HDF
+  void Save(const std::string &filename) const {
+    return mean_opac_.Save(filename);
+  }
+#endif
 
   PORTABLE_INLINE_FUNCTION
   Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp,

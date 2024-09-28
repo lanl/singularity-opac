@@ -447,7 +447,8 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
 #ifdef SPINER_USE_HDF
     THEN("We can save to disk and reload") {
       mean_opac.Save(grayname);
-      photons::MeanOpacityCGS mean_opac_host_load(grayname);
+      photons::MeanOpacity mean_opac_host_load =
+          photons::impl::MeanOpacity(grayname);
       AND_THEN("The reloaded table matches the gray opacities") {
 
         auto mean_opac_load = mean_opac_host_load.GetOnDevice();
