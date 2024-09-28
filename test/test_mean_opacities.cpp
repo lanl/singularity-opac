@@ -87,7 +87,7 @@ TEST_CASE("Mean neutrino opacities", "[MeanNeutrinos]") {
     neutrinos::Gray opac_host(kappa);
     neutrinos::Opacity opac = opac_host.GetOnDevice();
 
-    neutrinos::MeanOpacity mean_opac_host = neutrinos::impl::MeanOpacity(
+    neutrinos::MeanOpacity mean_opac_host = neutrinos::MeanOpacityBase(
         opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, YeMin, YeMax, NYe);
     auto mean_opac = mean_opac_host.GetOnDevice();
 
@@ -412,7 +412,7 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
     photons::Gray opac_host(kappa);
     photons::Opacity opac = opac_host.GetOnDevice();
 
-    photons::MeanOpacity mean_opac_host = photons::impl::MeanOpacity(
+    photons::MeanOpacity mean_opac_host = photons::MeanOpacityBase(
         opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT);
     auto mean_opac = mean_opac_host.GetOnDevice();
 
@@ -448,7 +448,7 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
     THEN("We can save to disk and reload") {
       mean_opac.Save(grayname);
       photons::MeanOpacity mean_opac_host_load =
-          photons::impl::MeanOpacity(grayname);
+          photons::MeanOpacityBase(grayname);
       AND_THEN("The reloaded table matches the gray opacities") {
 
         auto mean_opac_load = mean_opac_host_load.GetOnDevice();

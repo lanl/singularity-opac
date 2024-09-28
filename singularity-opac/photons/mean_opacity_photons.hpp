@@ -196,8 +196,9 @@ class MeanOpacity {
 
 } // namespace impl
 
+using MeanOpacityBase = impl::MeanOpacity;
 using MeanOpacity =
-    impl::MeanVariant<impl::MeanOpacity, MeanNonCGSUnits<impl::MeanOpacity>>;
+    impl::MeanVariant<MeanOpacityBase, MeanNonCGSUnits<MeanOpacityBase>>;
 
 } // namespace photons
 } // namespace singularity
