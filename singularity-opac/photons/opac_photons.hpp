@@ -17,6 +17,7 @@
 #define SINGULARITY_OPAC_PHOTONS_OPAC_PHOTONS_
 
 #include <singularity-opac/photons/epbremsstrahlung_opacity_photons.hpp>
+#include <singularity-opac/photons/zhu_grey_table_opacity_photons.hpp>
 #include <singularity-opac/photons/gray_opacity_photons.hpp>
 #include <singularity-opac/photons/non_cgs_photons.hpp>
 #include <singularity-opac/photons/photon_variant.hpp>
@@ -33,9 +34,10 @@ using Gray = GrayOpacity<PhysicalConstantsCGS>;
 using PowerLawScaleFree = PowerLawOpacity<PhysicalConstantsUnity>;
 using PowerLaw = PowerLawOpacity<PhysicalConstantsCGS>;
 using EPBremss = EPBremsstrahlungOpacity<PhysicalConstantsCGS>;
+using ZhuTable = ZhuTableOpacity<PhysicalConstantsCGS>;
 
 using Opacity = impl::Variant<ScaleFree, Gray, PowerLawScaleFree, PowerLaw,
-                              EPBremss, NonCGSUnits<Gray>,
+                              EPBremss, ZhuTable, NonCGSUnits<Gray>,
                               NonCGSUnits<PowerLaw>, NonCGSUnits<EPBremss>>;
 
 } // namespace photons
