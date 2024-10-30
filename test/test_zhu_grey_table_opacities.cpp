@@ -39,7 +39,8 @@ TEST_CASE("Zhu table photon opacities", "[GrayPhotons]") {
   WHEN("We initialize a gray Zhu tabular photon opacity") {
 
     // values are directly copied from parsed table for a_grain=-1
-    constexpr int a_grain = -1;
+    const std::string fbase = "opacitysolar09dustq3p5amax0p1new";
+    const std::string fname = fbase + ".hdf5";
     constexpr Real rho_min = 1e-14;  // g/cc.
     constexpr Real temp_min = 1.0; // Kelvin.
     constexpr Real ross_at_min = 0.0030420184427588414; // cm^2/g
@@ -49,7 +50,8 @@ TEST_CASE("Zhu table photon opacities", "[GrayPhotons]") {
 
     constexpr Real nu = 3e9; // Hz. UHF microwave
 
-    photons::Opacity opac_host = photons::ZhuTable(a_grain);
+    // not all opacities have a save method, so not using variant for host here
+    photons::ZhuTable opac_host = photons::ZhuTable(fname);
     photons::Opacity opac = opac_host.GetOnDevice();
 
     // Check constants from mean opacity
@@ -73,6 +75,11 @@ TEST_CASE("Zhu table photon opacities", "[GrayPhotons]") {
       REQUIRE(n_wrong == 0);
     }
 
+    // uncomment this save method to creat hdf5 file from ZhuTable DataBox
+    // const std::string hdfname = fbase + ".hdf5";
+    // opac_host.Save(hdfname);
+
+    // finished
     opac.Finalize();
   }
 }

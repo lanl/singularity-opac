@@ -55,6 +55,9 @@ PRIVATE
 file(CREATE_LINK
     ${CMAKE_SOURCE_DIR}/singularity-opac/photons/zhu_data/opacitysolar09dustq3p5amax0p1new.txt
     ${CMAKE_CURRENT_BINARY_DIR}/opacitysolar09dustq3p5amax0p1new.txt SYMBOLIC)
+file(CREATE_LINK
+    ${CMAKE_SOURCE_DIR}/singularity-opac/photons/zhu_data/opacitysolar09dustq3p5amax0p1new.hdf5
+    ${CMAKE_CURRENT_BINARY_DIR}/opacitysolar09dustq3p5amax0p1new.hdf5 SYMBOLIC)
 
 target_link_libraries(${PROJECT_NAME}_unit_tests
 PRIVATE

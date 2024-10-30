@@ -17,6 +17,7 @@
 #define SINGULARITY_OPAC_PHOTONS_ZHU_GREY_TABLE_OPACITY_PHOTONS_
 
 #include <fstream>
+#include <filesystem>
 
 #include <singularity-opac/base/opac_error.hpp>
 #include <spiner/databox.hpp>
@@ -43,106 +44,48 @@ class ZhuTableOpacity {
   ZhuTableOpacity() = default;
 
   // construct Planck/Rosseland DataBox from Zhu ascii file
-  ZhuTableOpacity(const int amax, const bool use_planck_absorb = false)
+  ZhuTableOpacity(const std::string filename, const bool use_planck_absorb = false)
     : opac_type_(use_planck_absorb) {
-
-    // TODO: replace this parsing with DataBox HDF loadHDF (requires pre-process of ASCII data)
-
-    // select file based on dust grain size index
-    std::string filename = "no_file";
-    switch(amax) {
-    case -1:
-      filename = "opacitysolar09dustq3p5amax0p1new.txt";
-      break;
-    case -3:
-      filename = "opacitysolar09dustq3p5amax0p001new.txt";
-      break;
-    case 0:
-      filename = "opacitysolar09dustq3p5amax1new.txt";
-      break;
-    case 10:
-      filename = "opacitysolar09dustq3p5amax10new.txt";
-      break;
-    default:
-      OPAC_ERROR("photons::ZhuTableOpacity: unrecognized amax ctor value.");
-    }
 
     // get number of density and temperature points
     std::ifstream ff(filename.c_str());
     const bool fexists = ff.good();
 
-    int NRho = -1;
-    int NT = -1;
     if (fexists) {
 
-      // line read from file
-      std::string fline;
+      std::filesystem::path filePath(filename);
+      std::string extension = filePath.extension().string();
 
-      // read 1-line header to get sizes
-      std::getline(ff, fline);
-
-      // tokenize fline
-      char* cfline = const_cast<char*>(fline.c_str());
-      char* fl_tok = std::strtok(cfline, " ");
-
-      // move to next token to get number of density points
-      fl_tok = std::strtok(nullptr, " ");
-      NRho = std::stoi(fl_tok);
-
-      // move to next token to get number of density points
-      fl_tok = std::strtok(nullptr, " ");
-      fl_tok = std::strtok(nullptr, " ");
-      NT = std::stoi(fl_tok);
-
-      // reseize the Planck and Rosseland databoxes (number of types of opac=2)
-      kappa_.resize(NRho, NT, 2);
-
-      // set rho-T rankges (Zhu tables are uniform in log-log rho-T space)
-      const Real lTMin = toLog_(1.0);
-      const Real lTMax = toLog_(7943282.347242886);
-      const Real lRhoMin = toLog_(1.0e-14);
-      const Real lRhoMax = toLog_(0.7943282347241912);
-      kappa_.setRange(1, lTMin, lTMax, NT);
-      kappa_.setRange(2, lRhoMin, lRhoMax, NRho);
-
-      // fill tables
-      for (int iRho = 0; iRho < NRho; ++iRho) {
-        const Real lRho_i = kappa_.range(2).x(iRho);
-        for (int iT = 0; iT < NT; ++iT) {
-
-          // get new file-line
-          std::getline(ff, fline);
-          cfline = const_cast<char*>(fline.c_str());
-          fl_tok = std::strtok(cfline, " ");
-
-          // check for consistent density [g/cm^3] on table row
-          const Real Rho = std::stod(fl_tok);
-          if (std::abs(Rho - fromLog_(lRho_i)) > 1e-6 * std::abs(Rho)) {
-            OPAC_ERROR("photons::ZhuTableOpacity: invalid rho");
-          }
-
-          // check for consistent temperature [K] on table row
-          const Real lT_i = kappa_.range(1).x(iT);
-          fl_tok = std::strtok(nullptr, " ");
-          const Real T = std::stod(fl_tok);
-          if (std::abs(T - fromLog_(lT_i)) > 1e-6 * std::abs(T)) {
-            OPAC_ERROR("photons::ZhuTableOpacity: invalid T");
-          }
-
-          // populate Rosseland opacity [cm^2/g]
-          fl_tok = std::strtok(nullptr, " ");
-          kappa_(iRho, iT, 0) = std::stod(fl_tok);
-
-          // populate Planck opacity [cm^2/g]
-          fl_tok = std::strtok(nullptr, " ");
-          kappa_(iRho, iT, 1) = std::stod(fl_tok);
-        }
+      if (extension == ".txt") {
+        // assume this is one of the original Zhu et al (2021) ASCII files
+        loadZhuASCII(ff);
+#ifdef SPINER_USE_HDF
+      } else if (extension == ".hdf5" || extension == ".h5") {
+        hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+        kappa_.loadHDF(file, "Zhu Table");
+#endif
+      } else {
+        OPAC_ERROR("photons::ZhuTableOpacity: unrecognized file extension");
       }
 
     } else {
       OPAC_ERROR("photons::ZhuTableOpacity: file does not exist");
     }
   }
+
+#ifdef SPINER_USE_HDF
+  void Save(const std::string &filename) const {
+    herr_t status = H5_SUCCESS;
+    hid_t file =
+        H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    status += kappa_.saveHDF(file, "Zhu Table");
+    status += H5Fclose(file);
+
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("photons::ZhuTableOpacity: HDF5 error\n");
+    }
+  }
+#endif
 
   ZhuTableOpacity GetOnDevice() { return *this; }
   inline void Finalize() noexcept {}
@@ -281,6 +224,77 @@ class ZhuTableOpacity {
   }
   PORTABLE_INLINE_FUNCTION Real fromLog_(const Real lx) const {
     return std::pow(10., lx);
+  }
+
+  // if .txt file, assume it is the original Zhu dust opacity file
+  void loadZhuASCII(std::ifstream &ff) {
+
+    int NRho = -1;
+    int NT = -1;
+
+    // line read from file
+    std::string fline;
+
+    // read 1-line header to get sizes
+    std::getline(ff, fline);
+
+    // tokenize fline
+    char* cfline = const_cast<char*>(fline.c_str());
+    char* fl_tok = std::strtok(cfline, " ");
+
+    // move to next token to get number of density points
+    fl_tok = std::strtok(nullptr, " ");
+    NRho = std::stoi(fl_tok);
+
+    // move to next token to get number of density points
+    fl_tok = std::strtok(nullptr, " ");
+    fl_tok = std::strtok(nullptr, " ");
+    NT = std::stoi(fl_tok);
+
+    // reseize the Planck and Rosseland databoxes (number of types of opac=2)
+    kappa_.resize(NRho, NT, 2);
+
+    // set rho-T rankges (Zhu tables are uniform in log-log rho-T space)
+    const Real lTMin = toLog_(1.0);
+    const Real lTMax = toLog_(7943282.347242886);
+    const Real lRhoMin = toLog_(1.0e-14);
+    const Real lRhoMax = toLog_(0.7943282347241912);
+    kappa_.setRange(1, lTMin, lTMax, NT);
+    kappa_.setRange(2, lRhoMin, lRhoMax, NRho);
+
+    // fill tables
+    for (int iRho = 0; iRho < NRho; ++iRho) {
+      const Real lRho_i = kappa_.range(2).x(iRho);
+      for (int iT = 0; iT < NT; ++iT) {
+
+        // get new file-line
+        std::getline(ff, fline);
+        cfline = const_cast<char*>(fline.c_str());
+        fl_tok = std::strtok(cfline, " ");
+
+        // check for consistent density [g/cm^3] on table row
+        const Real Rho = std::stod(fl_tok);
+        if (std::abs(Rho - fromLog_(lRho_i)) > 1e-6 * std::abs(Rho)) {
+          OPAC_ERROR("photons::ZhuTableOpacity: invalid rho");
+        }
+
+        // check for consistent temperature [K] on table row
+        const Real lT_i = kappa_.range(1).x(iT);
+        fl_tok = std::strtok(nullptr, " ");
+        const Real T = std::stod(fl_tok);
+        if (std::abs(T - fromLog_(lT_i)) > 1e-6 * std::abs(T)) {
+          OPAC_ERROR("photons::ZhuTableOpacity: invalid T");
+        }
+
+        // populate Rosseland opacity [cm^2/g]
+        fl_tok = std::strtok(nullptr, " ");
+        kappa_(iRho, iT, 0) = std::stod(fl_tok);
+
+        // populate Planck opacity [cm^2/g]
+        fl_tok = std::strtok(nullptr, " ");
+        kappa_(iRho, iT, 1) = std::stod(fl_tok);
+      }
+    }
   }
 
   // WARNING: which only one of the two possibilities can be used for now
