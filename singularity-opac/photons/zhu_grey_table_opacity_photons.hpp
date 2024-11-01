@@ -60,7 +60,7 @@ class ZhuTableOpacity {
         // assume this is one of the original Zhu et al (2021) ASCII files
         loadZhuASCII(ff);
 #ifdef SPINER_USE_HDF
-      } else if (extension == ".hdf5" || extension == ".h5") {
+      } else if (extension == ".hdf5" || extension == ".h5" || extension == ".sp5") {
         hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
         kappa_.loadHDF(file, "Zhu Table");
 #endif
