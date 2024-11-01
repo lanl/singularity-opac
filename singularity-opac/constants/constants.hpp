@@ -196,6 +196,7 @@ struct PhysicalConstants {
 
 struct RuntimePhysicalConstants {
   template <typename T>
+  PORTABLE_INLINE_FUNCTION
   RuntimePhysicalConstants(T pc)
       : na(pc.na), alpha(pc.alpha), h(pc.h), hbar(pc.hbar), kb(pc.kb),
         r_gas(pc.r_gas), qe(pc.qe), c(pc.c), g_newt(pc.g_newt),
@@ -229,6 +230,7 @@ struct RuntimePhysicalConstants {
 };
 
 template <typename T>
+PORTABLE_INLINE_FUNCTION
 RuntimePhysicalConstants GetRuntimePhysicalConstants(T phys_constants) {
   return RuntimePhysicalConstants(phys_constants);
 }
