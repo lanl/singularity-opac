@@ -43,7 +43,7 @@ class ZhuTableOpacity {
 
   ZhuTableOpacity() = default;
 
-  // construct Planck/Rosseland DataBox from Zhu ascii file
+  // construct Planck/Rosseland DataBox from Zhu ascii or spiner hdf5 file
   ZhuTableOpacity(const std::string filename, const bool use_planck_absorb = false)
     : opac_type_(use_planck_absorb) {
 
