@@ -78,9 +78,7 @@ class MeanOpacity {
       } else if (extension == ".hdf5" || extension == ".h5" || extension == ".sp5") {
         herr_t status = H5_SUCCESS;
         hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-        status += lkappaPlanck_.loadHDF(file, SP5::MeanOpac::PlanckMeanOpacity);
-        status +=
-          lkappaRosseland_.loadHDF(file, SP5::MeanOpac::RosselandMeanOpacity);
+        status += lkappa_.loadHDF(file, "Rosseland & Planck Mean Opacities");
         status += H5Fclose(file);
 
         if (status != H5_SUCCESS) {
@@ -101,9 +99,7 @@ class MeanOpacity {
     herr_t status = H5_SUCCESS;
     hid_t file =
         H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    status += lkappaPlanck_.saveHDF(file, SP5::MeanOpac::PlanckMeanOpacity);
-    status +=
-        lkappaRosseland_.saveHDF(file, SP5::MeanOpac::RosselandMeanOpacity);
+    status += lkappa_.saveHDF(file, "Rosseland & Planck Mean Opacities");
     status += H5Fclose(file);
 
     if (status != H5_SUCCESS) {
@@ -118,21 +114,19 @@ class MeanOpacity {
 
   MeanOpacity GetOnDevice() {
     MeanOpacity other;
-    other.lkappaPlanck_ = Spiner::getOnDeviceDataBox(lkappaPlanck_);
-    other.lkappaRosseland_ = Spiner::getOnDeviceDataBox(lkappaRosseland_);
+    other.lkappa_ = Spiner::getOnDeviceDataBox(lkappa_);
     return other;
   }
 
   void Finalize() {
-    lkappaPlanck_.finalize();
-    lkappaRosseland_.finalize();
+    lkappa_.finalize();
   }
 
   PORTABLE_INLINE_FUNCTION
   Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
     Real lRho = toLog_(rho);
     Real lT = toLog_(temp);
-    return rho * fromLog_(lkappaPlanck_.interpToReal(lRho, lT));
+    return rho * fromLog_(lkappa_.interpToReal(lRho, lT, 1));
   }
 
   PORTABLE_INLINE_FUNCTION
@@ -140,7 +134,7 @@ class MeanOpacity {
                                           const Real temp) const {
     Real lRho = toLog_(rho);
     Real lT = toLog_(temp);
-    return rho * fromLog_(lkappaRosseland_.interpToReal(lRho, lT));
+    return rho * fromLog_(lkappa_.interpToReal(lRho, lT, 0));
   }
 
  private:
@@ -151,17 +145,16 @@ class MeanOpacity {
                         Real lNuMax, const int NNu, Real *lambda = nullptr) {
     using PC = typename Opacity::PC;
 
-    lkappaPlanck_.resize(NRho, NT);
-    lkappaPlanck_.setRange(0, lTMin, lTMax, NT);
-    lkappaPlanck_.setRange(1, lRhoMin, lRhoMax, NRho);
-    lkappaRosseland_.copyMetadata(lkappaPlanck_);
+    lkappa_.resize(NRho, NT, 2);
+    lkappa_.setRange(1, lTMin, lTMax, NT);
+    lkappa_.setRange(2, lRhoMin, lRhoMax, NRho);
 
     // Fill tables
     for (int iRho = 0; iRho < NRho; ++iRho) {
-      Real lRho = lkappaPlanck_.range(1).x(iRho);
+      Real lRho = lkappa_.range(2).x(iRho);
       Real rho = fromLog_(lRho);
       for (int iT = 0; iT < NT; ++iT) {
-        Real lT = lkappaPlanck_.range(0).x(iT);
+        Real lT = lkappa_.range(1).x(iT);
         Real T = fromLog_(lT);
         Real kappaPlanckNum = 0.;
         Real kappaPlanckDenom = 0.;
@@ -198,10 +191,11 @@ class MeanOpacity {
                                   ? singularity_opac::robust::ratio(
                                         kappaRosselandDenom, kappaRosselandNum)
                                   : 0.;
-        lkappaPlanck_(iRho, iT) = toLog_(kappaPlanck);
-        lkappaRosseland_(iRho, iT) = toLog_(kappaRosseland);
-        if (std::isnan(lkappaPlanck_(iRho, iT)) ||
-            std::isnan(lkappaRosseland_(iRho, iT))) {
+
+        lkappa_(iRho, iT, 0) = toLog_(kappaRosseland);
+        lkappa_(iRho, iT, 1) = toLog_(kappaPlanck);
+        if (std::isnan(lkappa_(iRho, iT, 0)) ||
+            std::isnan(lkappa_(iRho, iT, 1))) {
           OPAC_ERROR("photons::MeanOpacity: NAN in opacity evaluations");
         }
       }
@@ -234,22 +228,19 @@ class MeanOpacity {
     NT = std::stoi(fl_tok);
 
     // reseize the Planck and Rosseland databoxes (number of types of opac=2)
-    lkappaRosseland_.resize(NRho, NT);
-    lkappaPlanck_.resize(NRho, NT);
+    lkappa_.resize(NRho, NT, 2);
 
     // set rho-T rankges (Zhu tables are uniform in log-log rho-T space)
     const Real lTMin = toLog_(1.0);
     const Real lTMax = toLog_(7943282.347242886);
     const Real lRhoMin = toLog_(1.0e-14);
     const Real lRhoMax = toLog_(0.7943282347241912);
-    lkappaRosseland_.setRange(1, lTMin, lTMax, NT);
-    lkappaRosseland_.setRange(2, lRhoMin, lRhoMax, NRho);
-    lkappaPlanck_.setRange(1, lTMin, lTMax, NT);
-    lkappaPlanck_.setRange(2, lRhoMin, lRhoMax, NRho);
+    lkappa_.setRange(1, lTMin, lTMax, NT);
+    lkappa_.setRange(2, lRhoMin, lRhoMax, NRho);
 
     // fill tables
     for (int iRho = 0; iRho < NRho; ++iRho) {
-      const Real lRho_i = lkappaRosseland_.range(2).x(iRho);
+      const Real lRho_i = lkappa_.range(2).x(iRho);
       for (int iT = 0; iT < NT; ++iT) {
 
         // get new file-line
@@ -264,7 +255,7 @@ class MeanOpacity {
         }
 
         // check for consistent temperature [K] on table row
-        const Real lT_i = lkappaRosseland_.range(1).x(iT);
+        const Real lT_i = lkappa_.range(1).x(iT);
         fl_tok = std::strtok(nullptr, " ");
         const Real T = std::stod(fl_tok);
         if (std::abs(T - fromLog_(lT_i)) > 1e-6 * std::abs(T)) {
@@ -273,14 +264,14 @@ class MeanOpacity {
 
         // populate Rosseland opacity [cm^2/g]
         fl_tok = std::strtok(nullptr, " ");
-        lkappaRosseland_(iRho, iT) = toLog_(std::stod(fl_tok));
+        lkappa_(iRho, iT, 0) = toLog_(std::stod(fl_tok));
 
         // populate Planck opacity [cm^2/g]
         fl_tok = std::strtok(nullptr, " ");
-        lkappaPlanck_(iRho, iT) = toLog_(std::stod(fl_tok));
+        lkappa_(iRho, iT, 1) = toLog_(std::stod(fl_tok));
 
-        if (std::isnan(lkappaPlanck_(iRho, iT)) ||
-            std::isnan(lkappaRosseland_(iRho, iT))) {
+        if (std::isnan(lkappa_(iRho, iT, 0)) ||
+            std::isnan(lkappa_(iRho, iT, 1))) {
           OPAC_ERROR("photons::MeanOpacity: NAN in parsed ASCII opacity");
         }
       }
@@ -293,8 +284,7 @@ class MeanOpacity {
   PORTABLE_INLINE_FUNCTION Real fromLog_(const Real lx) const {
     return std::pow(10., lx);
   }
-  Spiner::DataBox<Real> lkappaPlanck_;
-  Spiner::DataBox<Real> lkappaRosseland_;
+  Spiner::DataBox<Real> lkappa_;
   const char *filename_;
 };
 
