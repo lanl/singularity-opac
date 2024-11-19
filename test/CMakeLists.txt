@@ -48,16 +48,12 @@ PRIVATE
   test_spiner_opac_neutrinos.cpp
   test_mean_opacities.cpp
   test_variant.cpp
-  test_zhu_grey_table_opacities.cpp
 )
 
 # Link data file directory for Zhu table test
 file(CREATE_LINK
-    ${CMAKE_SOURCE_DIR}/singularity-opac/photons/zhu_data/opacitysolar09dustq3p5amax0p1new.txt
-    ${CMAKE_CURRENT_BINARY_DIR}/opacitysolar09dustq3p5amax0p1new.txt SYMBOLIC)
-file(CREATE_LINK
-    ${CMAKE_SOURCE_DIR}/singularity-opac/photons/zhu_data/opacitysolar09dustq3p5amax0p1new.hdf5
-    ${CMAKE_CURRENT_BINARY_DIR}/opacitysolar09dustq3p5amax0p1new.hdf5 SYMBOLIC)
+    ${CMAKE_SOURCE_DIR}/singularity-opac/photons/example_ascii/kap_plaw.txt
+    ${CMAKE_CURRENT_BINARY_DIR}/kap_plaw.txt SYMBOLIC)
 
 target_link_libraries(${PROJECT_NAME}_unit_tests
 PRIVATE

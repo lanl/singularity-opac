@@ -17,6 +17,8 @@
 #define SINGULARITY_OPAC_PHOTONS_MEAN_OPACITY_PHOTONS_
 
 #include <cmath>
+#include <filesystem>
+#include <fstream>
 
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
@@ -57,20 +59,44 @@ class MeanOpacity {
                                      NT, lNuMin, lNuMax, NNu, lambda);
   }
 
-#ifdef SPINER_USE_HDF
-  MeanOpacity(const std::string &filename) : filename_(filename.c_str()) {
-    herr_t status = H5_SUCCESS;
-    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-    status += lkappaPlanck_.loadHDF(file, SP5::MeanOpac::PlanckMeanOpacity);
-    status +=
-        lkappaRosseland_.loadHDF(file, SP5::MeanOpac::RosselandMeanOpacity);
-    status += H5Fclose(file);
+  // construct Planck/Rosseland DataBox from Zhu-formatted ascii file
+  MeanOpacity(const std::string &filename)  : filename_(filename.c_str()) {
 
-    if (status != H5_SUCCESS) {
-      OPAC_ERROR("photons::MeanOpacity: HDF5 error\n");
+    // get number of density and temperature points
+    std::ifstream ff(filename.c_str());
+    const bool fexists = ff.good();
+
+    if (fexists) {
+
+      std::filesystem::path filePath(filename);
+      std::string extension = filePath.extension().string();
+
+      if (extension == ".txt") {
+        // assume this is one of the original Zhu et al (2021) ASCII files
+        loadZhuASCII(ff);
+#ifdef SPINER_USE_HDF
+      } else if (extension == ".hdf5" || extension == ".h5" || extension == ".sp5") {
+        herr_t status = H5_SUCCESS;
+        hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+        status += lkappaPlanck_.loadHDF(file, SP5::MeanOpac::PlanckMeanOpacity);
+        status +=
+          lkappaRosseland_.loadHDF(file, SP5::MeanOpac::RosselandMeanOpacity);
+        status += H5Fclose(file);
+
+        if (status != H5_SUCCESS) {
+          OPAC_ERROR("photons::MeanOpacity: HDF5 error\n");
+        }
+#endif
+      } else {
+        OPAC_ERROR("photons::MeanOpacity: unrecognized file extension");
+      }
+
+    } else {
+      OPAC_ERROR("photons::MeanOpacity: file does not exist");
     }
   }
 
+#ifdef SPINER_USE_HDF
   void Save(const std::string &filename) const {
     herr_t status = H5_SUCCESS;
     hid_t file =
@@ -181,6 +207,86 @@ class MeanOpacity {
       }
     }
   }
+
+  // if .txt file, assume it is the original Zhu dust opacity file
+  void loadZhuASCII(std::ifstream &ff) {
+
+    int NRho = -1;
+    int NT = -1;
+
+    // line read from file
+    std::string fline;
+
+    // read 1-line header to get sizes
+    std::getline(ff, fline);
+
+    // tokenize fline
+    char* cfline = const_cast<char*>(fline.c_str());
+    char* fl_tok = std::strtok(cfline, " ");
+
+    // move to next token to get number of density points
+    fl_tok = std::strtok(nullptr, " ");
+    NRho = std::stoi(fl_tok);
+
+    // move to next token to get number of density points
+    fl_tok = std::strtok(nullptr, " ");
+    fl_tok = std::strtok(nullptr, " ");
+    NT = std::stoi(fl_tok);
+
+    // reseize the Planck and Rosseland databoxes (number of types of opac=2)
+    lkappaRosseland_.resize(NRho, NT);
+    lkappaPlanck_.resize(NRho, NT);
+
+    // set rho-T rankges (Zhu tables are uniform in log-log rho-T space)
+    const Real lTMin = toLog_(1.0);
+    const Real lTMax = toLog_(7943282.347242886);
+    const Real lRhoMin = toLog_(1.0e-14);
+    const Real lRhoMax = toLog_(0.7943282347241912);
+    lkappaRosseland_.setRange(1, lTMin, lTMax, NT);
+    lkappaRosseland_.setRange(2, lRhoMin, lRhoMax, NRho);
+    lkappaPlanck_.setRange(1, lTMin, lTMax, NT);
+    lkappaPlanck_.setRange(2, lRhoMin, lRhoMax, NRho);
+
+    // fill tables
+    for (int iRho = 0; iRho < NRho; ++iRho) {
+      const Real lRho_i = lkappaRosseland_.range(2).x(iRho);
+      for (int iT = 0; iT < NT; ++iT) {
+
+        // get new file-line
+        std::getline(ff, fline);
+        cfline = const_cast<char*>(fline.c_str());
+        fl_tok = std::strtok(cfline, " ");
+
+        // check for consistent density [g/cm^3] on table row
+        const Real Rho = std::stod(fl_tok);
+        if (std::abs(Rho - fromLog_(lRho_i)) > 1e-6 * std::abs(Rho)) {
+          OPAC_ERROR("photons::MeanOpacity: invalid rho");
+        }
+
+        // check for consistent temperature [K] on table row
+        const Real lT_i = lkappaRosseland_.range(1).x(iT);
+        fl_tok = std::strtok(nullptr, " ");
+        const Real T = std::stod(fl_tok);
+        if (std::abs(T - fromLog_(lT_i)) > 1e-6 * std::abs(T)) {
+          OPAC_ERROR("photons::MeanOpacity: invalid T");
+        }
+
+        // populate Rosseland opacity [cm^2/g]
+        fl_tok = std::strtok(nullptr, " ");
+        lkappaRosseland_(iRho, iT) = toLog_(std::stod(fl_tok));
+
+        // populate Planck opacity [cm^2/g]
+        fl_tok = std::strtok(nullptr, " ");
+        lkappaPlanck_(iRho, iT) = toLog_(std::stod(fl_tok));
+
+        if (std::isnan(lkappaPlanck_(iRho, iT)) ||
+            std::isnan(lkappaRosseland_(iRho, iT))) {
+          OPAC_ERROR("photons::MeanOpacity: NAN in parsed ASCII opacity");
+        }
+      }
+    }
+  }
+
   PORTABLE_INLINE_FUNCTION Real toLog_(const Real x) const {
     return std::log10(std::abs(x) + EPS);
   }

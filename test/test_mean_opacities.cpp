@@ -695,3 +695,62 @@ TEST_CASE("Mean photon scattering opacities", "[MeanPhotonS]") {
     opac.Finalize();
   }
 }
+
+TEST_CASE("ASCII-parsed Mean photon opacities", "[MeanPhotons]") {
+  const std::string grayname = "kap_plaw.txt";
+
+  WHEN("We initialize a mean photon opacity from an ASCII table") {
+
+    constexpr Real rho_min = 1e-14;  // g/cc.
+    constexpr Real temp_min = 1.0; // Kelvin.
+    constexpr Real ross_at_min = 0.001; // cm^2/g
+    constexpr Real plnk_at_min = 0.1; // cm^2/g
+    constexpr Real rho_max = 0.7943282347241912;  // g/cc.
+    constexpr Real temp_max = 7943282.347242886; // Kelvin.
+    constexpr Real ross_at_max = 0.001; // cm^2/g
+    constexpr Real plnk_at_max = 0.1; // cm^2/g
+
+    photons::MeanOpacity mean_opac_host = photons::MeanOpacity(grayname);
+    auto mean_opac = mean_opac_host.GetOnDevice();
+
+    THEN("The emissivity per nu omega is consistent with the emissity per nu") {
+      int n_wrong_h = 0;
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+      Kokkos::View<int, atomic_view> n_wrong_d("wrong");
+#else
+      PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
+#endif
+
+      // get a test value at min rho-T point
+      Real mross = mean_opac.RosselandMeanAbsorptionCoefficient(rho_min, temp_min);
+      Real mplnk = mean_opac.PlanckMeanAbsorptionCoefficient(rho_min, temp_min);
+
+      // check min rho-T point
+      if (FractionalDifference(rho_min * ross_at_min, mross) > EPS_TEST) {
+        n_wrong_d() += 1;
+      }
+      if (FractionalDifference(rho_min * plnk_at_min, mplnk) > EPS_TEST) {
+        n_wrong_d() += 1;
+      }
+
+      // get a test value at max rho-T point
+      mross = mean_opac.RosselandMeanAbsorptionCoefficient(rho_max, temp_max);
+      mplnk = mean_opac.PlanckMeanAbsorptionCoefficient(rho_max, temp_max);
+
+      // check min rho-T point
+      if (FractionalDifference(rho_max * ross_at_max, mross) > EPS_TEST) {
+        n_wrong_d() += 1;
+      }
+      if (FractionalDifference(rho_max * plnk_at_max, mplnk) > EPS_TEST) {
+        n_wrong_d() += 1;
+      }
+
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+      Kokkos::deep_copy(n_wrong_h, n_wrong_d);
+#endif
+      REQUIRE(n_wrong_h == 0);
+    }
+
+    mean_opac.Finalize();
+  }
+}
