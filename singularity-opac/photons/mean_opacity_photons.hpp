@@ -125,7 +125,7 @@ class MeanOpacity {
   Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
     Real lRho = toLog_(rho);
     Real lT = toLog_(temp);
-    return rho * fromLog_(lkappa_.interpToReal(lRho, lT, 1));
+    return rho * fromLog_(lkappa_.interpToReal(lRho, lT, Planck));
   }
 
   PORTABLE_INLINE_FUNCTION
@@ -133,7 +133,7 @@ class MeanOpacity {
                                           const Real temp) const {
     Real lRho = toLog_(rho);
     Real lT = toLog_(temp);
-    return rho * fromLog_(lkappa_.interpToReal(lRho, lT, 0));
+    return rho * fromLog_(lkappa_.interpToReal(lRho, lT, Rosseland));
   }
 
  private:
@@ -191,10 +191,10 @@ class MeanOpacity {
                                         kappaRosselandDenom, kappaRosselandNum)
                                   : 0.;
 
-        lkappa_(iRho, iT, 0) = toLog_(kappaRosseland);
-        lkappa_(iRho, iT, 1) = toLog_(kappaPlanck);
-        if (std::isnan(lkappa_(iRho, iT, 0)) ||
-            std::isnan(lkappa_(iRho, iT, 1))) {
+        lkappa_(iRho, iT, Rosseland) = toLog_(kappaRosseland);
+        lkappa_(iRho, iT, Planck) = toLog_(kappaPlanck);
+        if (std::isnan(lkappa_(iRho, iT, Rosseland)) ||
+            std::isnan(lkappa_(iRho, iT, Planck))) {
           OPAC_ERROR("photons::MeanOpacity: NAN in opacity evaluations");
         }
       }
@@ -270,14 +270,14 @@ class MeanOpacity {
         fl_tok = std::strtok(cfline, " ");
 
         // populate Rosseland opacity [cm^2/g]
-        lkappa_(iRho, iT, 0) = toLog_(std::stod(fl_tok));
+        lkappa_(iRho, iT, Rosseland) = toLog_(std::stod(fl_tok));
 
         // populate Planck opacity [cm^2/g]
         fl_tok = std::strtok(nullptr, " ");
-        lkappa_(iRho, iT, 1) = toLog_(std::stod(fl_tok));
+        lkappa_(iRho, iT, Planck) = toLog_(std::stod(fl_tok));
 
-        if (std::isnan(lkappa_(iRho, iT, 0)) ||
-            std::isnan(lkappa_(iRho, iT, 1))) {
+        if (std::isnan(lkappa_(iRho, iT, Rosseland)) ||
+            std::isnan(lkappa_(iRho, iT, Planck))) {
           OPAC_ERROR("photons::MeanOpacity: NAN in parsed ASCII opacity");
         }
       }
@@ -292,6 +292,10 @@ class MeanOpacity {
   }
   Spiner::DataBox<Real> lkappa_;
   const char *filename_;
+  enum OpacityAveraging {
+    Rosseland = 0,
+    Planck = 1
+  };
 };
 
 #undef EPS
