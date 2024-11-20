@@ -19,8 +19,8 @@
 #include <cassert>
 #include <cmath>
 #include <cstdio>
-#include <pair>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <fast-math/logs.hpp>
@@ -399,9 +399,9 @@ class SpinerOpacity {
 
     auto [rho_min, rho_max] = ReadBounds_(file, "rho_points", NR);
     auto [T_min, T_max] = ReadBounds_(file, "temp_points", NT);
-    auto [Ye_min, Ye_max] = ReadBounds_(file, "ye_points", NY);
     auto [emin, emax] = ReadBounds_(file, "neutrino_energies", NE);
 
+    auto [YeMin, YeMax] = ReadBounds_(file, "ye_points", NY);
     const Real lRhoMin = std::log10(rho_min); // g/cm^3
     const Real lRhoMax = std::log10(rho_max);
     const Real lTMin = std::log10(T_min); // MeV internally. Converted from K
@@ -445,7 +445,7 @@ class SpinerOpacity {
     // Fill lalphanu and lJnu
     for (int iR = 0; iR < NR; ++iR) {
       for (int iT = 0; iT < NT; ++iT) {
-        for (int iY = 0; iY < NY, ++iY) {
+        for (int iY = 0; iY < NY; ++iY) {
           for (int idx = 0; idx < NTYPE; ++idx) {
             for (int ie = 0; ie < NE; ++ie) {
               Real kappa = kappa_file(ie, idx, iY, iT, iR);
@@ -462,7 +462,7 @@ class SpinerOpacity {
         }
       }
     }
-    ComputeIntegrals(ljnu_, lJ_, lJYe_);
+    ComputeIntegrals(ljnu_, lJ_, lJYe_, NTYPE);
   }
 
   static int ReadInt_(const hid_t &file_id, const std::string &name) {
@@ -487,8 +487,8 @@ class SpinerOpacity {
     return std::make_pair(lo, hi);
   }
 
-  static void ComputeIntegrals(const DataBox &ljnu, DataBox &lJ,
-                               DataBox &lJYe) {
+  static void ComputeIntegrals(const DataBox &ljnu, DataBox &lJ, DataBox &lJYe,
+                               int RAD_NUM_TYPES) {
     auto rhoGrid = ljnu.range(4);
     auto TGrid = ljnu.range(3);
     auto YeGrid = ljnu.range(2);
@@ -516,8 +516,8 @@ class SpinerOpacity {
               lJYe(iRho, iT, iYe, itp) += integrand / (MEV * e);
             }
             // multiply by log spacing and take the log
-            lJ(iRho, iT, iYe, itp) = ToLog(lJ(iRho, iT, iYe, itp) * dle);
-            lJYe(iRho, iT, iYe, itp) = ToLog(lJYe(iRho, iT, iYe, itp) * dle);
+            lJ(iRho, iT, iYe, itp) = toLog_(lJ(iRho, iT, iYe, itp) * dle);
+            lJYe(iRho, iT, iYe, itp) = toLog_(lJYe(iRho, iT, iYe, itp) * dle);
           }
         }
       }
@@ -526,17 +526,16 @@ class SpinerOpacity {
 #endif // SPINER_USE_HDF
 
   // TODO(JMM): Offsets probably not necessary
-  PORTABLE_INLINE_FUNCTION Real toLog_(const Real x, const Real offset) const {
+  PORTABLE_INLINE_FUNCTION static Real toLog_(const Real x, const Real offset) {
     return std::log10(std::abs(std::max(x, -offset) + offset) + EPS);
   }
-  PORTABLE_INLINE_FUNCTION Real toLog_(const Real x) const {
+  PORTABLE_INLINE_FUNCTION static Real toLog_(const Real x) {
     return toLog_(x, 0);
   }
-  PORTABLE_INLINE_FUNCTION Real fromLog_(const Real lx,
-                                         const Real offset) const {
+  PORTABLE_INLINE_FUNCTION static fromLog_(const Real lx, const Real offset) {
     return std::pow(10., lx) - offset;
   }
-  PORTABLE_INLINE_FUNCTION Real fromLog_(const Real lx) const {
+  PORTABLE_INLINE_FUNCTION static fromLog_(const Real lx) {
     return fromLog_(lx, 0);
   }
   PORTABLE_INLINE_FUNCTION void toLogs_(const Real rho, const Real temp,
