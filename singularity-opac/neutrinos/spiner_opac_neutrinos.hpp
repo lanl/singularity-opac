@@ -19,7 +19,9 @@
 #include <cassert>
 #include <cmath>
 #include <cstdio>
+#include <pair>
 #include <string>
+#include <vector>
 
 #include <fast-math/logs.hpp>
 #include <ports-of-call/portability.hpp>
@@ -62,6 +64,7 @@ template <typename ThermalDistribution, typename pc = PhysicalConstantsCGS>
 class SpinerOpacity {
  public:
   using DataBox = Spiner::DataBox<Real>;
+  static constexpr Real MEV = 1e6 * pc::eV;
   static constexpr Real EPS = 10.0 * std::numeric_limits<Real>::min();
   static constexpr Real Hz2MeV = pc::h / (1e6 * pc::eV);
   static constexpr Real MeV2Hz = 1 / Hz2MeV;
@@ -69,6 +72,8 @@ class SpinerOpacity {
   static constexpr Real GK2MeV = 1. / MeV2GK;
   static constexpr Real MeV2K = 1.e9 * MeV2GK;
   static constexpr Real K2MeV = 1. / MeV2K;
+
+  enum class LoadSource { SP5, NuLib };
 
   SpinerOpacity() = default;
 
@@ -110,7 +115,8 @@ class SpinerOpacity {
             Real J = std::max(opac.Emissivity(rho, T * MeV2K, Ye, type), 0.0);
             Real lJ = toLog_(J);
             lJ_(iRho, iT, iYe, idx) = lJ;
-            Real JYe = std::max(opac.NumberEmissivity(rho, T * MeV2K, Ye, type), 0.0);
+            Real JYe =
+                std::max(opac.NumberEmissivity(rho, T * MeV2K, Ye, type), 0.0);
             lJYe_(iRho, iT, iYe, idx) = toLog_(JYe);
             for (int ie = 0; ie < Ne; ++ie) {
               Real lE = lalphanu_.range(0).x(ie);
@@ -119,8 +125,8 @@ class SpinerOpacity {
               Real alpha = std::max(
                   opac.AbsorptionCoefficient(rho, T, Ye, type, nu), 0.0);
               lalphanu_(iRho, iT, iYe, idx, ie) = toLog_(alpha);
-              Real j = std::max(opac.EmissivityPerNuOmega(rho, T * MeV2K, Ye, type, nu),
-                                0.0);
+              Real j = std::max(
+                  opac.EmissivityPerNuOmega(rho, T * MeV2K, Ye, type, nu), 0.0);
               ljnu_(iRho, iT, iYe, idx, ie) = toLog_(j);
             }
           }
@@ -131,24 +137,21 @@ class SpinerOpacity {
 
   // DataBox constructor. Note that this constructor *shallow* copies
   // the databoxes, so they must be managed externally.
-  SpinerOpacity(const DataBox &lalphanu, const DataBox ljnu,
-                const DataBox lJ, const DataBox lJYe)
+  SpinerOpacity(const DataBox &lalphanu, const DataBox ljnu, const DataBox lJ,
+                const DataBox lJYe)
       : memoryStatus_(impl::DataStatus::OnHost), lalphanu_(lalphanu),
         ljnu_(ljnu), lJ_(lJ), lJYe_(lJYe) {}
 
 #ifdef SPINER_USE_HDF
-  SpinerOpacity(const std::string &filename)
+  SpinerOpacity(const std::string &filename,
+                LoadSource load_from = LoadSource::SP5)
       : filename_(filename.c_str()), memoryStatus_(impl::DataStatus::OnHost) {
-    herr_t status = H5_SUCCESS;
-    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-    status += lalphanu_.loadHDF(file, SP5::Opac::AbsorptionCoefficient);
-    status += ljnu_.loadHDF(file, SP5::Opac::EmissivityPerNu);
-    status += lJ_.loadHDF(file, SP5::Opac::TotalEmissivity);
-    status += lJYe_.loadHDF(file, SP5::Opac::NumberEmissivity);
-    status += H5Fclose(file);
-
-    if (status != H5_SUCCESS) {
-      OPAC_ERROR("neutrinos::SpinerOpacity: HDF5 error\n");
+    if (load_from == LoadSource::SP5) {
+      LoadFromSP5_(filename);
+    } else if (load_from == LoadSource::NuLib) {
+      LoadFromNuLib_(filename);
+    } else {
+      OPAC_ERROR("Unknown file source type\n");
     }
   }
 
@@ -166,7 +169,7 @@ class SpinerOpacity {
       OPAC_ERROR("neutrinos::SpinerOpacity: HDF5 error\n");
     }
   }
-#endif
+#endif // SPINER_USE_HDF
 
   PORTABLE_INLINE_FUNCTION int nlambda() const noexcept { return 0; }
   PORTABLE_INLINE_FUNCTION
@@ -367,6 +370,159 @@ class SpinerOpacity {
   }
 
  private:
+#ifdef SPINER_USE_HDF
+  void LoadFromSP5_(const std::string &filename) {
+    herr_t status = H5_SUCCESS;
+    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    status += lalphanu_.loadHDF(file, SP5::Opac::AbsorptionCoefficient);
+    status += ljnu_.loadHDF(file, SP5::Opac::EmissivityPerNu);
+    status += lJ_.loadHDF(file, SP5::Opac::TotalEmissivity);
+    status += lJYe_.loadHDF(file, SP5::Opac::NumberEmissivity);
+    status += H5Fclose(file);
+
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("neutrinos::SpinerOpacity: HDF5 error\n");
+    }
+  }
+
+  void LoadFromNuLib_(const std::string &filename) {
+    herr_t status = H5_SUCCESS;
+    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    // table size
+    const int NR = ReadInt_(file, "nrho");
+    const int NT = ReadInt_(file, "ntemp");
+    const int NY = ReadInt_(file, "nye");
+    const int NE = ReadInt_(file, "number_groups");
+    const int NTYPE = ReadInt_(file, "number_species");
+
+    auto [rho_min, rho_max] = ReadBounds_(file, "rho_points", NR);
+    auto [T_min, T_max] = ReadBounds_(file, "temp_points", NT);
+    auto [Ye_min, Ye_max] = ReadBounds_(file, "ye_points", NY);
+    auto [emin, emax] = ReadBounds_(file, "neutrino_energies", NE);
+
+    const Real lRhoMin = std::log10(rho_min); // g/cm^3
+    const Real lRhoMax = std::log10(rho_max);
+    const Real lTMin = std::log10(T_min); // MeV internally. Converted from K
+    const Real lTMax = std::log10(T_max); // when function calls made.
+    const Real leMin = std::log10(emin);  // MeV internally. Converted from Hz
+    const Real leMax = std::log10(emax);  // when function calls made.
+
+    DataBox jnu_file(NE, NTYPE, NY, NT,
+                     NR); // (erg s^{-1} cm^{-3} MeV^{-1} / 4pi)
+    status = H5LTread_dataset_double(file, "emissivities", jnu_file.data());
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("An HDF5 error ocurred while reading emissivities");
+    }
+    DataBox kappa_file(NE, NTYPE, NY, NT, NR); // 1/cm
+    status =
+        H5LTread_dataset_double(file, "absorption_opacity", jnu_file.data());
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("An HDF5 error ocurred while reading absorption opacities");
+    }
+    status = H5Fclose(file);
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("An HDF5 error ocurred while reading absorption opacities");
+    }
+
+    // Set metadata for lalphanu and ljnu
+    lalphanu_.resize(NR, NT, NY, NTYPE, NE); // 1/cm
+    lalphanu_.setRange(0, leMin, leMax, NE);
+    // index 1 is the species and is not interpolatable
+    lalphanu_.setRange(2, YeMin, YeMax, NY);
+    lalphanu_.setRange(3, lTMin, lTMax, NT);
+    lalphanu_.setRange(4, lRhoMin, lRhoMax, NR);
+    ljnu_.copyMetadata(lalphanu_); // (erg s^{-1} cm^{-3} Hz^{-1} / 4pi)
+
+    // set metadata for lJ and lJYe
+    lJ_.resize(NR, NT, NY, NTYPE);
+    lJ_.setRange(1, YeMin, YeMax, NY);
+    lJ_.setRange(2, lTMin, lTMax, NT);
+    lJ_.setRange(3, lRhoMin, lRhoMax, NR);
+    lJYe_.copyMetadata(lJ_);
+
+    // Fill lalphanu and lJnu
+    for (int iR = 0; iR < NR; ++iR) {
+      for (int iT = 0; iT < NT; ++iT) {
+        for (int iY = 0; iY < NY, ++iY) {
+          for (int idx = 0; idx < NTYPE; ++idx) {
+            for (int ie = 0; ie < NE; ++ie) {
+              Real kappa = kappa_file(ie, idx, iY, iT, iR);
+              // log
+              lalphanu_(iR, iT, iY, idx, ie) = std::log10(kappa);
+              Real j = jnu_file(ie, idx, iY, iT, iR);
+              // convert from
+              // (erg s^{-1} cm^{-3} MeV^{-1} / 4pi)
+              // to
+              // (erg s^{-1} cm^{-3} Hz^{-1} / 4pi)
+              ljnu_(iR, iT, iY, idx, ie) = std::log10(pc::h * j / MEV);
+            }
+          }
+        }
+      }
+    }
+    ComputeIntegrals(ljnu_, lJ_, lJYe_);
+  }
+
+  static int ReadInt_(const hid_t &file_id, const std::string &name) {
+    int data;
+    herr_t status = H5LTread_dataset_int(file_id, name.c_str(), &data);
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("Failed to read dataset!\n");
+    }
+    return data;
+  }
+
+  static auto ReadBounds_(const hid_t &file_id, const std::string &name,
+                          int size) {
+    std::vector<Real> table(size);
+    herr_t status =
+        H5LTread_dataset_double(file_id, name.c_str(), table.data());
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("An HDF5 error ocurred while reading bounds");
+    }
+    Real lo = table[0];
+    Real hi = table[size - 1];
+    return std::make_pair(lo, hi);
+  }
+
+  static void ComputeIntegrals(const DataBox &ljnu, DataBox &lJ,
+                               DataBox &lJYe) {
+    auto rhoGrid = ljnu.range(4);
+    auto TGrid = ljnu.range(3);
+    auto YeGrid = ljnu.range(2);
+    auto leGrid = ljnu.range(0);
+
+    // integrals performed as Riemann sum in log space
+    Real dle = leGrid.dx();
+    for (int iRho = 0; iRho < rhoGrid.nPoints(); ++iRho) {
+      for (int iT = 0; iT < TGrid.nPoints(); ++iT) {
+        for (int iYe = 0; iYe < YeGrid.nPoints(); ++iYe) {
+          for (int itp = 0; itp < RAD_NUM_TYPES; ++itp) {
+            lJ(iRho, iT, iYe, itp) = 0.0;
+            lJYe(iRho, iT, iYe, itp) = 0.0;
+            for (int ie = 0; ie < leGrid.nPoints(); ++ie) {
+              Real le = leGrid.x(ie);
+              Real e = std::pow(10., le);
+              Real lj = ljnu(iRho, iT, iYe, itp, ie);
+              // convert again to
+              // (erg s^{-1} cm^{-3} MeV^{-1} / 4pi)
+              // since we integrate in those units
+              Real j = std::pow(10., lj) * MEV / pc::h;
+              Real integrand = 4 * M_PI * j * e;
+              lJ(iRho, iT, iYe, itp) += integrand;
+              // divide by energy in ergs for lJYe to get number emissivity
+              lJYe(iRho, iT, iYe, itp) += integrand / (MEV * e);
+            }
+            // multiply by log spacing and take the log
+            lJ(iRho, iT, iYe, itp) = ToLog(lJ(iRho, iT, iYe, itp) * dle);
+            lJYe(iRho, iT, iYe, itp) = ToLog(lJYe(iRho, iT, iYe, itp) * dle);
+          }
+        }
+      }
+    }
+  }
+#endif // SPINER_USE_HDF
+
   // TODO(JMM): Offsets probably not necessary
   PORTABLE_INLINE_FUNCTION Real toLog_(const Real x, const Real offset) const {
     return std::log10(std::abs(std::max(x, -offset) + offset) + EPS);
