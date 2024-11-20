@@ -59,7 +59,7 @@ class MeanOpacity {
                                      NT, lNuMin, lNuMax, NNu, lambda);
   }
 
-  // construct Planck/Rosseland DataBox from Zhu-formatted ascii file
+  // construct Planck/Rosseland DataBox from ascii file
   MeanOpacity(const std::string &filename)  : filename_(filename.c_str()) {
 
     // get number of density and temperature points
@@ -72,8 +72,7 @@ class MeanOpacity {
       std::string extension = filePath.extension().string();
 
       if (extension == ".txt") {
-        // assume this is one of the original Zhu et al (2021) ASCII files
-        loadZhuASCII(ff);
+        loadASCII(ff);
 #ifdef SPINER_USE_HDF
       } else if (extension == ".hdf5" || extension == ".h5" || extension == ".sp5") {
         herr_t status = H5_SUCCESS;
@@ -202,8 +201,8 @@ class MeanOpacity {
     }
   }
 
-  // if .txt file, assume it is the original Zhu dust opacity file
-  void loadZhuASCII(std::ifstream &ff) {
+  // ASCII opacity file reader
+  void loadASCII(std::ifstream &ff) {
 
     int NRho = -1;
     int NT = -1;
@@ -211,7 +210,7 @@ class MeanOpacity {
     // line read from file
     std::string fline;
 
-    // read 1-line header to get sizes
+    // read 1st line of header to get sizes
     std::getline(ff, fline);
 
     // tokenize fline
@@ -222,19 +221,41 @@ class MeanOpacity {
     fl_tok = std::strtok(nullptr, " ");
     NRho = std::stoi(fl_tok);
 
-    // move to next token to get number of density points
+    // move to next token to get number of temperature points
     fl_tok = std::strtok(nullptr, " ");
     fl_tok = std::strtok(nullptr, " ");
     NT = std::stoi(fl_tok);
 
-    // reseize the Planck and Rosseland databoxes (number of types of opac=2)
+    // read 2nd line of header to get min/max density
+    std::getline(ff, fline);
+    // tokenize fline
+    cfline = const_cast<char*>(fline.c_str());
+    fl_tok = std::strtok(cfline, " ");
+    fl_tok = std::strtok(nullptr, " ");
+    const Real RhoMin = std::stod(fl_tok);
+    fl_tok = std::strtok(nullptr, " ");
+    fl_tok = std::strtok(nullptr, " ");
+    const Real RhoMax = std::stod(fl_tok);
+
+    // read 3nd line of header to get min/max temperature
+    std::getline(ff, fline);
+    // tokenize fline
+    cfline = const_cast<char*>(fline.c_str());
+    fl_tok = std::strtok(cfline, " ");
+    fl_tok = std::strtok(nullptr, " ");
+    const Real TMin = std::stod(fl_tok);
+    fl_tok = std::strtok(nullptr, " ");
+    fl_tok = std::strtok(nullptr, " ");
+    const Real TMax = std::stod(fl_tok);
+
+    // reseize the Planck and Rosseland databox
     lkappa_.resize(NRho, NT, 2);
 
-    // set rho-T rankges (Zhu tables are uniform in log-log rho-T space)
-    const Real lTMin = toLog_(1.0);
-    const Real lTMax = toLog_(7943282.347242886);
-    const Real lRhoMin = toLog_(1.0e-14);
-    const Real lRhoMax = toLog_(0.7943282347241912);
+    // set rho-T ranges
+    const Real lTMin = toLog_(TMin);
+    const Real lTMax = toLog_(TMax);
+    const Real lRhoMin = toLog_(RhoMin);
+    const Real lRhoMax = toLog_(RhoMax);
     lkappa_.setRange(1, lTMin, lTMax, NT);
     lkappa_.setRange(2, lRhoMin, lRhoMax, NRho);
 
