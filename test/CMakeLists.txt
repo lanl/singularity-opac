@@ -50,6 +50,11 @@ PRIVATE
   test_variant.cpp
 )
 
+# Link data file directory for Zhu table test
+file(CREATE_LINK
+    ${CMAKE_SOURCE_DIR}/singularity-opac/photons/example_ascii/kap_plaw.txt
+    ${CMAKE_CURRENT_BINARY_DIR}/kap_plaw.txt SYMBOLIC)
+
 target_link_libraries(${PROJECT_NAME}_unit_tests
 PRIVATE
   catch2_define
