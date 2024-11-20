@@ -25,6 +25,7 @@ parser = argparse.ArgumentParser(description="Re-grid opacity data to be log-log
 parser.add_argument("fname", type=str, help="Opacity file to re-grid.")
 parser.add_argument("--is_loglog", action="store_true", help="Avoid regridding if already log-log.")
 parser.add_argument("--fname_new", type=str, default="kappa_new.txt", help="File name for new file created.")
+parser.add_argument("--plot", action="store_true", help="If not log-log, plot colormap of original and regridded data.")
 args = parser.parse_args()
 
 NRho = -1
@@ -62,10 +63,30 @@ else:
     ross_old_opac = np.reshape(opac[:,2], (NRho, NT))
     plnk_old_opac = np.reshape(opac[:,3], (NRho, NT))
     #-- linearly interpolate in log-log rho-T
-    ross_f2d = interp2d(np.log10(Rho), np.log10(T), ross_old_opac, kind='linear')
-    plnk_f2d = interp2d(np.log10(Rho), np.log10(T), plnk_old_opac, kind='linear')
-    ross_new_opac = ross_f2d(np.log10(r), np.log10(tt))
-    plnk_new_opac = plnk_f2d(np.log10(r), np.log10(tt))
+    ross_f2d = interp2d(np.log10(T), np.log10(Rho), ross_old_opac, kind='linear')
+    plnk_f2d = interp2d(np.log10(T), np.log10(Rho), plnk_old_opac, kind='linear')
+    ross_new_opac = ross_f2d(np.log10(tt), np.log10(r))
+    plnk_new_opac = plnk_f2d(np.log10(tt), np.log10(r))
+    #-- plot 4-panel of data
+    if (args.plot):
+        import matplotlib.pyplot as plt
+        XOLD, YOLD = np.meshgrid(np.log10(T), np.log10(Rho))
+        XNEW, YNEW = np.meshgrid(np.log10(tt), np.log10(r))
+        fig, axes = plt.subplots(2, 2)
+        im1 = axes[0, 0].pcolormesh(XOLD, YOLD, ross_old_opac)
+        axes[0, 0].set_title('Old Rosseland')
+        fig.colorbar(im1, ax=axes[0, 0])
+        im2 = axes[0, 1].pcolormesh(XOLD, YOLD, plnk_old_opac)
+        axes[0, 1].set_title('Old Planck')
+        fig.colorbar(im2, ax=axes[0, 1])
+        im3 = axes[1, 0].pcolormesh(XNEW, YNEW, ross_new_opac)
+        axes[1, 0].set_title('New Rosseland')
+        fig.colorbar(im3, ax=axes[1, 0])
+        im4 = axes[1, 1].pcolormesh(XNEW, YNEW, plnk_new_opac)
+        axes[1, 1].set_title('New Planck')
+        fig.colorbar(im4, ax=axes[1, 1])
+        plt.tight_layout()
+        plt.show()
     #-- reset opacity array
     for i in range(NRho):
         for j in range(NT):
@@ -80,4 +101,3 @@ hdr = "NRho "+str(NRho)+" NT "+str(NT) + "\n" \
     "rho_min {:.8e}".format(r[0])+" rho_max {:.8e}".format(r[NRho-1]) + "\n" \
     "T_min {:.8e}".format(tt[0]) + " T_max {:.8e}".format(tt[NT-1])
 np.savetxt(args.fname_new, opac[:,2:], delimiter=" ", header=hdr, comments=" ", fmt="%.8e")
-
