@@ -11,21 +11,30 @@ else()
 endif()
 
 #=======================================
+# Setup Kokkos
+# - provides Kokkos::kokkos
+#=======================================
+if (SINGULARITY_USE_KOKKOS)
+  if (NOT TARGET Kokkos::kokkos)
+    message(status "Kokkos::kokkos must be found")
+    if (SINGULARITY_KOKKOS_IN_TREE)
+      message(status "Using in-tree Kokkos")
+      add_subdirectory(utils/kokkos)
+    else()
+      message(status "Using system Kokkos if available")
+      find_package(Kokkos REQUIRED)
+    endif()
+  else()
+    message(status "Kokkos::kokkos provided by parent package")
+  endif()
+endif()
+
+#=======================================
 # Setup ports of call
 # - provides PortsofCall::PortsofCall
 #=======================================
 find_package(PortsofCall REQUIRED)
 target_link_libraries(singularity-opac::flags INTERFACE PortsofCall::PortsofCall)
-
-#=======================================
-# Setup Kokkos
-# - provides Kokkos::kokkos
-#=======================================
-if (NOT TARGET Kokkos::kokkos)
-  find_package(Kokkos QUIET)
-else()
-  message(status "Kokkos::kokkos provided by parent package")
-endif()
 
 #=======================================
 # Find HDF5

@@ -17,11 +17,18 @@ option (SINGULARITY_USE_FMATH "Enable fast-math logarithms" ON)
 # Dependency options
 #=======================================
 # check for using in-tree third-party dependencies
-option (SINULARITY_KOKKOS_IN_TREE "Use in-tree dependencies" OFF)
-
 option (SINGULARITY_USE_KOKKOS "Use Kokkos for portability" OFF)
 option (SINGULARITY_USE_CUDA "Enable cuda support" OFF)
 option (SINGULARITY_USE_HDF5 "Pull in hdf5" OFF)
+cmake_dependent_option(SINULARITY_KOKKOS_IN_TREE
+  "Use in-tree dependencies" OFF
+  ${SINGULARITY_USE_KOKKOS} OFF)
+
+# Kill cmake's package registry because it can interfere
+if (SINGULARITY_KOKKOS_IN_TREE)
+  set(CMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY ON CACHE BOOL "" FORCE)
+  set(CMAKE_FIND_PACKAGE_NO_SYSTEM_PACKAGE_REGISTRY ON CACHE BOOL "" FORCE)
+endif()
 
 # If the conditional is TRUE, it's the first default, else it's the
 # second.

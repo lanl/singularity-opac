@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2021. Triad National Security, LLC. All rights reserved.  This
+// © 2021-2024. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -32,6 +32,8 @@ namespace neutrinos {
 template <typename ThermalDistribution, typename pc = PhysicalConstantsCGS>
 class TophatEmissivity {
  public:
+  using PC = pc;
+
   TophatEmissivity(const Real C, const Real numin, const Real numax)
       : C_(C), numin_(numin), numax_(numax) {}
   TophatEmissivity(const ThermalDistribution &dist, const Real C,
@@ -46,6 +48,7 @@ class TophatEmissivity {
     printf("Tophat emissivity. C, numin, numax = %g, %g, %g\n", C_, numin_,
            numax_);
   }
+
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION

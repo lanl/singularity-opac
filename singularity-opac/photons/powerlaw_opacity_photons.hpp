@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2022-2024. Triad National Security, LLC. All rights reserved.  This
+// © 2024. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -13,8 +13,8 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
-#ifndef SINGULARITY_OPAC_PHOTONS_EPBREMSSTRAHLUNG_OPACITY_PHOTONS_
-#define SINGULARITY_OPAC_PHOTONS_EPBREMSSTRAHLUNG_OPACITY_PHOTONS_
+#ifndef SINGULARITY_OPAC_PHOTONS_POWERLAW_OPACITY_PHOTONS_
+#define SINGULARITY_OPAC_PHOTONS_POWERLAW_OPACITY_PHOTONS_
 
 #include <cassert>
 #include <cmath>
@@ -27,27 +27,26 @@
 namespace singularity {
 namespace photons {
 
-// Expression for specific emissivity from Rybicki & Lightman 1979
-
 template <typename pc = PhysicalConstantsCGS>
-class EPBremsstrahlungOpacity {
+class PowerLawOpacity {
  public:
   using PC = pc;
 
-  EPBremsstrahlungOpacity() = default;
-  EPBremsstrahlungOpacity(const PlanckDistribution<pc> &dist) : dist_(dist) {}
+  PowerLawOpacity() = default;
+  PowerLawOpacity(const Real kappa0, const Real rho_exp, const Real temp_exp)
+      : kappa0_(kappa0), rho_exp_(rho_exp), temp_exp_(temp_exp) {}
+  PowerLawOpacity(const PlanckDistribution<pc> &dist, const Real kappa0,
+                  const Real rho_exp, const Real temp_exp)
+      : dist_(dist), kappa0_(kappa0), rho_exp_(rho_exp), temp_exp_(temp_exp) {}
 
-  EPBremsstrahlungOpacity GetOnDevice() { return *this; }
+  PowerLawOpacity GetOnDevice() { return *this; }
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return 0; }
   PORTABLE_INLINE_FUNCTION
   void PrintParams() const noexcept {
-    printf("Electron-proton bremsstrahlung opacity.\n");
+    printf("Power law opacity. kappa0 = %g rho_exp = %g temp_exp = %g\n",
+           kappa0_, rho_exp_, temp_exp_);
   }
-
-  PORTABLE_INLINE_FUNCTION
-  pc GetPhysicalConstants() const { return pc(); }
-
   inline void Finalize() noexcept {}
 
   PORTABLE_INLINE_FUNCTION
@@ -88,11 +87,10 @@ class EPBremsstrahlungOpacity {
   PORTABLE_INLINE_FUNCTION
   Real EmissivityPerNuOmega(const Real rho, const Real temp, const Real nu,
                             Real *lambda = nullptr) const {
-    const Real thetaE = pc::kb * temp / (pc::me * pc::c * pc::c);
-    const Real x = pc::h * nu / (pc::kb * temp);
-    const Real ne = rho / mmw_ / 2.;
-    const Real ni = ne;
-    return prefac_ / std::sqrt(thetaE) * ne * ni * std::exp(-x) * gff_;
+    Real Bnu = dist_.ThermalDistributionOfTNu(temp, nu, lambda);
+    return rho *
+           (kappa0_ * std::pow(rho, rho_exp_) * std::pow(temp, temp_exp_)) *
+           Bnu;
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
@@ -124,19 +122,16 @@ class EPBremsstrahlungOpacity {
   PORTABLE_INLINE_FUNCTION
   Real Emissivity(const Real rho, const Real temp,
                   Real *lambda = nullptr) const {
-
-    const Real thetaE = pc::kb * temp / (pc::me * pc::c * pc::c);
-    const Real ne = rho / mmw_ / 2.;
-    const Real ni = ne;
-    return 4. * M_PI * pc::kb * temp / pc::h * prefac_ / std::sqrt(thetaE) *
-           ne * ni * gff_;
+    Real B = dist_.ThermalDistributionOfT(temp, lambda);
+    return rho *
+           (kappa0_ * std::pow(rho, rho_exp_) * std::pow(temp, temp_exp_)) * B;
   }
 
   PORTABLE_INLINE_FUNCTION
   Real NumberEmissivity(const Real rho, const Real temp,
                         Real *lambda = nullptr) const {
-    // Infrared catastrophe
-    return std::numeric_limits<Real>::infinity();
+    return (kappa0_ * std::pow(rho, rho_exp_) * std::pow(temp, temp_exp_)) *
+           dist_.ThermalNumberDistributionOfT(temp, lambda);
   }
 
   PORTABLE_INLINE_FUNCTION
@@ -180,17 +175,13 @@ class EPBremsstrahlungOpacity {
   }
 
  private:
-  Real mass_ion_;
+  Real kappa0_;   // Opacity scale. Units of cm^2/g
+  Real rho_exp_;  // Power law index of density
+  Real temp_exp_; // Power law index of temperature
   PlanckDistribution<pc> dist_;
-  static constexpr Real mmw_ =
-      (pc::mp + pc::me) / 2.; // Neutral fully ionized electron-proton gas (g)
-  static constexpr Real gff_ = 1.2;
-  Real prefac_ = 8. * std::pow(pc::qe, 6) /
-                 (3. * std::pow(pc::me * pc::c * pc::c, 2)) *
-                 std::sqrt(2. * M_PI / 3.);
 };
 
 } // namespace photons
 } // namespace singularity
 
-#endif // SINGULARITY_OPAC_PHOTONS_EPBREMSSTRAHLUNG_OPACITY_PHOTONS_
+#endif // SINGULARITY_OPAC_PHOTONS_POWERLAW_OPACITY_PHOTONS_

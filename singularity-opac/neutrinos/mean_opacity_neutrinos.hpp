@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2022. Triad National Security, LLC. All rights reserved.  This
+// © 2022-2024. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -37,7 +37,6 @@ namespace impl {
 // TODO(BRR) Note: It is assumed that lambda is constant for all densities,
 // temperatures, and Ye
 
-template <typename pc = PhysicalConstantsCGS>
 class MeanOpacity {
 
  public:
@@ -134,6 +133,8 @@ class MeanOpacity {
                         const Real lTMax, const int NT, const Real YeMin,
                         const Real YeMax, const int NYe, Real lNuMin,
                         Real lNuMax, const int NNu, Real *lambda = nullptr) {
+    using PC = typename Opacity::PC;
+
     lkappaPlanck_.resize(NRho, NT, NYe, NEUTRINO_NTYPES);
     // index 0 is the species and is not interpolatable
     lkappaPlanck_.setRange(1, YeMin, YeMax, NYe);
@@ -159,8 +160,8 @@ class MeanOpacity {
             // Choose default temperature-specific frequency grid if frequency
             // grid not specified
             if (AUTOFREQ) {
-              lNuMin = toLog_(1.e-3 * pc::kb * fromLog_(lTMin) / pc::h);
-              lNuMax = toLog_(1.e3 * pc::kb * fromLog_(lTMax) / pc::h);
+              lNuMin = toLog_(1.e-3 * PC::kb * fromLog_(lTMin) / PC::h);
+              lNuMax = toLog_(1.e3 * PC::kb * fromLog_(lTMax) / PC::h);
             }
             const Real dlnu = (lNuMax - lNuMin) / (NNu - 1);
             // Integrate over frequency
@@ -219,10 +220,9 @@ class MeanOpacity {
 
 } // namespace impl
 
-using MeanOpacityScaleFree = impl::MeanOpacity<PhysicalConstantsUnity>;
-using MeanOpacityCGS = impl::MeanOpacity<PhysicalConstantsCGS>;
-using MeanOpacity = impl::MeanVariant<MeanOpacityScaleFree, MeanOpacityCGS,
-                                      MeanNonCGSUnits<MeanOpacityCGS>>;
+using MeanOpacityBase = impl::MeanOpacity;
+using MeanOpacity =
+    impl::MeanVariant<MeanOpacityBase, MeanNonCGSUnits<MeanOpacityBase>>;
 
 } // namespace neutrinos
 } // namespace singularity

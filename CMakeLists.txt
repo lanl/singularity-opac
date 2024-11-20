@@ -53,8 +53,8 @@ target_include_directories(singularity-opac::flags
                            INTERFACE
                            $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
 
-include (SetupDeps)
 include (SetupOptions)
+include (SetupDeps)
 include (SetupCompilers)
 include (SetupFlags)
 

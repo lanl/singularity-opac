@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2021. Triad National Security, LLC. All rights reserved.  This
+// © 2021-2024. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -29,6 +29,8 @@ namespace neutrinos {
 template <typename Opac>
 class NonCGSUnits {
  public:
+  using PC = typename Opac::PC;
+
   NonCGSUnits() = default;
   NonCGSUnits(Opac &&opac, const Real time_unit, const Real mass_unit,
               const Real length_unit, const Real temp_unit)
@@ -47,6 +49,7 @@ class NonCGSUnits {
     return NonCGSUnits<Opac>(opac_.GetOnDevice(), time_unit_, mass_unit_,
                              length_unit_, temp_unit_);
   }
+
   inline void Finalize() noexcept { opac_.Finalize(); }
 
   PORTABLE_INLINE_FUNCTION
@@ -66,10 +69,11 @@ class NonCGSUnits {
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
-  PORTABLE_INLINE_FUNCTION void AbsorptionCoefficient(
-      const Real rho, const Real temp, const Real Ye, RadiationType type,
-      FrequencyIndexer &nu_bins, DataIndexer &coeffs, const int nbins,
-      Real *lambda = nullptr) const {
+  PORTABLE_INLINE_FUNCTION void
+  AbsorptionCoefficient(const Real rho, const Real temp, const Real Ye,
+                        RadiationType type, FrequencyIndexer &nu_bins,
+                        DataIndexer &coeffs, const int nbins,
+                        Real *lambda = nullptr) const {
     for (int i = 0; i < nbins; ++i) {
       nu_bins[i] *= freq_unit_;
     }
@@ -261,6 +265,12 @@ class MeanNonCGSUnits {
 
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept { return mean_opac_.nlambda(); }
+
+#ifdef SPINER_USE_HDF
+  void Save(const std::string &filename) const {
+    return mean_opac_.Save(filename);
+  }
+#endif
 
   PORTABLE_INLINE_FUNCTION
   Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp,

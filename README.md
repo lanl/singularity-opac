@@ -57,6 +57,21 @@ A number of options are avaialable for compiling:
 | --------------------------------- | ------- | ------------------------------------------------------------------------------------ |
 | SINGULARITY_BUILD_TESTS           | OFF     | Build test infrastructure.                                                           |
 | SINGULARITY_USE_HDF5              | ON      | Enables HDF5. Required for Spiner opacities.                                         |
+| SINGULARITY_KOKKOS_IN_TREE        | OFF     | Force cmake to use Kokkos source included in tree.                                   |
+
+### Loading ASCII Data
+
+Currently, the MeanOpacity class, defined in singularity-opac/photons/mean_opacity_photons.hpp, supports
+loading grey Rosseland and Planck opacity data in an ASCII format.  An example of this format is
+provided by singularity-opac/photons/example_ascii/kap_plaw.txt.  The 1st row of the header has the
+number of density points, NRho, then the number of temperature points, NT.  The 2nd (3rd) row of the header
+has min and max density (temperature) bounds.  These bounds are inclusive, so the opacity data in the file
+should have evaluations at these min and max values.  The rest of the ASCII file is a two-column table, where
+the 1st (2nd) column is Rosseland (Planck) opacity.  The number of rows in each column is NRhoxNT, where
+density is the slow index and temperature is the fast index (thus the row index = temperature index
++ NT x (density index), indexing from 0).  Each opacity is assumed to be evaluated on log-spaced
+density and temperature grids, where these grids are defined by NRho, NT, and the (again inclusive) min and
+max bounds the header.
 
 ## Copyright
 
