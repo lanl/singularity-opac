@@ -269,22 +269,7 @@ class MeanOpacity {
         cfline = const_cast<char*>(fline.c_str());
         fl_tok = std::strtok(cfline, " ");
 
-        // check for consistent density [g/cm^3] on table row
-        const Real Rho = std::stod(fl_tok);
-        if (std::abs(Rho - fromLog_(lRho_i)) > 1e-6 * std::abs(Rho)) {
-          OPAC_ERROR("photons::MeanOpacity: invalid rho");
-        }
-
-        // check for consistent temperature [K] on table row
-        const Real lT_i = lkappa_.range(1).x(iT);
-        fl_tok = std::strtok(nullptr, " ");
-        const Real T = std::stod(fl_tok);
-        if (std::abs(T - fromLog_(lT_i)) > 1e-6 * std::abs(T)) {
-          OPAC_ERROR("photons::MeanOpacity: invalid T");
-        }
-
         // populate Rosseland opacity [cm^2/g]
-        fl_tok = std::strtok(nullptr, " ");
         lkappa_(iRho, iT, 0) = toLog_(std::stod(fl_tok));
 
         // populate Planck opacity [cm^2/g]

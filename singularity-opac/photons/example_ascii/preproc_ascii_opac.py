@@ -64,7 +64,7 @@ else:
 hdr = "NRho "+str(NRho)+" NT "+str(NT) + "\n" \
     "rho_min {:.8e}".format(r[0])+" rho_max {:.8e}".format(r[NRho-1]) + "\n" \
     "T_min {:.8e}".format(tt[0]) + " T_max {:.8e}".format(tt[NT-1])
-np.savetxt(args.fname_new, opac, delimiter=" ", header=hdr, comments=" ", fmt="%.8e")
+np.savetxt(args.fname_new, opac[:,2:], delimiter=" ", header=hdr, comments=" ", fmt="%.8e")
 
 #--------------------------------------------------------------------------------------------------#
 # End of preproc_ascii_opac.py
