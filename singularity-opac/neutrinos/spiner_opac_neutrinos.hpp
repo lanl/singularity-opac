@@ -146,7 +146,7 @@ class SpinerOpacity {
 
 #ifdef SPINER_USE_HDF
   SpinerOpacity(const std::string &filename,
-                LoadSource load_from = LoadSource::SP5)
+                const LoadSource load_from = LoadSource::SP5)
       : filename_(filename.c_str()), memoryStatus_(impl::DataStatus::OnHost) {
     if (load_from == LoadSource::SP5) {
       LoadFromSP5_(filename);
@@ -532,10 +532,11 @@ class SpinerOpacity {
   PORTABLE_INLINE_FUNCTION static Real toLog_(const Real x) {
     return toLog_(x, 0);
   }
-  PORTABLE_INLINE_FUNCTION static fromLog_(const Real lx, const Real offset) {
+  PORTABLE_INLINE_FUNCTION static Real fromLog_(const Real lx,
+                                                const Real offset) {
     return std::pow(10., lx) - offset;
   }
-  PORTABLE_INLINE_FUNCTION static fromLog_(const Real lx) {
+  PORTABLE_INLINE_FUNCTION static Real fromLog_(const Real lx) {
     return fromLog_(lx, 0);
   }
   PORTABLE_INLINE_FUNCTION void toLogs_(const Real rho, const Real temp,
