@@ -22,15 +22,19 @@
 #include <cmath>
 #include <ports-of-call/portability.hpp>
 
+// TODO(JMM): This has got to go. Replace with sane math.
+
+#ifdef SINGULARITY_USE_FMATH
 // herumi-fmath does not work on device
 // On CPUS it provides another 10% or so speedup
 // for negligible cost in accuracy
 #define BD_USE_FMATH
-#if defined(PORTABILITY_STRATEGY_KOKKOS) || defined(SINGULARITY_USE_FMATH)
+#if defined(PORTABILITY_STRATEGY_KOKKOS)
   #undef BD_USE_FMATH
 #else
   #include <fmath.hpp>
 #endif
+#endif // SINGULARITY_USE_FMATH
 
 namespace BDMath {
 

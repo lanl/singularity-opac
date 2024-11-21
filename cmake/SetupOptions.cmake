@@ -11,7 +11,7 @@ option (SINGULARITY_HIDE_MORE_WARNINGS "hide more warnings" OFF)
 option (SINGULARITY_BUILD_TESTS "Compile tests" OFF)
 option (SINGULARITY_BETTER_DEBUG_FLAGS
   "Better debug flags for singularity" ON)
-option (SINGULARITY_USE_FMATH "Enable fast-math logarithms" ON)
+option (SINGULARITY_USE_FMATH "Enable fast-math logarithms" OFF)
 
 #=======================================
 # Dependency options
