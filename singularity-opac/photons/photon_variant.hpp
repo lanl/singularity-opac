@@ -75,8 +75,7 @@ class Variant {
   GetRuntimePhysicalConstants() const {
     return mpark::visit(
         [](auto &opac) {
-          using PC = typename std::decay_t<decltype(opac)>::PC;
-          return RuntimePhysicalConstants(PC());
+          return opac.GetRuntimePhysicalConstants();
         },
         opac_);
   }

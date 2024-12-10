@@ -109,9 +109,6 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
               neutrinos::Gray(1), time_unit, mass_unit, length_unit, temp_unit);
       auto funny_units = funny_units_host.GetOnDevice();
 
-      auto noncgs_rpc = funny_units.GetRuntimePhysicalConstants();
-      printf("ar: %e\n", noncgs_rpc.ar);
-
       THEN("We can convert meaningfully into and out of funny units") {
         int n_wrong_h = 0;
 #ifdef PORTABILITY_STRATEGY_KOKKOS
@@ -271,6 +268,11 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
       photons::Opacity funny_units_host = photons::NonCGSUnits<photons::Gray>(
           photons::Gray(1), time_unit, mass_unit, length_unit, temp_unit);
       auto funny_units = funny_units_host.GetOnDevice();
+
+      THEN("We can retrieve physical constants in code units") {
+        auto noncgs_rpc = funny_units.GetRuntimePhysicalConstants();
+        REQUIRE(FractionalDifference(noncgs_rpc.ar, 1.980493e-10) < EPS_TEST);
+      }
 
       THEN("We can convert meaningfully into and out of funny units") {
         int n_wrong_h = 0;
