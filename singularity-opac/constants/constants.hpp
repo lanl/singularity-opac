@@ -180,26 +180,26 @@ struct PhysicalConstants {
 struct RuntimePhysicalConstants {
   template <typename T>
   PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants(T pc)
-      : length(1.), time(1.), mass(1.), na(pc.na), alpha(pc.alpha), h(pc.h),
-        hbar(pc.hbar), kb(pc.kb), r_gas(pc.r_gas), qe(pc.qe), c(pc.c),
+      : length(1.), time(1.), mass(1.), temp(1.), na(pc.na), alpha(pc.alpha),
+        h(pc.h), hbar(pc.hbar), kb(pc.kb), r_gas(pc.r_gas), qe(pc.qe), c(pc.c),
         g_newt(pc.g_newt), me(pc.me), mp(pc.mp), mn(pc.mn), amu(pc.amu),
         sb(pc.sb), ar(pc.ar), eV(pc.eV), Fc(pc.Fc), nu_sigma0(pc.nu_sigma0),
         gA(pc.gA) {}
 
   template <typename T>
-  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants(T pc, const Real time_,
-                                                    const Real mass_,
-                                                    const Real length_,
-                                                    const Real temp_)
-      : time(time_), mass(mass_), length(length_), temp(temp_), na(pc.na), alpha(pc.alpha),
-        h(pc.h * time / mass * std::pow(length, -2)),
+  PORTABLE_INLINE_FUNCTION
+  RuntimePhysicalConstants(T pc, const Real time_, const Real mass_,
+                           const Real length_, const Real temp_)
+      : time(time_), mass(mass_), length(length_), temp(temp_), na(pc.na),
+        alpha(pc.alpha), h(pc.h * time / mass * std::pow(length, -2)),
         hbar(pc.hbar * time / mass * std::pow(length, -2)),
         kb(pc.kb * std::pow(time, 2) / mass * std::pow(length, -2) * temp),
         r_gas(pc.r_gas * std::pow(time, 2) / mass * std::pow(length, -2)),
         qe(pc.qe), c(pc.c * time / length),
         g_newt(pc.g_newt * std::pow(length, -3) / mass * std::pow(time, 2)),
         me(pc.me / mass), mp(pc.mp / mass), mn(pc.mn / mass),
-        amu(pc.amu / mass), sb(pc.sb * std::pow(time, 3) / mass * std::pow(temp, 4)),
+        amu(pc.amu / mass),
+        sb(pc.sb * std::pow(time, 3) / mass * std::pow(temp, 4)),
         ar(pc.ar * std::pow(time, 2) * length / mass * std::pow(temp, 4)),
         eV(pc.eV * std::pow(time, 2) / mass * std::pow(length, -2)),
         Fc(pc.Fc * std::pow(time, 2) * length / mass),

@@ -271,16 +271,34 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
 
       THEN("We can retrieve physical constants in code units") {
         auto noncgs_rpc = funny_units.GetRuntimePhysicalConstants();
-        REQUIRE(FractionalDifference(noncgs_rpc.length, length_unit) < EPS_TEST);
-        REQUIRE(FractionalDifference(noncgs_rpc.time, length_unit) < EPS_TEST);
-        REQUIRE(FractionalDifference(noncgs_rpc.length, length_unit) < EPS_TEST);
-        REQUIRE(FractionalDifference(noncgs_rpc.ar, 1.980493e-10) < EPS_TEST);
-        printf("ltm %e %e %e\n", noncgs_rpc.length, noncgs_rpc.time, noncgs_rpc.mass);
-        printf("%e %e %e %e\n", noncgs_rpc.na, noncgs_rpc.alpha, noncgs_rpc.h, noncgs_rpc.hbar);
-        printf("%e %e %e %e\n", noncgs_rpc.kb, noncgs_rpc.r_gas, noncgs_rpc.qe, noncgs_rpc.c);
-        printf("%e %e %e %e\n", noncgs_rpc.g_newt, noncgs_rpc.me, noncgs_rpc.mp, noncgs_rpc.mn);
-        printf("%e %e %e %e\n", noncgs_rpc.amu, noncgs_rpc.sb, noncgs_rpc.ar, noncgs_rpc.eV);
-        printf("%e %e %e\n", noncgs_rpc.Fc, noncgs_rpc.nu_sigma0, noncgs_rpc.gA);
+        REQUIRE(FractionalDifference(noncgs_rpc.length, length_unit) <
+                EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.time, time_unit) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.mass, mass_unit) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.temp, temp_unit) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.na, 6.022141e+23) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.alpha, 7.297353e-03) <
+                EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.h, 2.871060e-33) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.hbar, 4.569434e-34) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.kb, 2.030877e-18) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.r_gas, 4.431243e+03) <
+                EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.qe, 4.803205e-10) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.c, 4.673571e+09) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.g_newt, 4.508065e-15) <
+                EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.me, 1.997672e-30) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.mp, 3.668030e-27) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.mn, 3.673086e-27) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.amu, 3.641533e-27) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.sb, 1.342760e+09) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.ar, 1.149237e+00) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.eV, 8.538896e-17) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.Fc, 1.189435e-09) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.nu_sigma0, 2.829094e-74) <
+                EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.gA, -1.23) < EPS_TEST);
       }
 
       THEN("We can convert meaningfully into and out of funny units") {
