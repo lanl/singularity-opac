@@ -76,7 +76,7 @@ class Variant {
     return mpark::visit(
         [=](const auto &opac) {
           using PC = typename std::decay_t<decltype(opac)>::PC;
-          return singularity::GetRuntimePhysicalConstants(PC());
+          return RuntimePhysicalConstants(PC());
         },
         opac_);
   }

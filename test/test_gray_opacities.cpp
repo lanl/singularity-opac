@@ -109,6 +109,9 @@ TEST_CASE("Gray neutrino opacities", "[GrayNeutrinos]") {
               neutrinos::Gray(1), time_unit, mass_unit, length_unit, temp_unit);
       auto funny_units = funny_units_host.GetOnDevice();
 
+      auto noncgs_rpc = funny_units.GetRuntimePhysicalConstants();
+      printf("ar: %e\n", noncgs_rpc.ar);
+
       THEN("We can convert meaningfully into and out of funny units") {
         int n_wrong_h = 0;
 #ifdef PORTABILITY_STRATEGY_KOKKOS
