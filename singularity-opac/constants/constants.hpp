@@ -187,27 +187,29 @@ struct RuntimePhysicalConstants {
         gA(pc.gA) {}
 
   template <typename T>
-  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants(T pc, const Real length_,
-                                                    const Real time_,
-                                                    const Real mass_)
-      : length(length_), time(time_), mass(mass_), na(pc.na), alpha(pc.alpha),
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants(T pc, const Real time_,
+                                                    const Real mass_,
+                                                    const Real length_,
+                                                    const Real temp_)
+      : time(time_), mass(mass_), length(length_), temp(temp_), na(pc.na), alpha(pc.alpha),
         h(pc.h * time / mass * std::pow(length, -2)),
         hbar(pc.hbar * time / mass * std::pow(length, -2)),
-        kb(pc.kb * std::pow(time, 2) / mass * std::pow(length, -2)),
+        kb(pc.kb * std::pow(time, 2) / mass * std::pow(length, -2) * temp),
         r_gas(pc.r_gas * std::pow(time, 2) / mass * std::pow(length, -2)),
         qe(pc.qe), c(pc.c * time / length),
         g_newt(pc.g_newt * std::pow(length, -3) / mass * std::pow(time, 2)),
         me(pc.me / mass), mp(pc.mp / mass), mn(pc.mn / mass),
-        amu(pc.amu / mass), sb(pc.sb * std::pow(time, 3) / mass),
-        ar(pc.ar * std::pow(time, 2) * length / mass),
+        amu(pc.amu / mass), sb(pc.sb * std::pow(time, 3) / mass * std::pow(temp, 4)),
+        ar(pc.ar * std::pow(time, 2) * length / mass * std::pow(temp, 4)),
         eV(pc.eV * std::pow(time, 2) / mass * std::pow(length, -2)),
         Fc(pc.Fc * std::pow(time, 2) * length / mass),
         nu_sigma0(pc.nu_sigma0 / std::pow(length, 2)), gA(pc.gA) {}
 
   // Conversion factors to the T pc unit system from code units
-  const Real length;
   const Real time;
   const Real mass;
+  const Real length;
+  const Real temp;
 
   const Real na;
   const Real alpha;

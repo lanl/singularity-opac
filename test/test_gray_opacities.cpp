@@ -271,7 +271,16 @@ TEST_CASE("Gray photon opacities", "[GrayPhotons]") {
 
       THEN("We can retrieve physical constants in code units") {
         auto noncgs_rpc = funny_units.GetRuntimePhysicalConstants();
+        REQUIRE(FractionalDifference(noncgs_rpc.length, length_unit) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.time, length_unit) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.length, length_unit) < EPS_TEST);
         REQUIRE(FractionalDifference(noncgs_rpc.ar, 1.980493e-10) < EPS_TEST);
+        printf("ltm %e %e %e\n", noncgs_rpc.length, noncgs_rpc.time, noncgs_rpc.mass);
+        printf("%e %e %e %e\n", noncgs_rpc.na, noncgs_rpc.alpha, noncgs_rpc.h, noncgs_rpc.hbar);
+        printf("%e %e %e %e\n", noncgs_rpc.kb, noncgs_rpc.r_gas, noncgs_rpc.qe, noncgs_rpc.c);
+        printf("%e %e %e %e\n", noncgs_rpc.g_newt, noncgs_rpc.me, noncgs_rpc.mp, noncgs_rpc.mn);
+        printf("%e %e %e %e\n", noncgs_rpc.amu, noncgs_rpc.sb, noncgs_rpc.ar, noncgs_rpc.eV);
+        printf("%e %e %e\n", noncgs_rpc.Fc, noncgs_rpc.nu_sigma0, noncgs_rpc.gA);
       }
 
       THEN("We can convert meaningfully into and out of funny units") {
