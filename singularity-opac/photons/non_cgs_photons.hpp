@@ -227,6 +227,11 @@ class NonCGSUnits {
     return opac_.GetPhysicalConstants();
   }
 
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return RuntimePhysicalConstants(PC(), length_unit_, time_unit_, mass_unit_);
+  }
+
  private:
   Opac opac_;
   Real time_unit_, mass_unit_, length_unit_, temp_unit_;
