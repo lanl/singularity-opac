@@ -229,7 +229,8 @@ class NonCGSUnits {
 
   PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
   GetRuntimePhysicalConstants() const {
-    return RuntimePhysicalConstants(PC(), time_unit_, mass_unit_, length_unit_, temp_unit_);
+    return RuntimePhysicalConstants(PC(), time_unit_, mass_unit_, length_unit_,
+                                    temp_unit_);
   }
 
  private:
@@ -242,6 +243,8 @@ class NonCGSUnits {
 template <typename MeanOpac>
 class MeanNonCGSUnits {
  public:
+  using PC = typename MeanOpac::PC;
+
   MeanNonCGSUnits() = default;
   MeanNonCGSUnits(MeanOpac &&mean_opac, const Real time_unit,
                   const Real mass_unit, const Real length_unit,
@@ -286,6 +289,12 @@ class MeanNonCGSUnits {
     // division converts length from cm to unit system.
     // thus multiplication converts (1/cm) to unit system.
     return alpha * length_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return RuntimePhysicalConstants(PhysicalConstantsCGS(), time_unit_,
+                                    mass_unit_, length_unit_, temp_unit_);
   }
 
  private:

@@ -495,11 +495,46 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
       constexpr Real rho_unit =
           mass_unit / (length_unit * length_unit * length_unit);
 
-      auto funny_units_host = photons::MeanNonCGSUnits<photons::MeanOpacity>(
-          std::forward<photons::MeanOpacity>(mean_opac_host), time_unit,
-          mass_unit, length_unit, temp_unit);
+      auto mean_opac_host_base = photons::MeanOpacityBase(
+          opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT);
+      auto funny_units_host =
+          photons::MeanNonCGSUnits<photons::MeanOpacityBase>(
+              std::forward<photons::MeanOpacityBase>(mean_opac_host_base),
+              time_unit, mass_unit, length_unit, temp_unit);
 
       auto funny_units = funny_units_host.GetOnDevice();
+
+      THEN("We can retrieve physical constants in code units") {
+        auto noncgs_rpc = funny_units.GetRuntimePhysicalConstants();
+        REQUIRE(FractionalDifference(noncgs_rpc.length, length_unit) <
+                EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.time, time_unit) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.mass, mass_unit) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.temp, temp_unit) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.na, 6.022141e+23) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.alpha, 7.297353e-03) <
+                EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.h, 2.871060e-33) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.hbar, 4.569434e-34) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.kb, 2.030877e-18) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.r_gas, 4.431243e+03) <
+                EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.qe, 4.803205e-10) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.c, 4.673571e+09) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.g_newt, 4.508065e-15) <
+                EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.me, 1.997672e-30) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.mp, 3.668030e-27) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.mn, 3.673086e-27) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.amu, 3.641533e-27) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.sb, 1.342760e+09) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.ar, 1.149237e+00) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.eV, 8.538896e-17) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.Fc, 1.189435e-09) < EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.nu_sigma0, 2.829094e-74) <
+                EPS_TEST);
+        REQUIRE(FractionalDifference(noncgs_rpc.gA, -1.23) < EPS_TEST);
+      }
 
       int n_wrong_h = 0;
 #ifdef PORTABILITY_STRATEGY_KOKKOS

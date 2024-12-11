@@ -37,9 +37,11 @@ namespace impl {
 // TODO(BRR) Note: It is assumed that lambda is constant for all densities and
 // temperatures
 
+template <typename pc = PhysicalConstantsCGS>
 class MeanOpacity {
-
  public:
+  using PC = pc;
+
   MeanOpacity() = default;
   template <typename Opacity>
   MeanOpacity(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
@@ -196,7 +198,7 @@ class MeanOpacity {
 
 } // namespace impl
 
-using MeanOpacityBase = impl::MeanOpacity;
+using MeanOpacityBase = impl::MeanOpacity<PhysicalConstantsCGS>;
 using MeanOpacity =
     impl::MeanVariant<MeanOpacityBase, MeanNonCGSUnits<MeanOpacityBase>>;
 
