@@ -104,6 +104,11 @@ class MeanOpacity {
     lkappaRosseland_.finalize();
   }
 
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return RuntimePhysicalConstants(PC());
+  }
+
   PORTABLE_INLINE_FUNCTION
   Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
     Real lRho = toLog_(rho);
@@ -125,7 +130,9 @@ class MeanOpacity {
                         const Real lRhoMax, const int NRho, const Real lTMin,
                         const Real lTMax, const int NT, Real lNuMin,
                         Real lNuMax, const int NNu, Real *lambda = nullptr) {
-    using PC = typename Opacity::PC;
+    static_assert(std::is_same<typename Opacity::PC, PC>::value,
+                  "Error: MeanOpacity physical constants do not match those of "
+                  "Opacity used for construction.");
 
     lkappaPlanck_.resize(NRho, NT);
     lkappaPlanck_.setRange(0, lTMin, lTMax, NT);

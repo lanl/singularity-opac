@@ -74,11 +74,7 @@ class Variant {
   PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
   GetRuntimePhysicalConstants() const {
     return mpark::visit(
-        [=](const auto &opac) {
-          using PC = typename std::decay_t<decltype(opac)>::PC;
-          return RuntimePhysicalConstants(PC());
-        },
-        opac_);
+        [](auto &opac) { return opac.GetRuntimePhysicalConstants(); }, opac_);
   }
 
   // Directional absorption coefficient with units of 1/length
