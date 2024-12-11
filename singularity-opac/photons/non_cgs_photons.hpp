@@ -222,11 +222,6 @@ class NonCGSUnits {
     return NoH * mass_unit_ / rho_unit_;
   }
 
-  // template <typename T>
-  // PORTABLE_INLINE_FUNCTION T GetPhysicalConstants() const {
-  //  return opac_.GetPhysicalConstants();
-  //}
-
   PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
   GetRuntimePhysicalConstants() const {
     return RuntimePhysicalConstants(PC(), time_unit_, mass_unit_, length_unit_,
