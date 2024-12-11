@@ -174,6 +174,11 @@ class PowerLawOpacity {
     return dist_.NumberDensityFromTemperature(temp, lambda);
   }
 
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return RuntimePhysicalConstants(PC());
+  }
+
  private:
   Real kappa0_;   // Opacity scale. Units of cm^2/g
   Real rho_exp_;  // Power law index of density

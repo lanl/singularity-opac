@@ -191,6 +191,11 @@ class TophatEmissivity {
     return dist_.NumberDensityFromTemperature(temp, type, lambda);
   }
 
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return RuntimePhysicalConstants(PC());
+  }
+
  private:
   PORTABLE_INLINE_FUNCTION
   Real GetYeF(RadiationType type, Real Ye) const {

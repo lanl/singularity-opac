@@ -371,6 +371,11 @@ class SpinerOpacity {
     return dist_.NumberDensityFromTemperature(temp, type, lambda);
   }
 
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return RuntimePhysicalConstants(PC());
+  }
+
  private:
 #ifdef SPINER_USE_HDF
   void LoadFromSP5_(const std::string &filename) {
