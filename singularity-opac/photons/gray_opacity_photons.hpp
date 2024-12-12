@@ -167,6 +167,11 @@ class GrayOpacity {
     return dist_.NumberDensityFromTemperature(temp, lambda);
   }
 
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return RuntimePhysicalConstants(PC());
+  }
+
  private:
   Real kappa_; // Opacity. Units of cm^2/g
   PlanckDistribution<pc> dist_;

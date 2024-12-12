@@ -173,6 +173,11 @@ class BRTOpacity {
     return dist_.NumberDensityFromTemperature(temp, type, lambda);
   }
 
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return RuntimePhysicalConstants(PC());
+  }
+
  private:
   PORTABLE_INLINE_FUNCTION
   Real GetSigmac(const RadiationType type, const Real nu) const {

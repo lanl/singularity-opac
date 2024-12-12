@@ -137,10 +137,6 @@ struct PhysicalConstants {
                                                  (mass * time * time);
   static constexpr Real g_newt = gravitational_constant;
 
-  static constexpr Real acceleration_from_gravity =
-      BASE::acceleration_from_gravity * length / (time * time);
-  static constexpr Real g_accel = acceleration_from_gravity;
-
   static constexpr Real electron_mass = BASE::electron_mass * mass;
   static constexpr Real me = electron_mass;
 
@@ -163,19 +159,6 @@ struct PhysicalConstants {
   static constexpr Real radiation_constant = 4.0 * sb / c;
   static constexpr Real ar = radiation_constant;
 
-  // Faraday constant (derived)
-  static constexpr Real faraday_constant = na * qe;
-  static constexpr Real faraday = faraday_constant;
-
-  // Permeability of free space
-  static constexpr Real vacuum_permeability =
-      BASE::vacuum_permeability * force / (current * current);
-  static constexpr Real mu0 = vacuum_permeability;
-
-  // Permittivity of free space (derived)
-  static constexpr Real vacuum_permittivity = 1.0 / (mu0 * c * c);
-  static constexpr Real eps0 = vacuum_permittivity;
-
   // Electron volt (derived)
   static constexpr Real electron_volt = BASE::elementary_charge * energy;
   static constexpr Real eV = electron_volt;
@@ -196,13 +179,37 @@ struct PhysicalConstants {
 
 struct RuntimePhysicalConstants {
   template <typename T>
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants(T pc)
+      : length(1.), time(1.), mass(1.), temp(1.), na(pc.na), alpha(pc.alpha),
+        h(pc.h), hbar(pc.hbar), kb(pc.kb), r_gas(pc.r_gas), qe(pc.qe), c(pc.c),
+        g_newt(pc.g_newt), me(pc.me), mp(pc.mp), mn(pc.mn), amu(pc.amu),
+        sb(pc.sb), ar(pc.ar), eV(pc.eV), Fc(pc.Fc), nu_sigma0(pc.nu_sigma0),
+        gA(pc.gA) {}
+
+  template <typename T>
   PORTABLE_INLINE_FUNCTION
-  RuntimePhysicalConstants(T pc)
-      : na(pc.na), alpha(pc.alpha), h(pc.h), hbar(pc.hbar), kb(pc.kb),
-        r_gas(pc.r_gas), qe(pc.qe), c(pc.c), g_newt(pc.g_newt),
-        g_accel(pc.g_accel), me(pc.me), mp(pc.mp), mn(pc.mn), amu(pc.amu),
-        sb(pc.sb), ar(pc.ar), faraday(pc.faraday), mu0(pc.mu0), eps0(pc.eps0),
-        eV(pc.eV), Fc(pc.Fc), nu_sigma0(pc.nu_sigma0), gA(pc.gA) {}
+  RuntimePhysicalConstants(T pc, const Real time_, const Real mass_,
+                           const Real length_, const Real temp_)
+      : time(time_), mass(mass_), length(length_), temp(temp_), na(pc.na),
+        alpha(pc.alpha), h(pc.h * time / mass * std::pow(length, -2)),
+        hbar(pc.hbar * time / mass * std::pow(length, -2)),
+        kb(pc.kb * std::pow(time, 2) / mass * std::pow(length, -2) * temp),
+        r_gas(pc.r_gas * std::pow(time, 2) / mass * std::pow(length, -2)),
+        qe(pc.qe), c(pc.c * time / length),
+        g_newt(pc.g_newt * std::pow(length, -3) / mass * std::pow(time, 2)),
+        me(pc.me / mass), mp(pc.mp / mass), mn(pc.mn / mass),
+        amu(pc.amu / mass),
+        sb(pc.sb * std::pow(time, 3) / mass * std::pow(temp, 4)),
+        ar(pc.ar * std::pow(time, 2) * length / mass * std::pow(temp, 4)),
+        eV(pc.eV * std::pow(time, 2) / mass * std::pow(length, -2)),
+        Fc(pc.Fc * std::pow(time, 2) * length / mass),
+        nu_sigma0(pc.nu_sigma0 / std::pow(length, 2)), gA(pc.gA) {}
+
+  // Conversion factors to the T pc unit system from code units
+  const Real time;
+  const Real mass;
+  const Real length;
+  const Real temp;
 
   const Real na;
   const Real alpha;
@@ -213,27 +220,17 @@ struct RuntimePhysicalConstants {
   const Real qe;
   const Real c;
   const Real g_newt;
-  const Real g_accel;
   const Real me;
   const Real mp;
   const Real mn;
   const Real amu;
   const Real sb;
   const Real ar;
-  const Real faraday;
-  const Real mu0;
-  const Real eps0;
   const Real eV;
   const Real Fc;
   const Real nu_sigma0;
   const Real gA;
 };
-
-template <typename T>
-PORTABLE_INLINE_FUNCTION
-RuntimePhysicalConstants GetRuntimePhysicalConstants(T phys_constants) {
-  return RuntimePhysicalConstants(phys_constants);
-}
 
 using PhysicalConstantsUnity =
     PhysicalConstants<BaseUnity, UnitConversionDefault>;

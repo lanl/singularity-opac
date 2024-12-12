@@ -72,11 +72,7 @@ class MeanVariant {
   PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
   GetRuntimePhysicalConstants() const {
     return mpark::visit(
-        [=](const auto &opac) {
-          using PC = typename std::decay_t<decltype(opac)>::PC;
-          return singularity::GetRuntimePhysicalConstants(PC());
-        },
-        opac_);
+        [](auto &opac) { return opac.GetRuntimePhysicalConstants(); }, opac_);
   }
 
   PORTABLE_INLINE_FUNCTION Real

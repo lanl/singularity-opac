@@ -179,6 +179,11 @@ class EPBremsstrahlungOpacity {
     return dist_.NumberDensityFromTemperature(temp, lambda);
   }
 
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return RuntimePhysicalConstants(PC());
+  }
+
  private:
   Real mass_ion_;
   PlanckDistribution<pc> dist_;

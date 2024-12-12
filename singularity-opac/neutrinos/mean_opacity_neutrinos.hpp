@@ -37,9 +37,11 @@ namespace impl {
 // TODO(BRR) Note: It is assumed that lambda is constant for all densities,
 // temperatures, and Ye
 
+template <typename pc = PhysicalConstantsCGS>
 class MeanOpacity {
-
  public:
+  using PC = pc;
+
   MeanOpacity() = default;
   template <typename Opacity>
   MeanOpacity(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
@@ -106,6 +108,11 @@ class MeanOpacity {
     lkappaRosseland_.finalize();
   }
 
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return RuntimePhysicalConstants(PC());
+  }
+
   PORTABLE_INLINE_FUNCTION
   Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp,
                                        const Real Ye,
@@ -133,7 +140,9 @@ class MeanOpacity {
                         const Real lTMax, const int NT, const Real YeMin,
                         const Real YeMax, const int NYe, Real lNuMin,
                         Real lNuMax, const int NNu, Real *lambda = nullptr) {
-    using PC = typename Opacity::PC;
+    static_assert(std::is_same<typename Opacity::PC, PC>::value,
+                  "Error: MeanOpacity physical constants do not match those of "
+                  "Opacity used for construction.");
 
     lkappaPlanck_.resize(NRho, NT, NYe, NEUTRINO_NTYPES);
     // index 0 is the species and is not interpolatable
@@ -220,7 +229,7 @@ class MeanOpacity {
 
 } // namespace impl
 
-using MeanOpacityBase = impl::MeanOpacity;
+using MeanOpacityBase = impl::MeanOpacity<PhysicalConstantsCGS>;
 using MeanOpacity =
     impl::MeanVariant<MeanOpacityBase, MeanNonCGSUnits<MeanOpacityBase>>;
 
