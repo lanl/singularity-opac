@@ -246,7 +246,8 @@ class MeanNonCGSUnits {
                   const Real temp_unit)
       : mean_opac_(std::forward<MeanOpac>(mean_opac)), time_unit_(time_unit),
         mass_unit_(mass_unit), length_unit_(length_unit), temp_unit_(temp_unit),
-        rho_unit_(mass_unit_ / (length_unit_ * length_unit_ * length_unit_)) {}
+        rho_unit_(mass_unit_ / (length_unit_ * length_unit_ * length_unit_)),
+        inv_emiss_unit_(length_unit_ * time_unit_ * time_unit_ / mass_unit_) {}
 
   auto GetOnDevice() {
     return MeanNonCGSUnits<MeanOpac>(mean_opac_.GetOnDevice(), time_unit_,
@@ -286,6 +287,21 @@ class MeanNonCGSUnits {
     return alpha * length_unit_;
   }
 
+  PORTABLE_INLINE_FUNCTION
+  Real AbsorptionCoefficient(const Real rho, const Real temp,
+                            const int gmode = 0) const {
+    const Real alpha = mean_opac_.AbsorptionCoefficient(rho, temp, gmode);
+    return alpha * length_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real Emissivity(const Real rho, const Real temp,
+                  const int gmode = 0,
+                  Real *lambda = nullptr) const {
+    const Real J = mean_opac_.Emissivity(rho, temp, gmode);
+    return J * inv_emiss_unit_ * time_unit_;
+  }
+
   PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
   GetRuntimePhysicalConstants() const {
     return RuntimePhysicalConstants(PhysicalConstantsCGS(), time_unit_,
@@ -295,7 +311,7 @@ class MeanNonCGSUnits {
  private:
   MeanOpac mean_opac_;
   Real time_unit_, mass_unit_, length_unit_, temp_unit_;
-  Real rho_unit_;
+  Real rho_unit_, inv_emiss_unit_;
 };
 
 } // namespace photons
