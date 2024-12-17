@@ -92,6 +92,27 @@ class MeanVariant {
         opac_);
   }
 
+  PORTABLE_INLINE_FUNCTION
+  Real AbsorptionCoefficient(const Real rho, const Real temp,
+                            const int gmode = 0) const {
+    return mpark::visit(
+        [=](const auto &opac) {
+          return opac.AbsorptionCoefficient(rho, temp, gmode);
+        },
+        opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real Emissivity(const Real rho, const Real temp,
+                  const int gmode = 0,
+                  Real *lambda = nullptr) const {
+    return mpark::visit(
+        [=](const auto &opac) {
+          return opac.Emissivity(rho, temp, gmode, lambda);
+        },
+        opac_);
+  }
+
   inline void Finalize() noexcept {
     return mpark::visit([](auto &opac) { return opac.Finalize(); }, opac_);
   }
