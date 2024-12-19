@@ -815,6 +815,33 @@ TEST_CASE("ASCII-parsed Mean photon opacities", "[MeanPhotons]") {
         n_wrong_d() += 1;
       }
 
+      // test absorption and emission in Rossland and Planck modes
+      Real mabs_ross = mean_opac.AbsorptionCoefficient(rho_max, temp_max, 0);
+      Real mabs_plnk = mean_opac.AbsorptionCoefficient(rho_max, temp_max, 1);
+
+      // compare to Rossland and Planck
+      if (FractionalDifference(mross, mabs_ross) > EPS_TEST) {
+        n_wrong_d() += 1;
+      }
+      if (FractionalDifference(mplnk, mabs_plnk) > EPS_TEST) {
+        n_wrong_d() += 1;
+      }
+
+      Real *lambda = nullptr;
+      singularity::photons::PlanckDistribution<PhysicalConstantsCGS> dist;
+      Real B = dist.ThermalDistributionOfT(temp_max, lambda);
+
+      Real memiss_ross = mean_opac.Emissivity(rho_max, temp_max, 0);
+      Real memiss_plnk = mean_opac.Emissivity(rho_max, temp_max, 0);
+
+      // compare to Rossland and Planck
+      if (FractionalDifference(mross * B, memiss_ross) > EPS_TEST) {
+        n_wrong_d() += 1;
+      }
+      if (FractionalDifference(mplnk * B, memiss_plnk) > EPS_TEST) {
+        n_wrong_d() += 1;
+      }
+
 #ifdef PORTABILITY_STRATEGY_KOKKOS
       Kokkos::deep_copy(n_wrong_h, n_wrong_d);
 #endif
