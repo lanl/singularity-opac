@@ -28,6 +28,12 @@ namespace singularity {
 namespace photons {
 namespace impl {
 
+// mean-opacity mode
+enum OpacityAveraging {
+  Rosseland = 0,
+  Planck = 1
+};
+
 template <typename... Opacs>
 class MeanVariant {
  private:
@@ -94,7 +100,7 @@ class MeanVariant {
 
   PORTABLE_INLINE_FUNCTION
   Real AbsorptionCoefficient(const Real rho, const Real temp,
-                            const int gmode = 0) const {
+                            const int gmode = Rosseland) const {
     return mpark::visit(
         [=](const auto &opac) {
           return opac.AbsorptionCoefficient(rho, temp, gmode);
@@ -104,7 +110,7 @@ class MeanVariant {
 
   PORTABLE_INLINE_FUNCTION
   Real Emissivity(const Real rho, const Real temp,
-                  const int gmode = 0,
+                  const int gmode = Rosseland,
                   Real *lambda = nullptr) const {
     return mpark::visit(
         [=](const auto &opac) {

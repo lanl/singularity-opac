@@ -321,10 +321,6 @@ class MeanOpacity {
   }
   Spiner::DataBox<Real> lkappa_;
   const char *filename_;
-  enum OpacityAveraging {
-    Rosseland = 0,
-    Planck = 1
-  };
   PlanckDistribution<PC> dist_;
 };
 
