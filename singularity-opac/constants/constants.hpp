@@ -16,6 +16,9 @@
 #ifndef SINGULARITY_OPAC_CONSTANTS_CONSTANTS_
 #define SINGULARITY_OPAC_CONSTANTS_CONSTANTS_
 
+#include <cstring>
+#include <type_traits>
+
 #include <ports-of-call/portability.hpp>
 
 namespace singularity {
@@ -230,6 +233,11 @@ struct RuntimePhysicalConstants {
   const Real Fc;
   const Real nu_sigma0;
   const Real gA;
+
+  // Runtime physical constants are trivially copyable
+  bool operator==(const RuntimePhysicalConstants &other) const {
+    return std::memcmp(this, &other, sizeof(*this));
+  }
 };
 
 using PhysicalConstantsUnity =

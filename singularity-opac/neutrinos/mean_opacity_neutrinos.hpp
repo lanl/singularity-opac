@@ -140,9 +140,11 @@ class MeanOpacity {
                         const Real lTMax, const int NT, const Real YeMin,
                         const Real YeMax, const int NYe, Real lNuMin,
                         Real lNuMax, const int NNu, Real *lambda = nullptr) {
-    static_assert(std::is_same<typename Opacity::PC, PC>::value,
-                  "Error: MeanOpacity physical constants do not match those of "
-                  "Opacity used for construction.");
+#ifndef NDEBUG
+    auto RPC = RuntimePhysicalConstants(PC);
+    auto opc = opac.GetRuntimePhysicalConstants();
+    assert(RPC == opc && "Physical constants are the same");
+#endif
 
     lkappaPlanck_.resize(NRho, NT, NYe, NEUTRINO_NTYPES);
     // index 0 is the species and is not interpolatable
