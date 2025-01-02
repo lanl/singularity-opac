@@ -150,7 +150,7 @@ class MeanOpacity {
                         const Real lTMax, const int NT, Real lNuMin,
                         Real lNuMax, const int NNu, Real *lambda = nullptr) {
 #ifndef NDEBUG
-    auto RPC = RuntimePhysicalConstants(PC);
+    auto RPC = RuntimePhysicalConstants(PC());
     auto opc = opac.GetRuntimePhysicalConstants();
     assert(RPC == opc && "Physical constants are the same");
 #endif
