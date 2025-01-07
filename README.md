@@ -8,7 +8,7 @@ Performance Portable Opacity and Emissivity library for simulation codes
 ## API
 
 singularity-opac provides a uniform API for all opacity models. The following functions are provided
-(here, $\sigma$ is the frequency- and angle-dependent cross section in units of `cm^2`):
+(here, $\sigma$ is the frequency- and angle-dependent cross section in units of ${\rm cm}^2$):
 | Function              | Expression | Description            | Units   |
 | --------------------- | ---------- | ---------------------  | ------- |
 | AbsorptionCoefficient | $n \sigma$ | Absorption coefficient | `cm^{-1}` |
