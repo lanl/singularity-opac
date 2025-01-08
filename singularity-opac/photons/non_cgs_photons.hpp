@@ -248,7 +248,8 @@ class MeanNonCGSUnits {
       : mean_opac_(std::forward<MeanOpac>(mean_opac)), time_unit_(time_unit),
         mass_unit_(mass_unit), length_unit_(length_unit), temp_unit_(temp_unit),
         rho_unit_(mass_unit_ / (length_unit_ * length_unit_ * length_unit_)),
-        inv_emiss_unit_(length_unit_ * time_unit_ * time_unit_ / mass_unit_) {}
+        inv_emiss_unit_(length_unit_ * time_unit_ * time_unit_ * time_unit_ /
+          mass_unit_) {}
 
   auto GetOnDevice() {
     return MeanNonCGSUnits<MeanOpac>(mean_opac_.GetOnDevice(), time_unit_,
@@ -300,7 +301,7 @@ class MeanNonCGSUnits {
                   const int gmode = Rosseland,
                   Real *lambda = nullptr) const {
     const Real J = mean_opac_.Emissivity(rho, temp, gmode);
-    return J * inv_emiss_unit_ * time_unit_;
+    return J * inv_emiss_unit_;
   }
 
   PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
