@@ -15,19 +15,20 @@ For frequency-dependent absorption opacities, the following functions are provid
 | --------------------- | ---------- | ---------------------  | ------- |
 | AbsorptionCoefficient | $n \sigma$ | Absorption coefficient | ${\rm cm}^{-1}$ |
 | AngleAveragedAbsorptionCoefficient | $\frac{1}{4 \pi}\int n \sigma d\Omega$ | Absorption coefficient averaged over solid angle | ${\rm cm}^{-1}$ |
-| EmissivityPerNuOmega | $j_{\nu} = \frac{dE}{d^3x dt d\Omega d\nu}$ | Frequency- and angle-dependent emissivity | ${\rm erg~cm}^{-3}~{\rm s}^{-1}~{\rm Sr}^{-1}~{\rm Hz}^{-1}$ |
-| EmissivityPerNu | $\int j_{\nu} d\Omega$  | Frequency-dependent emissivity | ${\rm erg~cm}^{-3}~{\rm s}^{-1}~{\rm Hz}^{-1}$ |
-| Emissivity | $\int j_{\nu} d\nu d\Omega$  | Total emissivity | ${\rm erg~cm}^{-3}~{\rm s}^{-1}$ |
+| EmissivityPerNuOmega | $j_{\nu} = \frac{dE}{d^3x dt d\Omega d\nu}$ | Frequency- and angle-dependent emissivity | ${\rm erg}~{\rm cm}^{-3}~{\rm s}^{-1}~{\rm Sr}^{-1}~{\rm Hz}^{-1}$ |
+| EmissivityPerNu | $\int j_{\nu} d\Omega$  | Frequency-dependent emissivity | ${\rm erg}~{\rm cm}^{-3}~{\rm s}^{-1}~{\rm Hz}^{-1}$ |
+| Emissivity | $\int j_{\nu} d\nu d\Omega$  | Total emissivity | ${\rm erg}~{\rm cm}^{-3}~{\rm s}^{-1}$ |
 | NumberEmissivity | $\int \frac{1}{h \nu} j_{\nu} d\Omega d\nu$ | Total number emissivity | ${\rm cm}^{-3}~{\rm s}^{-1}$ |
-| ThermalDistributionOfTNu | $B_{\nu} = \frac{dE}{dA dt d\Omega d\nu}$ | Specific intensity of thermal distribution | ${\rm erg~cm}^{-2}~{\rm s}^{-1}~{\rm Sr}^{-1}~{\rm Hz}^{-1}$ |
-| DThermalDistributionOfTNuDT | $dB_{\nu}/dT$ | Temperature derivative of specific intensity of thermal distribution | ${\rm erg~cm}^{-2}~{\rm s}^{-1}~{\rm Sr}^{-1}~{\rm Hz}^{-1}~{\rm K}^{-1}$ |
-| ThermalDistributionOfT | $B = \int B_{\nu} d\Omega d\nu$ | Frequency- and angle-integrated intensity of thermal distribution | ${\rm erg~cm}^{-2}~{\rm s}^{-1}$ |
-| ThermalNumberDistributionOfT | $B = \int \frac{1}{h \nu} B_{\nu} d\Omega d\nu$ | Frequency- and angle-integrated intensity of thermal distribution | ${\rm erg~cm}^{-2}~{\rm s}^{-1}$ |
-| EnergyDensityFromTemperature | $E_{\rm R}$ | Radiation energy density | ${\rm erg~cm}^{-3}$ |
+| ThermalDistributionOfTNu | $B_{\nu} = \frac{dE}{dA dt d\Omega d\nu}$ | Specific intensity of thermal distribution | ${\rm erg}~{\rm cm}^{-2}~{\rm s}^{-1}~{\rm Sr}^{-1}~{\rm Hz}^{-1}$ |
+| DThermalDistributionOfTNuDT | $dB_{\nu}/dT$ | Temperature derivative of specific intensity of thermal distribution | ${\rm erg}~{\rm cm}^{-2}~{\rm s}^{-1}~{\rm Sr}^{-1}~{\rm Hz}^{-1}~{\rm K}^{-1}$ |
+| ThermalDistributionOfT | $B = \int B_{\nu} d\Omega d\nu$ | Frequency- and angle-integrated intensity of thermal distribution | ${\rm erg}~{\rm cm}^{-2}~{\rm s}^{-1}$ |
+| ThermalNumberDistributionOfT | $B = \int \frac{1}{h \nu} B_{\nu} d\Omega d\nu$ | Frequency- and angle-integrated intensity of thermal distribution | ${\rm erg}~{\rm cm}^{-2}~{\rm s}^{-1}$ |
+| EnergyDensityFromTemperature | $E_{\rm R}$ | Radiation energy density | ${\rm erg}~{\rm cm}^{-3}$ |
 | TemperatureFromEnergyDensity | $T_{\rm R}$ | Radiation temperature | ${\rm K}$ |
 | NumberDensityFromTemperature | $n_{\rm R}$ | Radiation number density | ${\rm cm}^{-3}$ |
 
 with the following function signatures:
+
     AbsorptionCoefficient(density, temperature, frequency)
     AngleAveragedAbsorptionCoefficient(density, temperature, frequency)
     EmissivityPerNuOmega(density, temperature, frequency)
@@ -48,9 +49,10 @@ For mean absorption opacities, the following functions are provided:
 | PlankMeanAbsorptionCoefficient | $n \sigma$ | Absorption coefficient | ${\rm cm}^{-1}$ |
 | RosselandMeanAbsorptionCoefficient | $n \sigma$ | Absorption coefficient | ${\rm cm}^{-1}$ |
 | AbsorptionCoefficient | $n \sigma$ | Absorption coefficient | ${\rm cm}^{-1}$ |
-| Emissivity | $\int j_{\nu} d\nu d\Omega$  | Total emissivity | ${\rm erg~cm}^{-3}~{\rm s}^{-1}$ |
+| Emissivity | $\int j_{\nu} d\nu d\Omega$  | Total emissivity | ${\rm erg}~{\rm cm}^{-3}~{\rm s}^{-1}$ |
 
 with the following function signatures:
+
     PlanckMeanAbsorptionCoefficient(density, temperature)
     RosselandMeanAbsorptionCoefficient(density, temperature)
     AbsorptionCoefficient(density, temperature, gmode [Planck, Rosseland])
@@ -64,6 +66,7 @@ For frequency-dependent scattering opacities, the following functions are provid
 | TotalScatteringCoefficient | $ n \sigma $ | Scattering coefficient | ${\rm cm}^{-1}$ |
 
 with the following function signatures:
+
     TotalCrossSection(density, temperature, frequency)
     DifferentialCrossSection(density, temperature, frequency, cos(theta))
     TotalScatteringCoefficient(density, temperature, frequency)
@@ -75,6 +78,7 @@ For mean scattering opacities, the following functions are provided:
 | RosselandMeanScatteringCoefficient | $n \sigma$ | Rosseland mean scattering coefficient | ${\rm cm}^{-1}$ |
 
 with the following function signatures:
+
     PlanckMeanScatteringCoefficient(density, temperature)
     RosselandMeanScatteringCoefficient(density, temperature)
 
