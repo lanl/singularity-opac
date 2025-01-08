@@ -84,8 +84,15 @@ with the following function signatures:
 
 Note that the thermal radiation energy density `u = 1/c ThermalDistributionOfT` and the thermal radiation number density `n = 1/c ThermalNumberDistributionOfT`.
 
+Opacity variant constructors are specific to the opacity model being requested; consult the source code for
+individual opacities.
+
 Internally singularity-opac always uses CGS units, as in the above table. However, arbitrary units are supported through the units modifier, which accepts
-function argument inputs in the arbitrary unit system, and returns the result from the function in those same arbitrary units.
+function argument inputs in the arbitrary unit system, and returns the result from the function in those same arbitrary units. For example, a gray absorption opacity in non-cgs units specified by `time_unit`, `mass_unit`, `length_unit`, and `temp_unit` conversion factors from code to CGS units (e.g. `mass_cgs = mass_unit * mass_code`)
+is created as
+
+    photons::Opacity noncgs_opacity = photons::NonCGSUnits<photons::Gray>(
+          photons::Gray(kappa), time_unit, mass_unit, length_unit, temp_unit);
 
 Note that neutrino opacity functions also include electron fraction and RadiationType species arguments.
 
