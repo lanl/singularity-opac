@@ -7,8 +7,9 @@ Performance Portable Opacity and Emissivity library for simulation codes
 
 ## API
 
-singularity-opac provides a uniform API for all opacity models, in two forms: frequency-averaged
-(Plank or Rosseland means) and frewquency-dependent. The following functions are provided
+singularity-opac provides a uniform API for all opacity models, in two forms: frequency-dependent, and frequency-averaged (Plank or Rosseland means), and separately for absorption and scattering opacities.
+
+For frequency-dependent absorption opacities, the following functions are provided
 (here, $\sigma$ is the frequency- and angle-dependent cross section in units of ${\rm cm}^2$):
 | Function              | Expression | Description            | Units   |
 | --------------------- | ---------- | ---------------------  | ------- |
@@ -22,11 +23,72 @@ singularity-opac provides a uniform API for all opacity models, in two forms: fr
 | DThermalDistributionOfTNuDT | $dB_{\nu}/dT$ | Temperature derivative of specific intensity of thermal distribution | ${\rm erg~cm}^{-2}~{\rm s}^{-1}~{\rm Sr}^{-1}~{\rm Hz}^{-1}~{\rm K}^{-1}$ |
 | ThermalDistributionOfT | $B = \int B_{\nu} d\Omega d\nu$ | Frequency- and angle-integrated intensity of thermal distribution | ${\rm erg~cm}^{-2}~{\rm s}^{-1}$ |
 | ThermalNumberDistributionOfT | $B = \int \frac{1}{h \nu} B_{\nu} d\Omega d\nu$ | Frequency- and angle-integrated intensity of thermal distribution | ${\rm erg~cm}^{-2}~{\rm s}^{-1}$ |
+| EnergyDensityFromTemperature | $E_{\rm R}$ | Radiation energy density | ${\rm erg~cm}^{-3}$ |
+| TemperatureFromEnergyDensity | $T_{\rm R}$ | Radiation temperature | ${\rm K}$ |
+| NumberDensityFromTemperature | $n_{\rm R}$ | Radiation number density | ${\rm cm}^{-3}$ |
+
+with the following function signatures:
+    AbsorptionCoefficient(density, temperature, frequency)
+    AngleAveragedAbsorptionCoefficient(density, temperature, frequency)
+    EmissivityPerNuOmega(density, temperature, frequency)
+    EmissivityPerNu(density, temperature, frequency)
+    Emissivity(density, temperature)
+    NumberEmissivity(density, temperature)
+    ThermalDistributionOfTNu(temperature, frequency)
+    DThermalDistribtuionOfTNuDT(temperature, frequency)
+    ThermalDistributionOfT(temperature)
+    ThermalNumberDistributionOfT(temperature)
+    EnergyDensityFromTemperature(temperature)
+    TemperatureFromEnergyDensity(radiation energy density)
+    NumberDensityFromTemperature(temperature)
+
+For mean absorption opacities, the following functions are provided:
+| Function              | Expression | Description            | Units   |
+| --------------------- | ---------- | ---------------------  | ------- |
+| PlankMeanAbsorptionCoefficient | $n \sigma$ | Absorption coefficient | ${\rm cm}^{-1}$ |
+| RosselandMeanAbsorptionCoefficient | $n \sigma$ | Absorption coefficient | ${\rm cm}^{-1}$ |
+| AbsorptionCoefficient | $n \sigma$ | Absorption coefficient | ${\rm cm}^{-1}$ |
+| Emissivity | $\int j_{\nu} d\nu d\Omega$  | Total emissivity | ${\rm erg~cm}^{-3}~{\rm s}^{-1}$ |
+
+with the following function signatures:
+    PlanckMeanAbsorptionCoefficient(density, temperature)
+    RosselandMeanAbsorptionCoefficient(density, temperature)
+    AbsorptionCoefficient(density, temperature, gmode [Planck, Rosseland])
+    Emissivity(density, temperature)
+
+For frequency-dependent scattering opacities, the following functions are provided
+| Function              | Expression | Description            | Units   |
+| --------------------- | ---------- | ---------------------  | ------- |
+| TotalCrossSection | $ \sigma$ | Scattering cross section | ${\rm cm}^{2}$ |
+| DifferentialCrossSection | $ d\sigma / d \Omega $ | Differential scattering cross section | ${\rm cm}^{2}~{\rm Sr}^{-1}$ |
+| TotalScatteringCoefficient | $ n \sigma $ | Scattering coefficient | ${\rm cm}^{-1}$ |
+
+with the following function signatures:
+    TotalCrossSection(density, temperature, frequency)
+    DifferentialCrossSection(density, temperature, frequency, cos(theta))
+    TotalScatteringCoefficient(density, temperature, frequency)
+
+For mean scattering opacities, the following functions are provided:
+| Function              | Expression | Description            | Units   |
+| --------------------- | ---------- | ---------------------  | ------- |
+| PlanckMeanScatteringCoefficient | $n \sigma$ | Planck mean scattering coefficient | ${\rm cm}^{-1}$ |
+| RosselandMeanScatteringCoefficient | $n \sigma$ | Rosseland mean scattering coefficient | ${\rm cm}^{-1}$ |
+
+with the following function signatures:
+    PlanckMeanScatteringCoefficient(density, temperature)
+    RosselandMeanScatteringCoefficient(density, temperature)
 
 Note that the thermal radiation energy density `u = 1/c ThermalDistributionOfT` and the thermal radiation number density `n = 1/c ThermalNumberDistributionOfT`.
 
 Internally singularity-opac always uses CGS units, as in the above table. However, arbitrary units are supported through the units modifier, which accepts
 function argument inputs in the arbitrary unit system, and returns the result from the function in those same arbitrary units.
+
+Note that neutrino opacity functions also include electron fraction and RadiationType species arguments.
+
+Frequency-dependent emissition and absorption functions do not currently support angle dependence.
+
+A struct of runtime physical constants is provided for optional consistency with internal operations by the
+`GetRuntimePhysicalConstants()` method.
 
 ## To Build
 
