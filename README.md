@@ -61,9 +61,9 @@ with the following function signatures:
 For frequency-dependent scattering opacities, the following functions are provided
 | Function              | Expression | Description            | Units   |
 | --------------------- | ---------- | ---------------------  | ------- |
-| TotalCrossSection | $ \sigma$ | Scattering cross section | ${\rm cm}^{2}$ |
-| DifferentialCrossSection | $ d\sigma / d \Omega $ | Differential scattering cross section | ${\rm cm}^{2}{\rm Sr}^{-1}$ |
-| TotalScatteringCoefficient | $ n \sigma $ | Scattering coefficient | ${\rm cm}^{-1}$ |
+| TotalCrossSection | $\sigma$ | Scattering cross section | ${\rm cm}^{2}$ |
+| DifferentialCrossSection | $d\sigma / d \Omega $ | Differential scattering cross section | ${\rm cm}^{2}{\rm Sr}^{-1}$ |
+| TotalScatteringCoefficient | $n \sigma $ | Scattering coefficient | ${\rm cm}^{-1}$ |
 
 with the following function signatures:
 
