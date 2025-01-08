@@ -11,20 +11,21 @@ singularity-opac provides a uniform API for all opacity models. The following fu
 (here, $\sigma$ is the frequency- and angle-dependent cross section in units of ${\rm cm}^2$):
 | Function              | Expression | Description            | Units   |
 | --------------------- | ---------- | ---------------------  | ------- |
-| AbsorptionCoefficient | $n \sigma$ | Absorption coefficient | `cm^{-1}` |
-| AngleAveragedAbsorptionCoefficient | `\frac{1}{4 \pi}\int n \sigma d\Omega` | Absorption coefficient averaged over solid angle | `cm^{-1}` |
-| EmissivityPerNuOmega | `j_{\nu} = \frac{dE}{d^3x dt d\Omega d\nu}` | Frequency- and angle-dependent emissivity | `erg cm^{-3} s^{-1} Sr^{-1} Hz^{-1}` |
-| EmissivityPerNu | `\int j_{\nu} d\Omega`  | Frequency-dependent emissivity | `erg cm^{-3} s^{-1} Hz^{-1}` |
-| Emissivity | `\int j_{\nu} d\nu d\Omega`  | Total emissivity | `erg cm^{-3} s^{-1}` |
-| NumberEmissivity | `\int \frac{1}{h \nu} j_{\nu} d\Omega d\nu` | Total number emissivity | `cm^{-3} s^{-1}` |
-| ThermalDistributionOfTNu | `B_{\nu} = \frac{dE}{dA dt d\Omega d\nu}` | Specific intensity of thermal distribution | `erg cm^{-2} s^{-1} Sr^{-1} Hz^{-1}` |
-| DThermalDistributionOfTNuDT | `dB_{\nu}/dT` | Temperature derivative of specific intensity of thermal distribution | `erg cm^{-2} s^{-1} Sr^{-1} Hz^{-1} K^{-1}` |
-| ThermalDistributionOfT | `B = \int B_{\nu} d\Omega d\nu` | Frequency- and angle-integrated intensity of thermal distribution | `erg cm^{-2} s^{-1}` |
-| ThermalNumberDistributionOfT | `B = \int \frac{1}{h \nu} B_{\nu} d\Omega d\nu` | Frequency- and angle-integrated intensity of thermal distribution | `erg cm^{-2} s^{-1}` |
+| AbsorptionCoefficient | $n \sigma$ | Absorption coefficient | $cm^{-1}$ |
+| AngleAveragedAbsorptionCoefficient | $\frac{1}{4 \pi}\int n \sigma d\Omega$ | Absorption coefficient averaged over solid angle | ${\rm cm}^{-1}$ |
+| EmissivityPerNuOmega | $j_{\nu} = \frac{dE}{d^3x dt d\Omega d\nu}$ | Frequency- and angle-dependent emissivity | ${\rm erg~cm}^{-3} {\rm s}^{-1} {\rm Sr}^{-1} {\rm Hz}^{-1}$ |
+| EmissivityPerNu | $\int j_{\nu} d\Omega$  | Frequency-dependent emissivity | ${\rm erg~cm}^{-3} {\rm s}^{-1} {\rm Hz}^{-1}$ |
+| Emissivity | $\int j_{\nu} d\nu d\Omega$  | Total emissivity | ${\rm erg~cm}^{-3} {\rm s}^{-1}$ |
+| NumberEmissivity | $\int \frac{1}{h \nu} j_{\nu} d\Omega d\nu$ | Total number emissivity | ${\rm cm}^{-3} {\rm s}^{-1}$ |
+| ThermalDistributionOfTNu | $B_{\nu} = \frac{dE}{dA dt d\Omega d\nu}$ | Specific intensity of thermal distribution | ${\rm erg~cm}^{-2} {\rm s}^{-1} {\rm Sr}^{-1} {\rm Hz}^{-1}$ |
+| DThermalDistributionOfTNuDT | $dB_{\nu}/dT$ | Temperature derivative of specific intensity of thermal distribution | ${\rm erg~cm}^{-2} {\rm s}^{-1} {\rm Sr}^{-1} {\rm Hz}^{-1} {\rm K}^{-1}$ |
+| ThermalDistributionOfT | $B = \int B_{\nu} d\Omega d\nu$ | Frequency- and angle-integrated intensity of thermal distribution | ${\rm erg~cm}^{-2} {\rm s}^{-1}$ |
+| ThermalNumberDistributionOfT | $B = \int \frac{1}{h \nu} B_{\nu} d\Omega d\nu$ | Frequency- and angle-integrated intensity of thermal distribution | ${\rm erg~cm}^{-2} {\rm s}^{-1}$ |
 
 Note that the thermal radiation energy density `u = 1/c ThermalDistributionOfT` and the thermal radiation number density `n = 1/c ThermalNumberDistributionOfT`.
 
-Internally singularity-opac always uses CGS units, as in the above table. However, arbitrary units are supported through the units modifier.
+Internally singularity-opac always uses CGS units, as in the above table. However, arbitrary units are supported through the units modifier, which accepts
+function argument inputs in the arbitrary unit system, and returns the result from the function in those same arbitrary units.
 
 ## To Build
 
