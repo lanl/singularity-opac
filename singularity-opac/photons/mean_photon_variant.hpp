@@ -21,6 +21,7 @@
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
+#include <singularity-opac/photons/mean_photon_types.hpp>
 #include <singularity-opac/photons/photon_variant.hpp>
 #include <variant/include/mpark/variant.hpp>
 
@@ -88,6 +89,27 @@ class MeanVariant {
     return mpark::visit(
         [=](const auto &opac) {
           return opac.RosselandMeanAbsorptionCoefficient(rho, temp);
+        },
+        opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real AbsorptionCoefficient(const Real rho, const Real temp,
+                            const int gmode = Rosseland) const {
+    return mpark::visit(
+        [=](const auto &opac) {
+          return opac.AbsorptionCoefficient(rho, temp, gmode);
+        },
+        opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real Emissivity(const Real rho, const Real temp,
+                  const int gmode = Rosseland,
+                  Real *lambda = nullptr) const {
+    return mpark::visit(
+        [=](const auto &opac) {
+          return opac.Emissivity(rho, temp, gmode, lambda);
         },
         opac_);
   }

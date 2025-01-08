@@ -29,6 +29,7 @@
 
 #include <singularity-opac/photons/mean_photon_variant.hpp>
 #include <singularity-opac/photons/non_cgs_photons.hpp>
+#include <singularity-opac/photons/thermal_distributions_photons.hpp>
 
 namespace singularity {
 namespace photons {
@@ -141,6 +142,25 @@ class MeanOpacity {
     Real lRho = toLog_(rho);
     Real lT = toLog_(temp);
     return rho * fromLog_(lkappa_.interpToReal(lRho, lT, Rosseland));
+  }
+
+  // standard grey opacity functions
+  PORTABLE_INLINE_FUNCTION
+  Real AbsorptionCoefficient(const Real rho, const Real temp,
+                            const int gmode = Rosseland) const {
+    Real lRho = toLog_(rho);
+    Real lT = toLog_(temp);
+    return rho * fromLog_(lkappa_.interpToReal(lRho, lT, gmode));
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real Emissivity(const Real rho, const Real temp,
+                  const int gmode = Rosseland,
+                  Real *lambda = nullptr) const {
+    Real B = dist_.ThermalDistributionOfT(temp, lambda);
+    Real lRho = toLog_(rho);
+    Real lT = toLog_(temp);
+    return rho * fromLog_(lkappa_.interpToReal(lRho, lT, gmode)) * B;
   }
 
  private:
@@ -303,10 +323,7 @@ class MeanOpacity {
   }
   Spiner::DataBox<Real> lkappa_;
   const char *filename_;
-  enum OpacityAveraging {
-    Rosseland = 0,
-    Planck = 1
-  };
+  PlanckDistribution<PC> dist_;
 };
 
 #undef EPS
