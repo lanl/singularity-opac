@@ -21,18 +21,13 @@
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
+#include <singularity-opac/photons/mean_photon_types.hpp>
 #include <singularity-opac/photons/photon_variant.hpp>
 #include <variant/include/mpark/variant.hpp>
 
 namespace singularity {
 namespace photons {
 namespace impl {
-
-// mean-opacity mode
-enum OpacityAveraging {
-  Rosseland = 0,
-  Planck = 1
-};
 
 template <typename... Opacs>
 class MeanVariant {

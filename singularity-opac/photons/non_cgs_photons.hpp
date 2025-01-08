@@ -22,6 +22,7 @@
 
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
+#include <singularity-opac/photons/mean_photon_types.hpp>
 
 namespace singularity {
 namespace photons {
@@ -289,14 +290,14 @@ class MeanNonCGSUnits {
 
   PORTABLE_INLINE_FUNCTION
   Real AbsorptionCoefficient(const Real rho, const Real temp,
-                            const int gmode = 0) const {
+                            const int gmode = Rosseland) const {
     const Real alpha = mean_opac_.AbsorptionCoefficient(rho, temp, gmode);
     return alpha * length_unit_;
   }
 
   PORTABLE_INLINE_FUNCTION
   Real Emissivity(const Real rho, const Real temp,
-                  const int gmode = 0,
+                  const int gmode = Rosseland,
                   Real *lambda = nullptr) const {
     const Real J = mean_opac_.Emissivity(rho, temp, gmode);
     return J * inv_emiss_unit_ * time_unit_;
