@@ -52,8 +52,7 @@ class PowerLawOpacity {
   PORTABLE_INLINE_FUNCTION
   Real AbsorptionCoefficient(const Real rho, const Real temp, const Real nu,
                              Real *lambda = nullptr) const {
-    return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, nu,
-                                                   lambda);
+    return rho * (kappa0_ * std::pow(rho, rho_exp_) * std::pow(temp, temp_exp_));
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
@@ -70,8 +69,7 @@ class PowerLawOpacity {
   Real AngleAveragedAbsorptionCoefficient(const Real rho, const Real temp,
                                           const Real nu,
                                           Real *lambda = nullptr) const {
-    return dist_.AngleAveragedAbsorptionCoefficientFromKirkhoff(
-        *this, rho, temp, nu, lambda);
+    return AbsorptionCoefficient(rho, temp, nu, lambda);
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
