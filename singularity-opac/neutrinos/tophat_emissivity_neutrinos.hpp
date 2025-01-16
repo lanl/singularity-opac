@@ -55,7 +55,7 @@ class TophatEmissivity {
   Real AbsorptionCoefficient(const Real rho, const Real temp, const Real Ye,
                              const RadiationType type, const Real nu,
                              Real *lambda = nullptr) const {
-    return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, Ye, type,
+    return dist_.AbsorptionCoefficientFromKirchhoff(*this, rho, temp, Ye, type,
                                                    nu, lambda) /
            (4. * M_PI);
   }
@@ -78,7 +78,7 @@ class TophatEmissivity {
                                           const RadiationType type,
                                           const Real nu,
                                           Real *lambda = nullptr) const {
-    return dist_.AngleAveragedAbsorptionCoefficientFromKirkhoff(
+    return dist_.AngleAveragedAbsorptionCoefficientFromKirchhoff(
         *this, rho, temp, Ye, type, nu, lambda);
   }
 

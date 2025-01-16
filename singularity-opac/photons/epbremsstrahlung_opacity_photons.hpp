@@ -53,7 +53,7 @@ class EPBremsstrahlungOpacity {
   PORTABLE_INLINE_FUNCTION
   Real AbsorptionCoefficient(const Real rho, const Real temp, const Real nu,
                              Real *lambda = nullptr) const {
-    return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, nu,
+    return dist_.AbsorptionCoefficientFromKirchhoff(*this, rho, temp, nu,
                                                    lambda);
   }
 
@@ -71,7 +71,7 @@ class EPBremsstrahlungOpacity {
   Real AngleAveragedAbsorptionCoefficient(const Real rho, const Real temp,
                                           const Real nu,
                                           Real *lambda = nullptr) const {
-    return dist_.AngleAveragedAbsorptionCoefficientFromKirkhoff(
+    return dist_.AngleAveragedAbsorptionCoefficientFromKirchhoff(
         *this, rho, temp, nu, lambda);
   }
 

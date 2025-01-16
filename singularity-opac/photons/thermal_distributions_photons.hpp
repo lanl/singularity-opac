@@ -74,7 +74,7 @@ struct PlanckDistribution {
     return ThermalNumberDistributionOfT(temp, lambda) / pc::c;
   }
   template <typename Emissivity>
-  PORTABLE_INLINE_FUNCTION Real AbsorptionCoefficientFromKirkhoff(
+  PORTABLE_INLINE_FUNCTION Real AbsorptionCoefficientFromKirchhoff(
       const Emissivity &J, const Real rho, const Real temp, const Real nu,
       Real *lambda = nullptr) const {
     Real Bnu = ThermalDistributionOfTNu(temp, nu, lambda);
@@ -82,7 +82,7 @@ struct PlanckDistribution {
     return singularity_opac::robust::ratio(jnu, Bnu);
   }
   template <typename Emissivity>
-  PORTABLE_INLINE_FUNCTION Real AngleAveragedAbsorptionCoefficientFromKirkhoff(
+  PORTABLE_INLINE_FUNCTION Real AngleAveragedAbsorptionCoefficientFromKirchhoff(
       const Emissivity &J, const Real rho, const Real temp, const Real nu,
       Real *lambda = nullptr) const {
     Real Bnu = ThermalDistributionOfTNu(temp, nu, lambda);
