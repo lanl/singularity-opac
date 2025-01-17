@@ -49,8 +49,7 @@ class GrayOpacity {
   PORTABLE_INLINE_FUNCTION
   Real AbsorptionCoefficient(const Real rho, const Real temp, const Real nu,
                              Real *lambda = nullptr) const {
-    return dist_.AbsorptionCoefficientFromKirkhoff(*this, rho, temp, nu,
-                                                   lambda);
+    return rho * kappa_;
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>
@@ -67,8 +66,7 @@ class GrayOpacity {
   Real AngleAveragedAbsorptionCoefficient(const Real rho, const Real temp,
                                           const Real nu,
                                           Real *lambda = nullptr) const {
-    return dist_.AngleAveragedAbsorptionCoefficientFromKirkhoff(
-        *this, rho, temp, nu, lambda);
+    return AbsorptionCoefficient(rho, temp, nu, lambda);
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>

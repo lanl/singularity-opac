@@ -81,7 +81,7 @@ struct FermiDiracDistributionNoMu {
     return ThermalNumberDistributionOfT(temp, type, lambda) / pc::c;
   }
   template <typename Emissivity>
-  PORTABLE_INLINE_FUNCTION Real AbsorptionCoefficientFromKirkhoff(
+  PORTABLE_INLINE_FUNCTION Real AbsorptionCoefficientFromKirchhoff(
       const Emissivity &J, const Real rho, const Real temp, const Real Ye,
       const RadiationType type, const Real nu, Real *lambda = nullptr) const {
     const Real Bnu =
@@ -91,7 +91,7 @@ struct FermiDiracDistributionNoMu {
     return singularity_opac::robust::ratio(jnu, Bnu);
   }
   template <typename Emissivity>
-  PORTABLE_INLINE_FUNCTION Real AngleAveragedAbsorptionCoefficientFromKirkhoff(
+  PORTABLE_INLINE_FUNCTION Real AngleAveragedAbsorptionCoefficientFromKirchhoff(
       const Emissivity &J, const Real rho, const Real temp, const Real Ye,
       const RadiationType type, const Real nu, Real *lambda = nullptr) const {
     const Real Bnu =
