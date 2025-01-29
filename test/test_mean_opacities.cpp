@@ -832,7 +832,7 @@ TEST_CASE("ASCII-parsed Mean photon opacities", "[MeanPhotons]") {
       Real B = dist.ThermalDistributionOfT(temp_max, lambda);
 
       Real memiss_ross = mean_opac.Emissivity(rho_max, temp_max, 0);
-      Real memiss_plnk = mean_opac.Emissivity(rho_max, temp_max, 0);
+      Real memiss_plnk = mean_opac.Emissivity(rho_max, temp_max, 1);
 
       // compare to Rossland and Planck
       if (FractionalDifference(mross * B, memiss_ross) > EPS_TEST) {
