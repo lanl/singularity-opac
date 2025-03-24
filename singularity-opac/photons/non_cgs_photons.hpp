@@ -249,7 +249,7 @@ class MeanNonCGSUnits {
         mass_unit_(mass_unit), length_unit_(length_unit), temp_unit_(temp_unit),
         rho_unit_(mass_unit_ / (length_unit_ * length_unit_ * length_unit_)),
         inv_emiss_unit_(length_unit_ * time_unit_ * time_unit_ * time_unit_ /
-          mass_unit_) {}
+                        mass_unit_) {}
 
   auto GetOnDevice() {
     return MeanNonCGSUnits<MeanOpac>(mean_opac_.GetOnDevice(), time_unit_,
@@ -291,16 +291,17 @@ class MeanNonCGSUnits {
 
   PORTABLE_INLINE_FUNCTION
   Real AbsorptionCoefficient(const Real rho, const Real temp,
-                            const int gmode = Rosseland) const {
-    const Real alpha = mean_opac_.AbsorptionCoefficient(rho, temp, gmode);
+                             const int gmode = Rosseland) const {
+    const Real alpha = mean_opac_.AbsorptionCoefficient(
+        rho_unit_ * rho, temp_unit_ * temp, gmode);
     return alpha * length_unit_;
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real Emissivity(const Real rho, const Real temp,
-                  const int gmode = Rosseland,
+  Real Emissivity(const Real rho, const Real temp, const int gmode = Rosseland,
                   Real *lambda = nullptr) const {
-    const Real J = mean_opac_.Emissivity(rho, temp, gmode);
+    const Real J =
+        mean_opac_.Emissivity(rho_unit_ * rho, temp_unit_ * temp, gmode);
     return J * inv_emiss_unit_;
   }
 
