@@ -23,6 +23,8 @@
 
 namespace singularity {
 
+#define EPS (10.0 * std::numeric_limits<Real>::min())
+
 struct BaseUnity {
   static constexpr Real avogadro = 1.;
   static constexpr Real fine_structure = 1.;
@@ -236,8 +238,37 @@ struct RuntimePhysicalConstants {
 
   // Runtime physical constants are trivially copyable
   bool operator==(const RuntimePhysicalConstants &other) const {
-    return (std::memcmp(this, &other, sizeof(*this)) == 0);
+    bool is_same = true;
+    is_same = is_same && eps_equal(this->time, other.time);
+    is_same = is_same && eps_equal(this->mass, other.mass);
+    is_same = is_same && eps_equal(this->length, other.length);
+    is_same = is_same && eps_equal(this->temp, other.temp);
+    is_same = is_same && eps_equal(this->na, other.na);
+    is_same = is_same && eps_equal(this->alpha, other.alpha);
+    is_same = is_same && eps_equal(this->h, other.h);
+    is_same = is_same && eps_equal(this->hbar, other.hbar);
+    is_same = is_same && eps_equal(this->kb, other.kb);
+    is_same = is_same && eps_equal(this->r_gas, other.r_gas);
+    is_same = is_same && eps_equal(this->qe, other.qe);
+    is_same = is_same && eps_equal(this->c, other.c);
+    is_same = is_same && eps_equal(this->g_newt, other.g_newt);
+    is_same = is_same && eps_equal(this->me, other.me);
+    is_same = is_same && eps_equal(this->mp, other.mp);
+    is_same = is_same && eps_equal(this->mn, other.mn);
+    is_same = is_same && eps_equal(this->amu, other.amu);
+    is_same = is_same && eps_equal(this->sb, other.sb);
+    is_same = is_same && eps_equal(this->ar, other.ar);
+    is_same = is_same && eps_equal(this->eV, other.eV);
+    is_same = is_same && eps_equal(this->Fc, other.Fc);
+    is_same = is_same && eps_equal(this->nu_sigma0, other.nu_sigma0);
+    is_same = is_same && eps_equal(this->gA, other.gA);
+    return is_same;
   }
+
+  private:
+   bool eps_equal(const Real &a, const Real &b) const {
+     return 2.0 * std::abs(a - b) < EPS * (std::abs(a) + std::abs(b) + 1e-100);
+   }
 };
 
 using PhysicalConstantsUnity =
@@ -246,6 +277,8 @@ using PhysicalConstantsSI =
     PhysicalConstants<BaseSICODATA2010, UnitConversionDefault>;
 using PhysicalConstantsCGS =
     PhysicalConstants<BaseSICODATA2010, UnitConversionSIToCGS>;
+
+#undef EPS
 
 } // namespace singularity
 
