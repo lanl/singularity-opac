@@ -236,7 +236,7 @@ struct RuntimePhysicalConstants {
 
   // Runtime physical constants are trivially copyable
   bool operator==(const RuntimePhysicalConstants &other) const {
-    return std::memcmp(this, &other, sizeof(*this));
+    return (std::memcmp(this, &other, sizeof(*this)) == 0);
   }
 };
 
