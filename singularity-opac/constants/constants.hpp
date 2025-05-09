@@ -265,10 +265,12 @@ struct RuntimePhysicalConstants {
     return is_same;
   }
 
-  private:
-   bool eps_equal(const Real &a, const Real &b) const {
-     return 2.0 * std::abs(a - b) < EPS * (std::abs(a) + std::abs(b) + 1e-100);
-   }
+ private:
+  bool eps_equal(const Real &a, const Real &b) const {
+    const Real diff = std::abs(a - b);
+    const Real scale = 0.5 * (std::abs(a) + std::abs(b));
+    return diff / (scale + 1e-100) <= EPS;
+  }
 };
 
 using PhysicalConstantsUnity =
