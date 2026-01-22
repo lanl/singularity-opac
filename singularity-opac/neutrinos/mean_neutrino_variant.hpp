@@ -19,10 +19,10 @@
 #include <utility>
 
 #include <ports-of-call/portability.hpp>
+#include <ports-of-call/variant.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
 #include <singularity-opac/neutrinos/neutrino_variant.hpp>
-#include <variant/include/mpark/variant.hpp>
 
 namespace singularity {
 namespace neutrinos {
@@ -60,25 +60,25 @@ class MeanVariant {
           !std::is_same<MeanVariant, typename std::decay<Choice>::type>::value,
           bool>::type = true>
   Choice get() {
-    return mpark::get<Choice>(opac_);
+    return PortsOfCall::get<Choice>(opac_);
   }
 
   MeanVariant GetOnDevice() {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [](auto &opac) { return opac_variant<Opacs...>(opac.GetOnDevice()); },
         opac_);
   }
 
   PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
   GetRuntimePhysicalConstants() const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [](auto &opac) { return opac.GetRuntimePhysicalConstants(); }, opac_);
   }
 
   PORTABLE_INLINE_FUNCTION Real PlanckMeanAbsorptionCoefficient(
       const Real rho, const Real temp, const Real Ye,
       const RadiationType type) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.PlanckMeanAbsorptionCoefficient(rho, temp, Ye, type);
         },
@@ -87,7 +87,7 @@ class MeanVariant {
   PORTABLE_INLINE_FUNCTION Real RosselandMeanAbsorptionCoefficient(
       const Real rho, const Real temp, const Real Ye,
       const RadiationType type) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.RosselandMeanAbsorptionCoefficient(rho, temp, Ye, type);
         },
@@ -95,12 +95,14 @@ class MeanVariant {
   }
 
   inline void Finalize() noexcept {
-    return mpark::visit([](auto &opac) { return opac.Finalize(); }, opac_);
+    return PortsOfCall::visit([](auto &opac) { return opac.Finalize(); },
+                              opac_);
   }
 
 #ifdef SPINER_USE_HDF
   void Save(const std::string &filename) const {
-    return mpark::visit([=](auto &opac) { return opac.Save(filename); }, opac_);
+    return PortsOfCall::visit([=](auto &opac) { return opac.Save(filename); },
+                              opac_);
   }
 #endif
 };

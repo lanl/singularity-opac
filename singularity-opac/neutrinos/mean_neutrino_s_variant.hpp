@@ -19,10 +19,10 @@
 #include <utility>
 
 #include <ports-of-call/portability.hpp>
+#include <ports-of-call/variant.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
 #include <singularity-opac/neutrinos/neutrino_s_variant.hpp>
-#include <variant/include/mpark/variant.hpp>
 
 namespace singularity {
 namespace neutrinos {
@@ -60,11 +60,11 @@ class MeanSVariant {
           !std::is_same<MeanSVariant, typename std::decay<Choice>::type>::value,
           bool>::type = true>
   Choice get() {
-    return mpark::get<Choice>(s_opac_);
+    return PortsOfCall::get<Choice>(s_opac_);
   }
 
   MeanSVariant GetOnDevice() {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [](auto &s_opac) {
           return s_opac_variant<SOpacs...>(s_opac.GetOnDevice());
         },
@@ -74,7 +74,7 @@ class MeanSVariant {
   PORTABLE_INLINE_FUNCTION Real PlanckMeanTotalScatteringCoefficient(
       const Real rho, const Real temp, const Real Ye,
       const RadiationType type) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &s_opac) {
           return s_opac.PlanckMeanTotalScatteringCoefficient(rho, temp, Ye,
                                                              type);
@@ -84,7 +84,7 @@ class MeanSVariant {
   PORTABLE_INLINE_FUNCTION Real RosselandMeanTotalScatteringCoefficient(
       const Real rho, const Real temp, const Real Ye,
       const RadiationType type) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &s_opac) {
           return s_opac.RosselandMeanTotalScatteringCoefficient(rho, temp, Ye,
                                                                 type);
@@ -93,8 +93,8 @@ class MeanSVariant {
   }
 
   inline void Finalize() noexcept {
-    return mpark::visit([](auto &s_opac) { return s_opac.Finalize(); },
-                        s_opac_);
+    return PortsOfCall::visit([](auto &s_opac) { return s_opac.Finalize(); },
+                              s_opac_);
   }
 };
 

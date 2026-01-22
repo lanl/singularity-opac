@@ -19,16 +19,16 @@
 #include <utility>
 
 #include <ports-of-call/portability.hpp>
+#include <ports-of-call/variant.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
-#include <variant/include/mpark/variant.hpp>
 
 namespace singularity {
 namespace photons {
 namespace impl {
 
 template <typename... Ts>
-using s_opac_variant = mpark::variant<Ts...>;
+using s_opac_variant = PortsOfCall::variant<Ts...>;
 
 template <typename... S_Opacs>
 class S_Variant {
@@ -62,11 +62,11 @@ class S_Variant {
           !std::is_same<S_Variant, typename std::decay<Choice>::type>::value,
           bool>::type = true>
   Choice get() {
-    return mpark::get<Choice>(s_opac_);
+    return PortsOfCall::get<Choice>(s_opac_);
   }
 
   S_Variant GetOnDevice() {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [](auto &s_opac) {
           return s_opac_variant<S_Opacs...>(s_opac.GetOnDevice());
         },
@@ -79,7 +79,7 @@ class S_Variant {
   PORTABLE_INLINE_FUNCTION Real
   TotalCrossSection(const Real rho, const Real temp, const Real nu,
                     Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &s_opac) {
           return s_opac.TotalCrossSection(rho, temp, nu, lambda);
         },
@@ -92,7 +92,7 @@ class S_Variant {
   PORTABLE_INLINE_FUNCTION Real
   DifferentialCrossSection(const Real rho, const Real temp, const Real nu,
                            const Real mu, Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &s_opac) {
           return s_opac.DifferentialCrossSection(rho, temp, nu, mu, lambda);
         },
@@ -105,7 +105,7 @@ class S_Variant {
   PORTABLE_INLINE_FUNCTION Real
   TotalScatteringCoefficient(const Real rho, const Real temp, const Real nu,
                              Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &s_opac) {
           return s_opac.TotalScatteringCoefficient(rho, temp, nu, lambda);
         },
@@ -114,24 +114,24 @@ class S_Variant {
 
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept {
-    return mpark::visit([](const auto &s_opac) { return s_opac.nlambda(); },
-                        s_opac_);
+    return PortsOfCall::visit(
+        [](const auto &s_opac) { return s_opac.nlambda(); }, s_opac_);
   }
 
   template <typename T>
   PORTABLE_INLINE_FUNCTION bool IsType() const noexcept {
-    return mpark::holds_alternative<T>(s_opac_);
+    return PortsOfCall::holds_alternative<T>(s_opac_);
   }
 
   PORTABLE_INLINE_FUNCTION
   void PrintParams() const noexcept {
-    return mpark::visit([](const auto &s_opac) { return s_opac.PrintParams(); },
-                        s_opac_);
+    return PortsOfCall::visit(
+        [](const auto &s_opac) { return s_opac.PrintParams(); }, s_opac_);
   }
 
   inline void Finalize() noexcept {
-    return mpark::visit([](auto &s_opac) { return s_opac.Finalize(); },
-                        s_opac_);
+    return PortsOfCall::visit([](auto &s_opac) { return s_opac.Finalize(); },
+                              s_opac_);
   }
 };
 
