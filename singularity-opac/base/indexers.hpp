@@ -18,7 +18,7 @@
 
 #include <fast-math/logs.hpp>
 #include <spiner/databox.hpp>
-#include <variant/include/mpark/variant.hpp>
+#include <ports-of-call/variant.hpp>
 
 #include <singularity-opac/chebyshev/chebyshev.hpp>
 

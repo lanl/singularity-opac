@@ -19,11 +19,11 @@
 #include <utility>
 
 #include <ports-of-call/portability.hpp>
+#include <ports-of-call/variant.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
 #include <singularity-opac/photons/mean_photon_types.hpp>
 #include <singularity-opac/photons/photon_variant.hpp>
-#include <variant/include/mpark/variant.hpp>
 
 namespace singularity {
 namespace photons {
@@ -61,24 +61,24 @@ class MeanVariant {
           !std::is_same<MeanVariant, typename std::decay<Choice>::type>::value,
           bool>::type = true>
   Choice get() {
-    return mpark::get<Choice>(opac_);
+    return PortsOfCall::get<Choice>(opac_);
   }
 
   MeanVariant GetOnDevice() {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [](auto &opac) { return opac_variant<Opacs...>(opac.GetOnDevice()); },
         opac_);
   }
 
   PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
   GetRuntimePhysicalConstants() const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [](auto &opac) { return opac.GetRuntimePhysicalConstants(); }, opac_);
   }
 
   PORTABLE_INLINE_FUNCTION Real
   PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.PlanckMeanAbsorptionCoefficient(rho, temp);
         },
@@ -86,7 +86,7 @@ class MeanVariant {
   }
   PORTABLE_INLINE_FUNCTION Real
   RosselandMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.RosselandMeanAbsorptionCoefficient(rho, temp);
         },
@@ -95,8 +95,8 @@ class MeanVariant {
 
   PORTABLE_INLINE_FUNCTION
   Real AbsorptionCoefficient(const Real rho, const Real temp,
-                            const int gmode = Rosseland) const {
-    return mpark::visit(
+                             const int gmode = Rosseland) const {
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.AbsorptionCoefficient(rho, temp, gmode);
         },
@@ -104,10 +104,9 @@ class MeanVariant {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real Emissivity(const Real rho, const Real temp,
-                  const int gmode = Rosseland,
+  Real Emissivity(const Real rho, const Real temp, const int gmode = Rosseland,
                   Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.Emissivity(rho, temp, gmode, lambda);
         },
@@ -115,12 +114,14 @@ class MeanVariant {
   }
 
   inline void Finalize() noexcept {
-    return mpark::visit([](auto &opac) { return opac.Finalize(); }, opac_);
+    return PortsOfCall::visit([](auto &opac) { return opac.Finalize(); },
+                              opac_);
   }
 
 #ifdef SPINER_USE_HDF
   void Save(const std::string &filename) const {
-    return mpark::visit([=](auto &opac) { return opac.Save(filename); }, opac_);
+    return PortsOfCall::visit([=](auto &opac) { return opac.Save(filename); },
+                              opac_);
   }
 #endif
 };

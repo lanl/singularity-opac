@@ -19,16 +19,16 @@
 #include <utility>
 
 #include <ports-of-call/portability.hpp>
+#include <ports-of-call/variant.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
-#include <variant/include/mpark/variant.hpp>
 
 namespace singularity {
 namespace photons {
 namespace impl {
 
 template <typename... Ts>
-using opac_variant = mpark::variant<Ts...>;
+using opac_variant = PortsOfCall::variant<Ts...>;
 
 template <typename... Opacs>
 class Variant {
@@ -62,18 +62,18 @@ class Variant {
           !std::is_same<Variant, typename std::decay<Choice>::type>::value,
           bool>::type = true>
   Choice get() {
-    return mpark::get<Choice>(opac_);
+    return PortsOfCall::get<Choice>(opac_);
   }
 
   Variant GetOnDevice() {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [](auto &opac) { return opac_variant<Opacs...>(opac.GetOnDevice()); },
         opac_);
   }
 
   PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
   GetRuntimePhysicalConstants() const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [](auto &opac) { return opac.GetRuntimePhysicalConstants(); }, opac_);
   }
 
@@ -83,7 +83,7 @@ class Variant {
   PORTABLE_INLINE_FUNCTION Real
   AbsorptionCoefficient(const Real rho, const Real temp, const Real nu,
                         Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.AbsorptionCoefficient(rho, temp, nu, lambda);
         },
@@ -95,7 +95,7 @@ class Variant {
   AbsorptionCoefficient(const Real rho, const Real temp,
                         FrequencyIndexer &nu_bins, DataIndexer &coeffs,
                         const int nbins, Real *lambda = nullptr) const {
-    mpark::visit(
+    PortsOfCall::visit(
         [&](const auto &opac) {
           opac.AbsorptionCoefficient(rho, temp, nu_bins, coeffs, nbins, lambda);
         },
@@ -108,7 +108,7 @@ class Variant {
   PORTABLE_INLINE_FUNCTION Real AngleAveragedAbsorptionCoefficient(
       const Real rho, const Real temp, const Real nu,
       Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.AngleAveragedAbsorptionCoefficient(rho, temp, nu, lambda);
         },
@@ -119,7 +119,7 @@ class Variant {
   PORTABLE_INLINE_FUNCTION void AngleAveragedAbsorptionCoefficient(
       const Real rho, const Real temp, FrequencyIndexer &nu_bins,
       DataIndexer &coeffs, const int nbins, Real *lambda = nullptr) const {
-    mpark::visit(
+    PortsOfCall::visit(
         [&](const auto &opac) {
           opac.AngleAveragedAbsorptionCoefficient(rho, temp, nu_bins, coeffs,
                                                   nbins, lambda);
@@ -132,7 +132,7 @@ class Variant {
   PORTABLE_INLINE_FUNCTION Real
   EmissivityPerNuOmega(const Real rho, const Real temp, const Real nu,
                        Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.EmissivityPerNuOmega(rho, temp, nu, lambda);
         },
@@ -144,7 +144,7 @@ class Variant {
   EmissivityPerNuOmega(const Real rho, const Real temp,
                        FrequencyIndexer &nu_bins, DataIndexer &coeffs,
                        const int nbins, Real *lambda = nullptr) const {
-    mpark::visit(
+    PortsOfCall::visit(
         [&](const auto &opac) {
           return opac.EmissivityPerNuOmega(rho, temp, nu_bins, coeffs, nbins,
                                            lambda);
@@ -156,7 +156,7 @@ class Variant {
   PORTABLE_INLINE_FUNCTION Real EmissivityPerNu(const Real rho, const Real temp,
                                                 const Real nu,
                                                 Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.EmissivityPerNu(rho, temp, nu, lambda);
         },
@@ -168,7 +168,7 @@ class Variant {
   EmissivityPerNu(const Real rho, const Real temp, FrequencyIndexer &nu_bins,
                   DataIndexer &coeffs, const int nbins,
                   Real *lambda = nullptr) const {
-    mpark::visit(
+    PortsOfCall::visit(
         [&](const auto &opac) {
           return opac.EmissivityPerNu(rho, temp, nu_bins, coeffs, nbins,
                                       lambda);
@@ -179,7 +179,7 @@ class Variant {
   // emissivity integrated over angle and frequency
   PORTABLE_INLINE_FUNCTION Real Emissivity(const Real rho, const Real temp,
                                            Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) { return opac.Emissivity(rho, temp, lambda); },
         opac_);
   }
@@ -188,7 +188,7 @@ class Variant {
   PORTABLE_INLINE_FUNCTION auto NumberEmissivity(const Real rho,
                                                  const Real temp,
                                                  Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.NumberEmissivity(rho, temp, lambda);
         },
@@ -198,7 +198,7 @@ class Variant {
   // Specific intensity of thermal distribution
   PORTABLE_INLINE_FUNCTION Real ThermalDistributionOfTNu(
       const Real temp, const Real nu, Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.ThermalDistributionOfTNu(temp, nu, lambda);
         },
@@ -208,7 +208,7 @@ class Variant {
   // Temperature derivative of specific intensity of thermal distribution
   PORTABLE_INLINE_FUNCTION Real DThermalDistributionOfTNuDT(
       const Real temp, const Real nu, Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.DThermalDistributionOfTNuDT(temp, nu, lambda);
         },
@@ -218,7 +218,7 @@ class Variant {
   // Integral of thermal distribution over frequency and angle
   PORTABLE_INLINE_FUNCTION Real
   ThermalDistributionOfT(const Real temp, Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.ThermalDistributionOfT(temp, lambda);
         },
@@ -228,7 +228,7 @@ class Variant {
   // Integral of thermal distribution over energy per frequency and angle
   PORTABLE_INLINE_FUNCTION Real
   ThermalNumberDistributionOfT(const Real temp, Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.ThermalNumberDistributionOfT(temp, lambda);
         },
@@ -238,7 +238,7 @@ class Variant {
   // Energy density of thermal distribution
   PORTABLE_INLINE_FUNCTION Real
   EnergyDensityFromTemperature(const Real temp, Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.EnergyDensityFromTemperature(temp, lambda);
         },
@@ -248,7 +248,7 @@ class Variant {
   // Temperature of thermal distribution
   PORTABLE_INLINE_FUNCTION Real
   TemperatureFromEnergyDensity(const Real er, Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.TemperatureFromEnergyDensity(er, lambda);
         },
@@ -258,7 +258,7 @@ class Variant {
   // Number density of thermal distribution
   PORTABLE_INLINE_FUNCTION Real
   NumberDensityFromTemperature(const Real temp, Real *lambda = nullptr) const {
-    return mpark::visit(
+    return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.NumberDensityFromTemperature(temp, lambda);
         },
@@ -267,22 +267,22 @@ class Variant {
 
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept {
-    return mpark::visit([](const auto &opac) { return opac.nlambda(); }, opac_);
+    return PortsOfCall::visit([](const auto &opac) { return opac.nlambda(); }, opac_);
   }
 
   template <typename T>
   PORTABLE_INLINE_FUNCTION bool IsType() const noexcept {
-    return mpark::holds_alternative<T>(opac_);
+    return PortsOfCall::holds_alternative<T>(opac_);
   }
 
   PORTABLE_INLINE_FUNCTION
   void PrintParams() const noexcept {
-    return mpark::visit([](const auto &opac) { return opac.PrintParams(); },
+    return PortsOfCall::visit([](const auto &opac) { return opac.PrintParams(); },
                         opac_);
   }
 
   inline void Finalize() noexcept {
-    return mpark::visit([](auto &opac) { return opac.Finalize(); }, opac_);
+    return PortsOfCall::visit([](auto &opac) { return opac.Finalize(); }, opac_);
   }
 };
 

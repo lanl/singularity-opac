@@ -80,13 +80,6 @@ endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS On)
 
-# Patches variant to be compatible with cuda
-# Assumes "patch" is present on system
-message(STATUS "Patching mpark::variant to support GPUs")
-execute_process(COMMAND patch -N -s -V never
-                ${CMAKE_CURRENT_SOURCE_DIR}/utils/variant/include/mpark/variant.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/utils/cuda_compatibility.patch)
-
 # xl fix
 target_compile_options(singularity-opac::flags INTERFACE
                        $<$<COMPILE_LANG_AND_ID:CXX,XL>:-std=c++1y;-qxflag=disable__cplusplusOverride>)
