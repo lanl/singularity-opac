@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2024. Triad National Security, LLC. All rights reserved.  This
+// © 2024-2026. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -12,6 +12,8 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
+
+// This file was made in part with generative AI.
 
 #include <cmath>
 #include <iostream>
@@ -45,9 +47,11 @@ PORTABLE_INLINE_FUNCTION Real CalcFrequency(const int n, const Real nu_min,
 }
 
 constexpr Real EPS_TEST = 1e-3;
+constexpr Real EPS_EXACT = 1.e-12;
 
 constexpr Real rho_exp = 2.;
 constexpr Real temp_exp = 2.5;
+constexpr Real nu_exp = 2.;
 
 TEST_CASE("Scale free power law photon opacities",
           "[PowerLawScaleFreePhotonOpacities]") {
@@ -196,3 +200,119 @@ TEST_CASE("CGS power law photon opacities", "[PowerLawCGSPhotonOpacities]") {
   }
 }
 
+TEST_CASE("Frequency-dependent CGS power law photon opacities",
+          "[PowerLawCGSPhotonOpacities]") {
+  constexpr Real rho = 1.5e0;    // g/cc
+  constexpr Real temp = 1.e3;    // K
+  constexpr Real nu_min = 1.e10; // Hz
+  constexpr Real nu_max = 1.e14; // Hz
+  constexpr int n_nu = 100;
+  constexpr Real kappa0 = 1.5;   // cm^2 / g / Hz^nu_exp
+  constexpr Real nu_ref = 1.e12; // Hz
+
+  WHEN("We initialize a frequency-dependent CGS power law photon opacity") {
+    photons::PowerLaw opac_host(kappa0, rho_exp, temp_exp, nu_exp, nu_ref);
+    photons::Opacity opac = opac_host.GetOnDevice();
+
+    THEN("The monochromatic opacity and emissivity follow the frequency power "
+         "law") {
+      int n_wrong_h = 0;
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+      Kokkos::View<int, atomic_view> n_wrong_d("wrong");
+#else
+      PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
+#endif
+
+      portableFor(
+          "calc frequency-dependent emissivities", 0, n_nu,
+          PORTABLE_LAMBDA(const int &i) {
+            const Real nu = CalcFrequency(i, nu_min, nu_max, n_nu);
+            const Real alpha = opac.AbsorptionCoefficient(rho, temp, nu);
+            const Real jnu = opac.EmissivityPerNuOmega(rho, temp, nu);
+            const Real Jnu = opac.EmissivityPerNu(rho, temp, nu);
+            const Real kappa = kappa0 * std::pow(rho, rho_exp) *
+                               std::pow(temp, temp_exp) *
+                               std::pow(nu / nu_ref, nu_exp);
+            const Real alpha_expected = rho * kappa;
+            const Real jnu_expected =
+                alpha_expected * opac.ThermalDistributionOfTNu(temp, nu);
+            if (FractionalDifference(alpha, alpha_expected) > EPS_EXACT) {
+              n_wrong_d() += 1;
+            }
+            if (FractionalDifference(jnu, jnu_expected) > EPS_EXACT) {
+              n_wrong_d() += 1;
+            }
+            if (FractionalDifference(Jnu, 4 * M_PI * jnu) > EPS_EXACT) {
+              n_wrong_d() += 1;
+            }
+          });
+
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+      Kokkos::deep_copy(n_wrong_h, n_wrong_d);
+#endif
+      REQUIRE(n_wrong_h == 0);
+    }
+
+    opac.Finalize();
+  }
+
+  WHEN("We initialize a frequency-dependent CGS power law photon opacity with "
+       "non-CGS units") {
+    constexpr Real time_unit = 123.;
+    constexpr Real mass_unit = 456.;
+    constexpr Real length_unit = 789.;
+    constexpr Real temp_unit = 276.;
+    constexpr Real rho_unit =
+        mass_unit / (length_unit * length_unit * length_unit);
+    constexpr Real j_unit = mass_unit / (length_unit * time_unit * time_unit);
+
+    photons::NonCGSUnits<photons::PowerLaw> opac_host(
+        photons::PowerLaw(kappa0, rho_exp, temp_exp, nu_exp, nu_ref), time_unit,
+        mass_unit, length_unit, temp_unit);
+    photons::Opacity opac = opac_host.GetOnDevice();
+    photons::PowerLaw opac_cgs_host(kappa0, rho_exp, temp_exp, nu_exp, nu_ref);
+    photons::Opacity opac_cgs = opac_cgs_host.GetOnDevice();
+
+    THEN("The frequency dependence is preserved through the non-CGS wrapper") {
+      int n_wrong_h = 0;
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+      Kokkos::View<int, atomic_view> n_wrong_d("wrong");
+#else
+      PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
+#endif
+
+      portableFor(
+          "calc frequency-dependent non-cgs emissivities", 0, n_nu,
+          PORTABLE_LAMBDA(const int &i) {
+            const Real nu = CalcFrequency(i, nu_min, nu_max, n_nu);
+            const Real alpha = opac.AbsorptionCoefficient(
+                rho / rho_unit, temp / temp_unit, nu * time_unit);
+            const Real jnu = opac.EmissivityPerNuOmega(
+                rho / rho_unit, temp / temp_unit, nu * time_unit);
+            const Real Jnu = opac.EmissivityPerNu(
+                rho / rho_unit, temp / temp_unit, nu * time_unit);
+            const Real alpha_cgs =
+                opac_cgs.AbsorptionCoefficient(rho, temp, nu);
+            const Real jnu_cgs = opac_cgs.EmissivityPerNuOmega(rho, temp, nu);
+            const Real Jnu_cgs = opac_cgs.EmissivityPerNu(rho, temp, nu);
+            if (FractionalDifference(alpha / length_unit, alpha_cgs) >
+                EPS_EXACT) {
+              n_wrong_d() += 1;
+            }
+            if (FractionalDifference(jnu * j_unit, jnu_cgs) > EPS_EXACT) {
+              n_wrong_d() += 1;
+            }
+            if (FractionalDifference(Jnu * j_unit, Jnu_cgs) > EPS_EXACT) {
+              n_wrong_d() += 1;
+            }
+          });
+
+#ifdef PORTABILITY_STRATEGY_KOKKOS
+      Kokkos::deep_copy(n_wrong_h, n_wrong_d);
+#endif
+      REQUIRE(n_wrong_h == 0);
+    }
+
+    opac.Finalize();
+  }
+}
