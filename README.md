@@ -59,6 +59,49 @@ with the following function signatures:
     AbsorptionCoefficient(density, temperature, gmode [Planck, Rosseland])
     Emissivity(density, temperature)
 
+For multigroup absorption opacities, the following functions are provided:
+| Function              | Expression | Description            | Units   |
+| --------------------- | ---------- | ---------------------  | ------- |
+| PlanckGroupAbsorptionCoefficient | $n \sigma_g$ | Planck-weighted absorption coefficient in a frequency group | ${\rm cm}^{-1}$ |
+| RosselandGroupAbsorptionCoefficient | $n \sigma_g$ | Rosseland-weighted absorption coefficient in a frequency group | ${\rm cm}^{-1}$ |
+| AbsorptionCoefficient | $n \sigma_g$ | Group absorption coefficient | ${\rm cm}^{-1}$ |
+| GroupOfNu | $g(\nu)$ | Group index containing a given frequency | dimensionless |
+| PlanckGroupAbsorptionCoefficientFromNu | $n \sigma_{g(\nu)}$ | Planck-weighted group coefficient selected by frequency | ${\rm cm}^{-1}$ |
+| RosselandGroupAbsorptionCoefficientFromNu | $n \sigma_{g(\nu)}$ | Rosseland-weighted group coefficient selected by frequency | ${\rm cm}^{-1}$ |
+| AbsorptionCoefficientFromNu | $n \sigma_{g(\nu)}$ | Group coefficient selected by frequency | ${\rm cm}^{-1}$ |
+
+with the following function signatures:
+
+    ngroups()
+    GroupOfNu(frequency)
+    PlanckGroupAbsorptionCoefficient(density, temperature, group index)
+    RosselandGroupAbsorptionCoefficient(density, temperature, group index)
+    AbsorptionCoefficient(density, temperature, group index, gmode [Planck, Rosseland])
+    PlanckGroupAbsorptionCoefficientFromNu(density, temperature, frequency)
+    RosselandGroupAbsorptionCoefficientFromNu(density, temperature, frequency)
+    AbsorptionCoefficientFromNu(density, temperature, frequency, gmode [Planck, Rosseland])
+
+Multigroup opacities can either be constructed from a frequency-dependent
+opacity model plus user-provided group bounds, or loaded directly from
+precomputed Spiner tables of group Planck and Rosseland opacities. The direct
+table-backed path does not require singularity-opac to recompute opacity
+integrals, but it must include explicit group bounds. Multigroup opacities
+always carry group bounds, and the convention is half-open groups
+`[nu_g, nu_{g+1})`, with the final upper bound included in the last group.
+If you want singularity-opac to interpret a group as extending to infinity,
+then the final entry of the `group bounds` array must literally be IEEE
+positive infinity, not just a very large finite cutoff. In C++, that means
+using `std::numeric_limits<Real>::infinity()`, while in Python that would
+typically be `float("inf")` or `numpy.inf`. In an HDF/Spiner table, that same
+IEEE `+infinity` value must appear in the final element of the `"group bounds"`
+dataset. Likewise, a lower tail group `[0, nu_1)` is represented by setting
+the first bound to `0.`. A very large finite number is still interpreted as a
+finite bound.
+When building from a frequency-dependent opacity, multigroup opacities can also
+be constructed from `(nu_min, nu_max, NLogGroups)`, which generates
+`NLogGroups + 2` groups: `[0, nu_min)`, `NLogGroups` logarithmically spaced
+groups between `nu_min` and `nu_max`, and `[nu_max, \infty)`.
+
 For frequency-dependent scattering opacities, the following functions are provided
 | Function              | Expression | Description            | Units   |
 | --------------------- | ---------- | ---------------------  | ------- |

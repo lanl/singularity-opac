@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2021-2024. Triad National Security, LLC. All rights reserved. This
+// © 2021-2026. Triad National Security, LLC. All rights reserved. This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -16,9 +16,12 @@
 #ifndef SINGULARITY_OPAC_PHOTONS_NON_CGS_PHOTONS_
 #define SINGULARITY_OPAC_PHOTONS_NON_CGS_PHOTONS_
 
+// This file was made in part with generative AI.
+
 #include <cassert>
 #include <cmath>
 #include <cstdio>
+#include <utility>
 
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
@@ -315,6 +318,101 @@ class MeanNonCGSUnits {
   MeanOpac mean_opac_;
   Real time_unit_, mass_unit_, length_unit_, temp_unit_;
   Real rho_unit_, inv_emiss_unit_;
+};
+
+template <typename MultigroupOpac>
+class MultigroupNonCGSUnits {
+ public:
+  using PC = typename MultigroupOpac::PC;
+
+  MultigroupNonCGSUnits() = default;
+  MultigroupNonCGSUnits(MultigroupOpac &&multigroup_opac, const Real time_unit,
+                        const Real mass_unit, const Real length_unit,
+                        const Real temp_unit)
+      : multigroup_opac_(std::forward<MultigroupOpac>(multigroup_opac)),
+        time_unit_(time_unit), mass_unit_(mass_unit), length_unit_(length_unit),
+        temp_unit_(temp_unit),
+        rho_unit_(mass_unit_ / (length_unit_ * length_unit_ * length_unit_)),
+        freq_unit_(1. / time_unit_) {}
+
+  auto GetOnDevice() {
+    return MultigroupNonCGSUnits<MultigroupOpac>(multigroup_opac_.GetOnDevice(),
+                                                 time_unit_, mass_unit_,
+                                                 length_unit_, temp_unit_);
+  }
+  inline void Finalize() noexcept { multigroup_opac_.Finalize(); }
+
+  PORTABLE_INLINE_FUNCTION
+  int ngroups() const noexcept { return multigroup_opac_.ngroups(); }
+
+  PORTABLE_INLINE_FUNCTION
+  bool HasGroupBounds() const noexcept {
+    return multigroup_opac_.HasGroupBounds();
+  }
+
+#ifdef SPINER_USE_HDF
+  void Save(const std::string &filename) const {
+    return multigroup_opac_.Save(filename);
+  }
+#endif
+
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckGroupAbsorptionCoefficient(const Real rho, const Real temp,
+                                        const int group) const {
+    return AbsorptionCoefficient(rho, temp, group, Planck);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandGroupAbsorptionCoefficient(const Real rho, const Real temp,
+                                           const int group) const {
+    return AbsorptionCoefficient(rho, temp, group, Rosseland);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real AbsorptionCoefficient(const Real rho, const Real temp, const int group,
+                             const int gmode = Rosseland) const {
+    const Real alpha = multigroup_opac_.AbsorptionCoefficient(
+        rho_unit_ * rho, temp_unit_ * temp, group, gmode);
+    return alpha * length_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  int GroupOfNu(const Real nu) const {
+    return multigroup_opac_.GroupOfNu(nu * freq_unit_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckGroupAbsorptionCoefficientFromNu(const Real rho, const Real temp,
+                                              const Real nu) const {
+    return AbsorptionCoefficientFromNu(rho, temp, nu, Planck);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandGroupAbsorptionCoefficientFromNu(const Real rho,
+                                                 const Real temp,
+                                                 const Real nu) const {
+    return AbsorptionCoefficientFromNu(rho, temp, nu, Rosseland);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real AbsorptionCoefficientFromNu(const Real rho, const Real temp,
+                                   const Real nu,
+                                   const int gmode = Rosseland) const {
+    const Real alpha = multigroup_opac_.AbsorptionCoefficientFromNu(
+        rho_unit_ * rho, temp_unit_ * temp, nu * freq_unit_, gmode);
+    return alpha * length_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return RuntimePhysicalConstants(PhysicalConstantsCGS(), time_unit_,
+                                    mass_unit_, length_unit_, temp_unit_);
+  }
+
+ private:
+  MultigroupOpac multigroup_opac_;
+  Real time_unit_, mass_unit_, length_unit_, temp_unit_;
+  Real rho_unit_, freq_unit_;
 };
 
 } // namespace photons

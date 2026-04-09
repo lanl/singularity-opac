@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2021. Triad National Security, LLC. All rights reserved.  This
+// © 2021-2026. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -16,8 +16,11 @@
 #ifndef SINGULARITY_OPAC_PHOTONS_OPAC_PHOTONS_
 #define SINGULARITY_OPAC_PHOTONS_OPAC_PHOTONS_
 
+// This file was made in part with generative AI.
+
 #include <singularity-opac/photons/epbremsstrahlung_opacity_photons.hpp>
 #include <singularity-opac/photons/gray_opacity_photons.hpp>
+#include <singularity-opac/photons/multigroup_opacity_photons.hpp>
 #include <singularity-opac/photons/non_cgs_photons.hpp>
 #include <singularity-opac/photons/photon_variant.hpp>
 #include <singularity-opac/photons/powerlaw_opacity_photons.hpp>
