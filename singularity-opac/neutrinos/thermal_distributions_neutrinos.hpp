@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2021. Triad National Security, LLC. All rights reserved.  This
+// © 2021-2026. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -15,6 +15,8 @@
 
 #ifndef SINGULARITY_OPAC_NEUTRINOS_THERMAL_DISTRIBUTIONS_NEUTRINOS_
 #define SINGULARITY_OPAC_NEUTRINOS_THERMAL_DISTRIBUTIONS_NEUTRINOS_
+
+// This file was made in part with generative AI.
 
 #include <cmath>
 
@@ -42,11 +44,12 @@ struct FermiDiracDistributionNoMu {
   Real DThermalDistributionOfTNuDT(const Real temp, const RadiationType type,
                                    const Real nu,
                                    Real *lambda = nullptr) const {
-    Real x = pc::h * nu / (pc::kb * temp);
-    Real dBnudT = NSPECIES *
-                  (2. * pc::h * pc::h * nu * nu * nu * nu /
-                   (temp * temp * pc::c * pc::c * pc::kb)) *
-                  1. / (std::exp(x) + 1.);
+    const Real x = pc::h * nu / (pc::kb * temp);
+    const Real expmx = std::exp(-x);
+    const Real denom = 1. + expmx;
+    const Real prefactor = NSPECIES * (2. * pc::h * pc::h * nu * nu * nu * nu /
+                                       (temp * temp * pc::c * pc::c * pc::kb));
+    const Real dBnudT = prefactor * expmx / (denom * denom);
     return dBnudT;
   }
   PORTABLE_INLINE_FUNCTION

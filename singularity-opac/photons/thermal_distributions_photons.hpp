@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2021. Triad National Security, LLC. All rights reserved.  This
+// © 2021-2026. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -15,6 +15,8 @@
 
 #ifndef SINGULARITY_OPAC_PHOTONS_THERMAL_DISTRIBUTIONS_PHOTONS_
 #define SINGULARITY_OPAC_PHOTONS_THERMAL_DISTRIBUTIONS_PHOTONS_
+
+// This file was made in part with generative AI.
 
 #include <cmath>
 
@@ -38,14 +40,18 @@ struct PlanckDistribution {
   PORTABLE_INLINE_FUNCTION
   Real DThermalDistributionOfTNuDT(const Real temp, const Real nu,
                                    Real *lambda = nullptr) const {
-    Real x = pc::h * nu / (pc::kb * temp);
-    Real dBnudT = (2. * pc::h * pc::h * nu * nu * nu * nu /
-                   (temp * temp * pc::c * pc::c * pc::kb)) *
-                  1. / std::expm1(x);
+    const Real x = pc::h * nu / (pc::kb * temp);
+    const Real expmx = std::exp(-x);
+    const Real one_minus_expmx = -std::expm1(-x);
+    const Real prefactor = 2. * pc::h * pc::h * nu * nu * nu * nu /
+                           (temp * temp * pc::c * pc::c * pc::kb);
+    const Real dBnudT = prefactor * expmx / (one_minus_expmx * one_minus_expmx);
     return dBnudT;
   }
   PORTABLE_INLINE_FUNCTION
   Real ThermalDistributionOfT(const Real temp, Real *lambda = nullptr) const {
+    // This is the 4 pi angle-integrated Planck intensity, not the
+    // per-steradian quantity (c / 4 pi) a T^4.
     return 8. * std::pow(M_PI, 5) * std::pow(pc::kb, 4) * std::pow(temp, 4) /
            (15. * std::pow(pc::c, 2) * std::pow(pc::h, 3));
   }

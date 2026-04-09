@@ -1,3 +1,4 @@
+<!-- This file was made in part with generative AI. -->
 singularity-opac
 ==
 
@@ -21,7 +22,7 @@ For frequency-dependent absorption opacities, the following functions are provid
 | NumberEmissivity | $\int \frac{1}{h \nu} j_{\nu} d\Omega d\nu$ | Total number emissivity | ${\rm cm}^{-3}{\rm s}^{-1}$ |
 | ThermalDistributionOfTNu | $B_{\nu} = \frac{dE}{dA dt d\Omega d\nu}$ | Specific intensity of thermal distribution | ${\rm erg}{\rm cm}^{-2}{\rm s}^{-1}{\rm Sr}^{-1}{\rm Hz}^{-1}$ |
 | DThermalDistributionOfTNuDT | $dB_{\nu}/dT$ | Temperature derivative of specific intensity of thermal distribution | ${\rm erg}{\rm cm}^{-2}{\rm s}^{-1}{\rm Sr}^{-1}{\rm Hz}^{-1}{\rm K}^{-1}$ |
-| ThermalDistributionOfT | $B = \int B_{\nu} d\Omega d\nu$ | Frequency- and angle-integrated intensity of thermal distribution | ${\rm erg}{\rm cm}^{-2}{\rm s}^{-1}$ |
+| ThermalDistributionOfT | $4 \pi \int B_{\nu} d\nu = \int B_{\nu} d\Omega d\nu$ | Frequency- and angle-integrated intensity of thermal distribution | ${\rm erg}{\rm cm}^{-2}{\rm s}^{-1}$ |
 | ThermalNumberDistributionOfT | $B = \int \frac{1}{h \nu} B_{\nu} d\Omega d\nu$ | Frequency- and angle-integrated intensity of thermal distribution | ${\rm erg}{\rm cm}^{-2}{\rm s}^{-1}$ |
 | EnergyDensityFromTemperature | $E_{\rm R}$ | Radiation energy density | ${\rm erg}{\rm cm}^{-3}$ |
 | TemperatureFromEnergyDensity | $T_{\rm R}$ | Radiation temperature | ${\rm K}$ |
@@ -82,7 +83,13 @@ with the following function signatures:
     PlanckMeanScatteringCoefficient(density, temperature)
     RosselandMeanScatteringCoefficient(density, temperature)
 
-Note that the thermal radiation energy density `u = 1/c ThermalDistributionOfT` and the thermal radiation number density `n = 1/c ThermalNumberDistributionOfT`.
+Note that `ThermalDistributionOfTNu` is the per-steradian Planck function `B_\nu`, so
+`\int B_\nu d\nu = (c / 4 \pi) a T^4`, while
+`ThermalDistributionOfT = 4 \pi \int B_\nu d\nu = c a T^4`. Therefore the
+thermal radiation energy density is
+`u = (4 \pi / c) \int B_\nu d\nu = (1 / c) ThermalDistributionOfT = a T^4`, and the
+thermal radiation number density is
+`n = (1 / c) ThermalNumberDistributionOfT`.
 
 Opacity variant constructors are specific to the opacity model being requested; consult the source code for
 individual opacities.
@@ -150,7 +157,7 @@ max bounds the header.
 
 ## Copyright
 
-© 2021. Triad National Security, LLC. All rights reserved.  This
+© 2021-2026. Triad National Security, LLC. All rights reserved.  This
 program was produced under U.S. Government contract 89233218CNA000001
 for Los Alamos National Laboratory (LANL), which is operated by Triad
 National Security, LLC for the U.S.  Department of Energy/National
