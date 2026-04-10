@@ -377,20 +377,11 @@ class MultigroupOpacity {
   void ForEachGroupFrequencySample_(const Real temp, const Real nuMin,
                                     const Real nuMax, const int NNuPerGroup,
                                     SampleOp &&sample_op) const {
-    if (nuMin == 0.) {
-      const Real du = 1. / NNuPerGroup;
-      for (int inu = 0; inu < NNuPerGroup; ++inu) {
-        const Real u = (inu + 0.5) * du;
-        const Real nu = nuMax * u * u;
-        const Real dnu = 2. * nuMax * u * du;
-        sample_op(nu, dnu);
-      }
-      return;
-    }
+    const Real du = 1. / NNuPerGroup;
 
+    // [nuMin, infinity): x = xMin + u/(1-u) maps [0,1] -> [xMin, infinity]
     if (!std::isfinite(nuMax)) {
-      const Real du = 1. / NNuPerGroup;
-      const Real xMin = PC::h * nuMin / (PC::kb * temp);
+      const Real xMin = (nuMin == 0.) ? 0. : (PC::h * nuMin / (PC::kb * temp));
       const Real nuScale = PC::kb * temp / PC::h;
       for (int inu = 0; inu < NNuPerGroup; ++inu) {
         const Real u = (inu + 0.5) * du;
@@ -403,14 +394,25 @@ class MultigroupOpacity {
       return;
     }
 
+    // [0, nuMax]: quadratic transformation u^2 concentrates samples near 0
+    if (nuMin == 0.) {
+      for (int inu = 0; inu < NNuPerGroup; ++inu) {
+        const Real u = (inu + 0.5) * du;
+        const Real nu = nuMax * u * u;
+        const Real dnu = 2. * nuMax * u * du;
+        sample_op(nu, dnu);
+      }
+      return;
+    }
+
+    // [nuMin, nuMax]: logarithmic spacing with midpoint rule
     const Real lNuMin = toLog_(nuMin);
     const Real lNuMax = toLog_(nuMax);
-    const Real dlnu = (lNuMax - lNuMin) / (NNuPerGroup - 1);
+    const Real dlnu = (lNuMax - lNuMin) / NNuPerGroup;
     for (int inu = 0; inu < NNuPerGroup; ++inu) {
-      const Real weight = (inu == 0 || inu == NNuPerGroup - 1) ? 0.5 : 1.;
-      const Real lnu = lNuMin + inu * dlnu;
+      const Real lnu = lNuMin + (inu + 0.5) * dlnu;
       const Real nu = fromLog_(lnu);
-      sample_op(nu, weight * nu * dlnu);
+      sample_op(nu, nu * dlnu);
     }
   }
 

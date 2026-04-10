@@ -63,7 +63,7 @@ class MeanOpacity {
   }
 
   // construct Planck/Rosseland DataBox from ascii file
-  MeanOpacity(const std::string &filename)  : filename_(filename.c_str()) {
+  MeanOpacity(const std::string &filename) : filename_(filename.c_str()) {
 
     // get number of density and temperature points
     std::ifstream ff(filename.c_str());
@@ -77,7 +77,8 @@ class MeanOpacity {
       if (extension == ".txt") {
         loadASCII(ff);
 #ifdef SPINER_USE_HDF
-      } else if (extension == ".hdf5" || extension == ".h5" || extension == ".sp5") {
+      } else if (extension == ".hdf5" || extension == ".h5" ||
+                 extension == ".sp5") {
         herr_t status = H5_SUCCESS;
         hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
         status += lkappa_.loadHDF(file, "Rosseland & Planck Mean Opacities");
@@ -120,9 +121,7 @@ class MeanOpacity {
     return other;
   }
 
-  void Finalize() {
-    lkappa_.finalize();
-  }
+  void Finalize() { lkappa_.finalize(); }
 
   PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
   GetRuntimePhysicalConstants() const {
@@ -147,15 +146,14 @@ class MeanOpacity {
   // standard grey opacity functions
   PORTABLE_INLINE_FUNCTION
   Real AbsorptionCoefficient(const Real rho, const Real temp,
-                            const int gmode = Rosseland) const {
+                             const int gmode = Rosseland) const {
     Real lRho = toLog_(rho);
     Real lT = toLog_(temp);
     return rho * fromLog_(lkappa_.interpToReal(lRho, lT, gmode));
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real Emissivity(const Real rho, const Real temp,
-                  const int gmode = Rosseland,
+  Real Emissivity(const Real rho, const Real temp, const int gmode = Rosseland,
                   Real *lambda = nullptr) const {
     Real B = dist_.ThermalDistributionOfT(temp, lambda);
     Real lRho = toLog_(rho);
@@ -194,24 +192,21 @@ class MeanOpacity {
           lNuMin = toLog_(1.e-3 * PC::kb * fromLog_(lTMin) / PC::h);
           lNuMax = toLog_(1.e3 * PC::kb * fromLog_(lTMax) / PC::h);
         }
-        const Real dlnu = (lNuMax - lNuMin) / (NNu - 1);
-        // Integrate over frequency
+        const Real dlnu = (lNuMax - lNuMin) / NNu;
+        // Integrate over frequency using midpoint rule
         for (int inu = 0; inu < NNu; ++inu) {
-          const Real weight =
-              (inu == 0 || inu == NNu - 1) ? 0.5 : 1.; // Trapezoidal rule
-          const Real lnu = lNuMin + inu * dlnu;
+          const Real lnu = lNuMin + (inu + 0.5) * dlnu;
           const Real nu = fromLog_(lnu);
           const Real alpha = opac.AbsorptionCoefficient(rho, T, nu, lambda);
           const Real B = opac.ThermalDistributionOfTNu(T, nu);
           const Real dBdT = opac.DThermalDistributionOfTNuDT(T, nu);
-          kappaPlanckNum += weight * alpha / rho * B * nu * dlnu;
-          kappaPlanckDenom += weight * B * nu * dlnu;
+          kappaPlanckNum += alpha / rho * B * nu * dlnu;
+          kappaPlanckDenom += B * nu * dlnu;
 
           if (alpha > singularity_opac::robust::SMALL()) {
-            kappaRosselandNum += weight *
-                                 singularity_opac::robust::ratio(rho, alpha) *
-                                 dBdT * nu * dlnu;
-            kappaRosselandDenom += weight * dBdT * nu * dlnu;
+            kappaRosselandNum +=
+                singularity_opac::robust::ratio(rho, alpha) * dBdT * nu * dlnu;
+            kappaRosselandDenom += dBdT * nu * dlnu;
           }
         }
 
@@ -245,8 +240,8 @@ class MeanOpacity {
     std::getline(ff, fline);
 
     // tokenize fline
-    char* cfline = const_cast<char*>(fline.c_str());
-    char* fl_tok = std::strtok(cfline, " ");
+    char *cfline = const_cast<char *>(fline.c_str());
+    char *fl_tok = std::strtok(cfline, " ");
 
     // move to next token to get number of density points
     fl_tok = std::strtok(nullptr, " ");
@@ -260,7 +255,7 @@ class MeanOpacity {
     // read 2nd line of header to get min/max density
     std::getline(ff, fline);
     // tokenize fline
-    cfline = const_cast<char*>(fline.c_str());
+    cfline = const_cast<char *>(fline.c_str());
     fl_tok = std::strtok(cfline, " ");
     fl_tok = std::strtok(nullptr, " ");
     const Real RhoMin = std::stod(fl_tok);
@@ -271,7 +266,7 @@ class MeanOpacity {
     // read 3nd line of header to get min/max temperature
     std::getline(ff, fline);
     // tokenize fline
-    cfline = const_cast<char*>(fline.c_str());
+    cfline = const_cast<char *>(fline.c_str());
     fl_tok = std::strtok(cfline, " ");
     fl_tok = std::strtok(nullptr, " ");
     const Real TMin = std::stod(fl_tok);
@@ -297,7 +292,7 @@ class MeanOpacity {
 
         // get new file-line
         std::getline(ff, fline);
-        cfline = const_cast<char*>(fline.c_str());
+        cfline = const_cast<char *>(fline.c_str());
         fl_tok = std::strtok(cfline, " ");
 
         // populate Rosseland opacity [cm^2/g]
