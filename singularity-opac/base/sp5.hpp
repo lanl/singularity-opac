@@ -46,6 +46,12 @@ constexpr char RosselandGroupOpacity[] = "Rosseland group opacity";
 constexpr char GroupBounds[] = "group bounds";
 } // namespace MultigroupOpac
 
+namespace MultigroupSOpac {
+constexpr char PlanckGroupSOpacity[] = "Planck group scattering opacity";
+constexpr char RosselandGroupSOpacity[] = "Rosseland group scattering opacity";
+constexpr char GroupBounds[] = "group bounds";
+} // namespace MultigroupSOpac
+
 } // namespace SP5
 
 #endif // SINGULARITY_OPAC_BASE_SP5_

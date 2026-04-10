@@ -22,6 +22,7 @@
 
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
+#include <singularity-opac/constants/constants.hpp>
 
 namespace singularity {
 namespace photons {

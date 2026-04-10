@@ -219,13 +219,10 @@ class MeanSOpacity {
 
 } // namespace impl
 
-using MeanSOpacityScaleFree =
-    impl::MeanSOpacity<FermiDiracDistributionNoMu<3, PhysicalConstantsUnity>,
-                       PhysicalConstantsUnity>;
-using MeanSOpacityCGS =
+using MeanSOpacityBase =
     impl::MeanSOpacity<FermiDiracDistributionNoMu<3>, PhysicalConstantsCGS>;
-using MeanSOpacity = impl::MeanSVariant<MeanSOpacityScaleFree, MeanSOpacityCGS,
-                                        MeanNonCGSUnitsS<MeanSOpacityCGS>>;
+using MeanSOpacity =
+    impl::MeanSVariant<MeanSOpacityBase, MeanNonCGSUnitsS<MeanSOpacityBase>>;
 
 } // namespace neutrinos
 } // namespace singularity

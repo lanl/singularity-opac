@@ -287,7 +287,7 @@ TEST_CASE("Mean neutrino scattering opacities", "[MeanNeutrinosS]") {
     neutrinos::GrayS opac_host(sigma, avg_particle_mass);
     neutrinos::SOpacity opac = opac_host.GetOnDevice();
 
-    neutrinos::MeanSOpacityCGS mean_opac_host(
+    neutrinos::MeanSOpacityBase mean_opac_host(
         opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, YeMin, YeMax, NYe);
     auto mean_opac = mean_opac_host.GetOnDevice();
 
@@ -325,7 +325,7 @@ TEST_CASE("Mean neutrino scattering opacities", "[MeanNeutrinosS]") {
 #ifdef SPINER_USE_HDF
     THEN("We can save to disk and reload") {
       mean_opac.Save(grayname);
-      neutrinos::MeanSOpacityCGS mean_opac_host_load(grayname);
+      neutrinos::MeanSOpacityBase mean_opac_host_load(grayname);
       AND_THEN("The reloaded table matches the gray opacities") {
 
         auto mean_opac_load = mean_opac_host_load.GetOnDevice();
@@ -637,7 +637,7 @@ TEST_CASE("Mean photon scattering opacities", "[MeanPhotonS]") {
     photons::GrayS opac_host(sigma, avg_particle_mass);
     photons::SOpacity opac = opac_host.GetOnDevice();
 
-    photons::MeanSOpacityCGS mean_opac_host(opac_host, lRhoMin, lRhoMax, NRho,
+    photons::MeanSOpacityBase mean_opac_host(opac_host, lRhoMin, lRhoMax, NRho,
                                             lTMin, lTMax, NT);
     auto mean_opac = mean_opac_host.GetOnDevice();
 
@@ -674,7 +674,7 @@ TEST_CASE("Mean photon scattering opacities", "[MeanPhotonS]") {
 #ifdef SPINER_USE_HDF
     THEN("We can save to disk and reload") {
       mean_opac.Save(grayname);
-      photons::MeanSOpacityCGS mean_opac_host_load(grayname);
+      photons::MeanSOpacityBase mean_opac_host_load(grayname);
       AND_THEN("The reloaded table matches the gray opacities") {
 
         auto mean_opac_load = mean_opac_host_load.GetOnDevice();

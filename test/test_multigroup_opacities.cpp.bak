@@ -975,7 +975,7 @@ TEST_CASE("Photon multigroup gray scattering opacities are exact",
   const std::array<Real, ngroups + 1> group_bounds = {1.e12, 3.e12, 1.e13,
                                                       1.e14, 3.e15};
 
-  photons::GraySOpacity<PhysicalConstantsCGS> s_opac_host(sigma, apm);
+  photons::GraySOpacity s_opac_host(sigma, apm);
   photons::MultigroupSOpacityBase multigroup_host(
       s_opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, group_bounds,
       ngroups, nnu_per_group);
@@ -1024,7 +1024,7 @@ TEST_CASE("Photon multigroup scattering with extreme bounds [0, infinity] "
   const std::array<Real, ngroups + 1> full_spectrum_bounds = {
       0., std::numeric_limits<Real>::infinity()};
 
-  photons::GraySOpacity<PhysicalConstantsCGS> s_opac_host(sigma, apm);
+  photons::GraySOpacity s_opac_host(sigma, apm);
   photons::MultigroupSOpacityBase multigroup_host(
       s_opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT,
       full_spectrum_bounds, ngroups, nnu_per_group);
@@ -1065,7 +1065,7 @@ TEST_CASE("Photon multigroup scattering GroupOfNu handles extreme bounds",
   const std::array<Real, ngroups + 1> extreme_bounds = {
       0., nu_low, nu_high, std::numeric_limits<Real>::infinity()};
 
-  photons::GraySOpacity<PhysicalConstantsCGS> s_opac_host(sigma, apm);
+  photons::GraySOpacity s_opac_host(sigma, apm);
   photons::MultigroupSOpacityBase multigroup_host(
       s_opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, extreme_bounds,
       ngroups, nnu_per_group);
