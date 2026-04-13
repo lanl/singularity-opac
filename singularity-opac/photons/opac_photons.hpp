@@ -20,13 +20,11 @@
 
 #include <singularity-opac/photons/epbremsstrahlung_opacity_photons.hpp>
 #include <singularity-opac/photons/gray_opacity_photons.hpp>
-#include <singularity-opac/photons/multigroup_opacity_photons.hpp>
+#include <singularity-opac/photons/mean_opacity_photons.hpp>
 #include <singularity-opac/photons/non_cgs_photons.hpp>
 #include <singularity-opac/photons/photon_variant.hpp>
 #include <singularity-opac/photons/powerlaw_opacity_photons.hpp>
 #include <singularity-opac/photons/thermal_distributions_photons.hpp>
-
-#include <singularity-opac/photons/mean_opacity_photons.hpp>
 
 namespace singularity {
 namespace photons {

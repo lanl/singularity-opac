@@ -96,11 +96,7 @@ class MeanVariant {
   PORTABLE_INLINE_FUNCTION
   Real AbsorptionCoefficient(const Real rho, const Real temp,
                              const int gmode = Rosseland) const {
-    return PortsOfCall::visit(
-        [=](const auto &opac) {
-          return opac.AbsorptionCoefficient(rho, temp, gmode);
-        },
-        opac_);
+    return AbsorptionCoefficient(rho, temp, 0, gmode);
   }
 
   PORTABLE_INLINE_FUNCTION
@@ -108,7 +104,71 @@ class MeanVariant {
                   Real *lambda = nullptr) const {
     return PortsOfCall::visit(
         [=](const auto &opac) {
-          return opac.Emissivity(rho, temp, gmode, lambda);
+          return opac.Emissivity(rho, temp, gmode);
+        },
+        opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  int ngroups() const noexcept {
+    return PortsOfCall::visit([](const auto &opac) { return opac.ngroups(); },
+                              opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  bool HasGroupBounds() const noexcept {
+    return PortsOfCall::visit(
+        [](const auto &opac) { return opac.HasGroupBounds(); }, opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckGroupAbsorptionCoefficient(const Real rho, const Real temp,
+                                        const int group) const {
+    return AbsorptionCoefficient(rho, temp, group, Planck);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandGroupAbsorptionCoefficient(const Real rho, const Real temp,
+                                           const int group) const {
+    return AbsorptionCoefficient(rho, temp, group, Rosseland);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real AbsorptionCoefficient(const Real rho, const Real temp, const int group,
+                             const int gmode) const {
+    return PortsOfCall::visit(
+        [=](const auto &opac) {
+          return opac.AbsorptionCoefficient(rho, temp, group, gmode);
+        },
+        opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  int GroupOfNu(const Real nu) const {
+    return PortsOfCall::visit(
+        [=](const auto &opac) { return opac.GroupOfNu(nu); }, opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckGroupAbsorptionCoefficientFromNu(const Real rho, const Real temp,
+                                              const Real nu) const {
+    return AbsorptionCoefficientFromNu(rho, temp, nu, Planck);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandGroupAbsorptionCoefficientFromNu(const Real rho,
+                                                 const Real temp,
+                                                 const Real nu) const {
+    return AbsorptionCoefficientFromNu(rho, temp, nu, Rosseland);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real AbsorptionCoefficientFromNu(const Real rho, const Real temp,
+                                   const Real nu,
+                                   const int gmode = Rosseland) const {
+    return PortsOfCall::visit(
+        [=](const auto &opac) {
+          return opac.AbsorptionCoefficientFromNu(rho, temp, nu, gmode);
         },
         opac_);
   }

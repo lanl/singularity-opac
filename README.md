@@ -44,27 +44,20 @@ with the following function signatures:
     TemperatureFromEnergyDensity(radiation energy density)
     NumberDensityFromTemperature(temperature)
 
-For mean absorption opacities, the following functions are provided:
+For mean absorption opacities, the following functions are provided.
+Mean opacities compute frequency-averaged (Planck or Rosseland) absorption
+coefficients over one or more energy groups. When `ngroups=1` with group bounds
+`[0, ∞)`, mean opacities reduce to traditional gray opacities. For `ngroups>1`,
+they provide multigroup radiation transport capabilities.
+
 | Function              | Expression | Description            | Units   |
 | --------------------- | ---------- | ---------------------  | ------- |
-| PlankMeanAbsorptionCoefficient | $n \sigma$ | Absorption coefficient | ${\rm cm}^{-1}$ |
-| RosselandMeanAbsorptionCoefficient | $n \sigma$ | Absorption coefficient | ${\rm cm}^{-1}$ |
-| AbsorptionCoefficient | $n \sigma$ | Absorption coefficient | ${\rm cm}^{-1}$ |
-| Emissivity | $\int j_{\nu} d\nu d\Omega$  | Total emissivity | ${\rm erg}{\rm cm}^{-3}{\rm s}^{-1}$ |
-
-with the following function signatures:
-
-    PlanckMeanAbsorptionCoefficient(density, temperature)
-    RosselandMeanAbsorptionCoefficient(density, temperature)
-    AbsorptionCoefficient(density, temperature, gmode [Planck, Rosseland])
-    Emissivity(density, temperature)
-
-For multigroup absorption opacities, the following functions are provided:
-| Function              | Expression | Description            | Units   |
-| --------------------- | ---------- | ---------------------  | ------- |
+| PlankMeanAbsorptionCoefficient | $n \sigma$ | Planck mean absorption coefficient (gray, ngroups=1) | ${\rm cm}^{-1}$ |
+| RosselandMeanAbsorptionCoefficient | $n \sigma$ | Rosseland mean absorption coefficient (gray, ngroups=1) | ${\rm cm}^{-1}$ |
 | PlanckGroupAbsorptionCoefficient | $n \sigma_g$ | Planck-weighted absorption coefficient in a frequency group | ${\rm cm}^{-1}$ |
 | RosselandGroupAbsorptionCoefficient | $n \sigma_g$ | Rosseland-weighted absorption coefficient in a frequency group | ${\rm cm}^{-1}$ |
-| AbsorptionCoefficient | $n \sigma_g$ | Group absorption coefficient | ${\rm cm}^{-1}$ |
+| AbsorptionCoefficient | $n \sigma$ or $n \sigma_g$ | Absorption coefficient (gray or group) | ${\rm cm}^{-1}$ |
+| Emissivity | $\int j_{\nu} d\nu d\Omega$  | Total emissivity | ${\rm erg}{\rm cm}^{-3}{\rm s}^{-1}$ |
 | GroupOfNu | $g(\nu)$ | Group index containing a given frequency | dimensionless |
 | PlanckGroupAbsorptionCoefficientFromNu | $n \sigma_{g(\nu)}$ | Planck-weighted group coefficient selected by frequency | ${\rm cm}^{-1}$ |
 | RosselandGroupAbsorptionCoefficientFromNu | $n \sigma_{g(\nu)}$ | Rosseland-weighted group coefficient selected by frequency | ${\rm cm}^{-1}$ |
@@ -73,19 +66,24 @@ For multigroup absorption opacities, the following functions are provided:
 with the following function signatures:
 
     ngroups()
-    GroupOfNu(frequency)
+    PlanckMeanAbsorptionCoefficient(density, temperature)
+    RosselandMeanAbsorptionCoefficient(density, temperature)
     PlanckGroupAbsorptionCoefficient(density, temperature, group index)
     RosselandGroupAbsorptionCoefficient(density, temperature, group index)
+    AbsorptionCoefficient(density, temperature, gmode [Planck, Rosseland])
     AbsorptionCoefficient(density, temperature, group index, gmode [Planck, Rosseland])
+    Emissivity(density, temperature)
+    GroupOfNu(frequency)
     PlanckGroupAbsorptionCoefficientFromNu(density, temperature, frequency)
     RosselandGroupAbsorptionCoefficientFromNu(density, temperature, frequency)
     AbsorptionCoefficientFromNu(density, temperature, frequency, gmode [Planck, Rosseland])
 
-Multigroup opacities can either be constructed from a frequency-dependent
+Mean absorption opacities can either be constructed from a frequency-dependent
+Mean absorption opacities can either be constructed from a frequency-dependent
 opacity model plus user-provided group bounds, or loaded directly from
 precomputed Spiner tables of group Planck and Rosseland opacities. The direct
 table-backed path does not require singularity-opac to recompute opacity
-integrals, but it must include explicit group bounds. Multigroup opacities
+integrals, but it must include explicit group bounds. Mean opacities
 always carry group bounds, and the convention is half-open groups
 `[nu_g, nu_{g+1})`, with the final upper bound included in the last group.
 If you want singularity-opac to interpret a group as extending to infinity,
@@ -97,10 +95,6 @@ IEEE `+infinity` value must appear in the final element of the `"group bounds"`
 dataset. Likewise, a lower tail group `[0, nu_1)` is represented by setting
 the first bound to `0.`. A very large finite number is still interpreted as a
 finite bound.
-When building from a frequency-dependent opacity, multigroup opacities can also
-be constructed from `(nu_min, nu_max, NLogGroups)`, which generates
-`NLogGroups + 2` groups: `[0, nu_min)`, `NLogGroups` logarithmically spaced
-groups between `nu_min` and `nu_max`, and `[nu_max, \infty)`.
 
 For frequency-dependent scattering opacities, the following functions are provided
 | Function              | Expression | Description            | Units   |

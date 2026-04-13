@@ -48,7 +48,6 @@ PRIVATE
   test_thomson_s_opacities.cpp
   test_chebyshev.cpp
   test_spiner_opac_neutrinos.cpp
-  test_mean_opacities.cpp
   test_multigroup_opacities.cpp
   test_variant.cpp
 )

@@ -198,7 +198,8 @@ class MeanOpacity {
             Real kappaPlanck = singularity_opac::robust::ratio(
                 kappaPlanckNum, kappaPlanckDenom);
             Real kappaRosseland =
-                kappaPlanck > singularity_opac::robust::SMALL()
+                (kappaPlanck > singularity_opac::robust::SMALL() &&
+                 kappaRosselandNum > singularity_opac::robust::SMALL())
                     ? singularity_opac::robust::ratio(kappaRosselandDenom,
                                                       kappaRosselandNum)
                     : 0.;
