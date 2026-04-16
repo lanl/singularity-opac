@@ -157,6 +157,14 @@ class MeanOpacity {
   PORTABLE_INLINE_FUNCTION
   bool HasGroupBounds() const noexcept { return true; }
 
+  std::vector<Real> GetGroupBounds() const {
+    std::vector<Real> bounds(ngroups_ + 1);
+    for (int group = 0; group <= ngroups_; ++group) {
+      bounds[group] = groupBounds_(group);
+    }
+    return bounds;
+  }
+
   PORTABLE_INLINE_FUNCTION
   Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
     return PlanckGroupAbsorptionCoefficient(rho, temp, 0);
