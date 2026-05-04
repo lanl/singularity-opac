@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2022-2024. Triad National Security, LLC. All rights reserved.  This
+// © 2022-2026. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -12,6 +12,8 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
+
+// This file was made in part with generative AI.
 
 #include <cmath>
 #include <iostream>
@@ -72,11 +74,11 @@ TEST_CASE("Mean neutrino opacities", "[MeanNeutrinos]") {
     constexpr Real nu = 1.25 * MeV2Hz; // 1 MeV
 
     constexpr int nT = 10;
-    constexpr Real lRhoMin = std::log10(0.1 * rho);
-    constexpr Real lRhoMax = std::log10(10. * rho);
+    const Real lRhoMin = std::log10(0.1 * rho);
+    const Real lRhoMax = std::log10(10. * rho);
     constexpr int NRho = 2;
-    constexpr Real lTMin = std::log10(0.1 * temp);
-    constexpr Real lTMax = std::log10(10. * temp);
+    const Real lTMin = std::log10(0.1 * temp);
+    const Real lTMax = std::log10(10. * temp);
     constexpr int NT = 10;
     constexpr Real YeMin = 0.1;
     constexpr Real YeMax = 0.5;
@@ -268,11 +270,11 @@ TEST_CASE("Mean neutrino scattering opacities", "[MeanNeutrinosS]") {
     constexpr Real nu = 1.25 * MeV2Hz; // 1 MeV
 
     constexpr int nT = 10;
-    constexpr Real lRhoMin = std::log10(0.1 * rho);
-    constexpr Real lRhoMax = std::log10(10. * rho);
+    const Real lRhoMin = std::log10(0.1 * rho);
+    const Real lRhoMax = std::log10(10. * rho);
     constexpr int NRho = 2;
-    constexpr Real lTMin = std::log10(0.1 * temp);
-    constexpr Real lTMax = std::log10(10. * temp);
+    const Real lTMin = std::log10(0.1 * temp);
+    const Real lTMax = std::log10(10. * temp);
     constexpr int NT = 10;
     constexpr Real YeMin = 0.1;
     constexpr Real YeMax = 0.5;
@@ -289,7 +291,7 @@ TEST_CASE("Mean neutrino scattering opacities", "[MeanNeutrinosS]") {
         opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, YeMin, YeMax, NYe);
     auto mean_opac = mean_opac_host.GetOnDevice();
 
-    THEN("The emissivity per nu omega is consistent with the emissity per nu") {
+    THEN("The gray Planck and Rosseland means reduce to rho kappa") {
       int n_wrong_h = 0;
 #ifdef PORTABILITY_STRATEGY_KOKKOS
       Kokkos::View<int, atomic_view> n_wrong_d("wrong");
@@ -435,11 +437,11 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
     constexpr Real nu = 1.e15;  // Hz
 
     constexpr int nT = 10;
-    constexpr Real lRhoMin = std::log10(0.1 * rho);
-    constexpr Real lRhoMax = std::log10(10. * rho);
+    const Real lRhoMin = std::log10(0.1 * rho);
+    const Real lRhoMax = std::log10(10. * rho);
     constexpr int NRho = 2;
-    constexpr Real lTMin = std::log10(0.1 * temp);
-    constexpr Real lTMax = std::log10(10. * temp);
+    const Real lTMin = std::log10(0.1 * temp);
+    const Real lTMax = std::log10(10. * temp);
     constexpr int NT = 10;
 
     constexpr Real kappa = 1.e-20;
@@ -464,11 +466,11 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
             Real alphaPlanck =
                 mean_opac.PlanckMeanAbsorptionCoefficient(rho, temp);
             Real alphaRosseland =
-                mean_opac.PlanckMeanAbsorptionCoefficient(rho, temp);
-            if (FractionalDifference(kappa * rho, alphaPlanck) > EPS_TEST) {
+                mean_opac.RosselandMeanAbsorptionCoefficient(rho, temp);
+            if (FractionalDifference(kappa * rho, alphaPlanck) > 1.e-12) {
               n_wrong_d() += 1;
             }
-            if (FractionalDifference(kappa * rho, alphaRosseland) > EPS_TEST) {
+            if (FractionalDifference(kappa * rho, alphaRosseland) > 1.e-12) {
               n_wrong_d() += 1;
             }
           });
@@ -621,11 +623,11 @@ TEST_CASE("Mean photon scattering opacities", "[MeanPhotonS]") {
     constexpr Real nu = 1.e15;  // Hz
 
     constexpr int nT = 10;
-    constexpr Real lRhoMin = std::log10(0.1 * rho);
-    constexpr Real lRhoMax = std::log10(10. * rho);
+    const Real lRhoMin = std::log10(0.1 * rho);
+    const Real lRhoMax = std::log10(10. * rho);
     constexpr int NRho = 2;
-    constexpr Real lTMin = std::log10(0.1 * temp);
-    constexpr Real lTMax = std::log10(10. * temp);
+    const Real lTMin = std::log10(0.1 * temp);
+    const Real lTMax = std::log10(10. * temp);
     constexpr int NT = 10;
 
     constexpr Real sigma = 1.e-20;
@@ -771,14 +773,14 @@ TEST_CASE("ASCII-parsed Mean photon opacities", "[MeanPhotons]") {
 
   WHEN("We initialize a mean photon opacity from an ASCII table") {
 
-    constexpr Real rho_min = 1e-14;  // g/cc.
-    constexpr Real temp_min = 1.0; // Kelvin.
-    constexpr Real ross_at_min = 0.001; // cm^2/g
-    constexpr Real plnk_at_min = 0.1; // cm^2/g
-    constexpr Real rho_max = 0.7943282347241912;  // g/cc.
+    constexpr Real rho_min = 1e-14;              // g/cc.
+    constexpr Real temp_min = 1.0;               // Kelvin.
+    constexpr Real ross_at_min = 0.001;          // cm^2/g
+    constexpr Real plnk_at_min = 0.1;            // cm^2/g
+    constexpr Real rho_max = 0.7943282347241912; // g/cc.
     constexpr Real temp_max = 7943282.347242886; // Kelvin.
-    constexpr Real ross_at_max = 0.001; // cm^2/g
-    constexpr Real plnk_at_max = 0.1; // cm^2/g
+    constexpr Real ross_at_max = 0.001;          // cm^2/g
+    constexpr Real plnk_at_max = 0.1;            // cm^2/g
 
     photons::MeanOpacity mean_opac_host = photons::MeanOpacity(grayname);
     auto mean_opac = mean_opac_host.GetOnDevice();
@@ -792,7 +794,8 @@ TEST_CASE("ASCII-parsed Mean photon opacities", "[MeanPhotons]") {
 #endif
 
       // get a test value at min rho-T point
-      Real mross = mean_opac.RosselandMeanAbsorptionCoefficient(rho_min, temp_min);
+      Real mross =
+          mean_opac.RosselandMeanAbsorptionCoefficient(rho_min, temp_min);
       Real mplnk = mean_opac.PlanckMeanAbsorptionCoefficient(rho_min, temp_min);
 
       // check min rho-T point
