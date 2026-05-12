@@ -40,7 +40,7 @@ class PowerLawOpacity {
       : PowerLawOpacity(PlanckDistribution<pc>{}, kappa0, rho_exp, temp_exp,
                         nu_exp, nu_ref) {}
   PowerLawOpacity(const PlanckDistribution<pc> &dist, const Real kappa0,
-                  const Real rho_exp, const Real temp_exp, const Real nu_exp,
+                  const Real rho_exp, const Real temp_exp, const Real nu_exp = 0.0,
                   const Real nu_ref = 1.)
       : dist_(dist), kappa0_(kappa0), rho_exp_(rho_exp), temp_exp_(temp_exp),
         nu_exp_(nu_exp), nu_ref_(nu_ref) {
