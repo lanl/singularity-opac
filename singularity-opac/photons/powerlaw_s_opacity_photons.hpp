@@ -33,10 +33,10 @@ class PowerLawSOpacity {
  public:
   PowerLawSOpacity() = default;
   PowerLawSOpacity(const Real kappa0, const Real rho_exp, const Real temp_exp,
+                   const Real nu_exp = 0., const Real nu_ref = 1., const Real nu_off = 0.,
                    const Real rho_ref = 1., const Real rho_off = 0.,
                    const Real temp_ref = 1., const Real temp_off = 0.,
-                   const Real nu_exp = 0., const Real nu_ref = 1.,
-                   const Real nu_off = 0.,const Real avg_particle_mass = 1.)
+                   const Real avg_particle_mass = 1.)
       : kappa0_(kappa0), rho_exp_(rho_exp), temp_exp_(temp_exp),
         rho_ref_(rho_ref), rho_off_(rho_off), temp_ref_(temp_ref), temp_off_(temp_off),
         nu_exp_(nu_exp), nu_ref_(nu_ref), nu_off_(nu_off), apm_(avg_particle_mass) {
