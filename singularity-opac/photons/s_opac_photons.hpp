@@ -21,6 +21,7 @@
 #include <singularity-opac/photons/gray_s_opacity_photons.hpp>
 #include <singularity-opac/photons/non_cgs_s_photons.hpp>
 #include <singularity-opac/photons/photon_s_variant.hpp>
+#include <singularity-opac/photons/powerlaw_s_opacity_photons.hpp>
 #include <singularity-opac/photons/thomson_s_opacity_photons.hpp>
 
 namespace singularity {
@@ -29,9 +30,11 @@ namespace photons {
 using ScaleFreeS = GraySOpacity<PhysicalConstantsUnity>;
 using GrayS = GraySOpacity<>;
 using ThomsonS = ThomsonSOpacity<>;
+using PowerLawS = PowerLawSOpacity<>;
 
-using SOpacity = impl::S_Variant<ScaleFreeS, GrayS, ThomsonS,
-                                 NonCGSUnitsS<GrayS>, NonCGSUnitsS<ThomsonS>>;
+using SOpacity = impl::S_Variant<ScaleFreeS, GrayS, ThomsonS, PowerLawS,
+                                 NonCGSUnitsS<GrayS>, NonCGSUnitsS<ThomsonS>,
+                                 NonCGSUnitsS<PowerLawS>>;
 
 } // namespace photons
 } // namespace singularity
