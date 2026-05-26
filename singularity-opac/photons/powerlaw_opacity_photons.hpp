@@ -78,8 +78,11 @@ class PowerLawOpacity {
   PORTABLE_INLINE_FUNCTION
   void PrintParams() const noexcept {
     printf("Power law opacity. kappa0 = %g rho_exp = %g temp_exp = %g "
-           "nu_exp = %g nu_ref = %g\n",
-           kappa0_, rho_exp_, temp_exp_, nu_exp_, nu_ref_);
+           "nu_exp = %g nu_ref = %g nu_off = %g rho_ref = %g rho_off = %g"
+           "temp_ref = %g temp_off = %g do_stim_emit = %d\n",
+           kappa0_, rho_exp_, temp_exp_, nu_exp_, nu_ref_,
+           nu_off_, rho_ref_, rho_off_, temp_ref_, temp_off_,
+           do_stim_emit_);
   }
   inline void Finalize() noexcept {}
 
@@ -246,13 +249,13 @@ class PowerLawOpacity {
   Real kappa0_;        // Opacity scale. Units depend on nu_exp and nu_ref.
   Real rho_exp_;       // Power law index of density
   Real temp_exp_;      // Power law index of temperature
-  Real rho_ref_;       // Density normalization for rho_exp
-  Real rho_off_;       // Density offset (same units as rho_ref)
-  Real temp_ref_;      // Temperature normalization for temp_exp
-  Real temp_off_;      // Temperature offset (same units as temp_ref)
+  Real rho_ref_;       // Density normalization for rho_exp. Units of g/cm^3
+  Real rho_off_;       // Density offset (same units as rho_ref). Units of g/cm^3
+  Real temp_ref_;      // Temperature normalization for temp_exp. Units of K
+  Real temp_off_;      // Temperature offset (same units as temp_ref). Units of K
   Real nu_exp_;        // Power law index of frequency
-  Real nu_ref_;        // Frequency normalization for nu_exp
-  Real nu_off_;        // Frequency offset (same units as nu_ref)
+  Real nu_ref_;        // Frequency normalization for nu_exp. Units of 1/s
+  Real nu_off_;        // Frequency offset (same units as nu_ref). Units of 1/s
   bool do_stim_emit_;  // indicator to use stimulated (LTE) emission factor
   PlanckDistribution<pc> dist_;
 };
