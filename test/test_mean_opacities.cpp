@@ -446,27 +446,42 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
 
     constexpr Real kappa = 1.e-20;
 
+    // Load analytic Opacity Eos
     photons::Gray opac_host(kappa);
+    // Put it on the GPU
     photons::Opacity opac = opac_host.GetOnDevice();
 
+    // Load a table Opacity
     photons::MeanOpacity mean_opac_host = photons::MeanOpacityBase(
         opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT);
+    // Put it on the GPU
     auto mean_opac = mean_opac_host.GetOnDevice();
 
+    // Declare this thing that lives in a scope where the GPU code is being
+    // managed.
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
       int n_wrong_h = 0;
 #ifdef PORTABILITY_STRATEGY_KOKKOS
+      // Create a view to avoid copying the data
       Kokkos::View<int, atomic_view> n_wrong_d("wrong");
 #else
+      // Create something that works like a View but is fine on CPU
       PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
 #endif
 
+      // This is a for loop that can be device side or host side
       portableFor(
-          "calc mean opacities", 0, 100, PORTABLE_LAMBDA(const int &i) {
+          // The for loop is called "calc mean opacities"
+          // It loops over an index from 0 to 100
+          "calc mean opacities", 0, 100, 
+          // Define a Lambda that takes an argument (we'll cal it i)
+          PORTABLE_LAMBDA(const int &i) {
+            // Inside of this lambda, we are calculating these opacities
             Real alphaPlanck =
                 mean_opac.PlanckMeanAbsorptionCoefficient(rho, temp);
             Real alphaRosseland =
                 mean_opac.RosselandMeanAbsorptionCoefficient(rho, temp);
+            // Check if they're wrong and if they are increase the wrong counter
             if (FractionalDifference(kappa * rho, alphaPlanck) > 1.e-12) {
               n_wrong_d() += 1;
             }
