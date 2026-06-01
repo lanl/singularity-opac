@@ -457,19 +457,19 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
     // Put it on the GPU
     auto mean_opac = mean_opac_host.GetOnDevice();
 
-    // Declare this thing that lives in a scope where the GPU code is being
-    // managed.
+    // This is a part of the catch2 control flow for unit testing.
     THEN("The emissivity per nu omega is consistent with the emissity per nu") {
       int n_wrong_h = 0;
 #ifdef PORTABILITY_STRATEGY_KOKKOS
-      // Create a view to avoid copying the data
+      // Creates a device-side view with the atomic trait when using Kokkos!
+      // This allocates data on device.
       Kokkos::View<int, atomic_view> n_wrong_d("wrong");
 #else
       // Create something that works like a View but is fine on CPU
       PortableMDArray<int> n_wrong_d(&n_wrong_h, 1);
 #endif
 
-      // This is a for loop that can be device side or host side
+      // This is a for loop that can be device side (default) or host side
       portableFor(
           // The for loop is called "calc mean opacities"
           // It loops over an index from 0 to 100
@@ -491,6 +491,7 @@ TEST_CASE("Mean photon opacities", "[MeanPhotons]") {
           });
 
 #ifdef PORTABILITY_STRATEGY_KOKKOS
+      // Copies counter from device to host
       Kokkos::deep_copy(n_wrong_h, n_wrong_d);
 #endif
       REQUIRE(n_wrong_h == 0);
