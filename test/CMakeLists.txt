@@ -10,28 +10,34 @@
 # prepare derivative works, distribute copies to the public, perform
 # publicly and display publicly, and to permit others to do so.
 
-# This file was made in part with generative AI.
+# This file was generated in part with the assistance of generative AI.
 
-if(NOT Catch2_FOUND)
+if(NOT TARGET Catch2::Catch2)
+  find_package(Catch2 3 CONFIG QUIET)
+endif()
+
+if(NOT TARGET Catch2::Catch2)
   # Get catch2
   message(STATUS "Fetching Catch2 as needed")
   Include(FetchContent)
   FetchContent_Declare(
     Catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG        v2.13.10)
+    GIT_TAG        v3.7.1)
   FetchContent_MakeAvailable(Catch2)
 endif()
-# TODO(JMM) This is gross and bad. Fix when we update to catch2/v3
-list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/contrib)
-list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
+if(DEFINED catch2_SOURCE_DIR)
+  list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+elseif(DEFINED Catch2_SOURCE_DIR)
+  list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
+endif()
 
 # Build tests
 message(STATUS "Configuring unit tests")
 #find_package(${PROJECT_NAME} CONFIG REQUIRED)
 
 add_library(catch2_define)
-target_sources(catch2_define PUBLIC catch2_define.cpp)
+target_sources(catch2_define PRIVATE catch2_define.cpp)
 target_link_libraries(catch2_define PUBLIC
                       ${PROJECT_NAME}
                       singularity-opac::flags

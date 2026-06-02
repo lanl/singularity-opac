@@ -13,9 +13,11 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
+// This file was generated in part with the assistance of generative AI.
+
 #include <iostream>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include <spiner/databox.hpp>
 #include <ports-of-call/portability.hpp>
