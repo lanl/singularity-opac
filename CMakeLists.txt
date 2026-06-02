@@ -51,7 +51,8 @@ add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 add_library (singularity-opac::flags INTERFACE IMPORTED GLOBAL)
 target_include_directories(singularity-opac::flags
                            INTERFACE
-                           $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
+                           $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+                           ${CMAKE_CURRENT_LIST_DIR}/utils)
 
 include (SetupOptions)
 include (SetupDeps)
