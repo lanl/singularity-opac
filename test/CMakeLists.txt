@@ -22,7 +22,9 @@ if(NOT Catch2_FOUND)
     GIT_TAG        v2.13.10)
   FetchContent_MakeAvailable(Catch2)
 endif()
+# TODO(JMM) This is gross and bad. Fix when we update to catch2/v3
 list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/contrib)
+list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
 
 # Build tests
 message(STATUS "Configuring unit tests")
