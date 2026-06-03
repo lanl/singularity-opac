@@ -13,10 +13,11 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
+// This file was generated in part with the assistance of generative AI.
+
 #include <ports-of-call/portability.hpp>
 
-#define CATCH_CONFIG_RUNNER
-#include <catch2/catch.hpp>
+#include <catch2/catch_session.hpp>
 
 int main(int argc, char *argv[]) {
 

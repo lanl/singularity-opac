@@ -51,7 +51,8 @@ add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 add_library (singularity-opac::flags INTERFACE IMPORTED GLOBAL)
 target_include_directories(singularity-opac::flags
                            INTERFACE
-                           $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
+                           $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+                           ${CMAKE_CURRENT_LIST_DIR}/utils)
 
 include (SetupOptions)
 include (SetupDeps)
@@ -65,7 +66,9 @@ else()
   message(STATUS "HDF5 not enabled. Turning it off in spiner")
   set(SPINER_USE_HDF OFF CACHE BOOL "")
 endif()
-add_subdirectory(utils/spiner)
+if (NOT TARGET spiner::spiner)
+  add_subdirectory(utils/spiner)
+endif()
 target_link_libraries(singularity-opac::flags INTERFACE spiner)
 
 include(GNUInstallDirs)

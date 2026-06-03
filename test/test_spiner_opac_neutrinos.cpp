@@ -13,12 +13,14 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
+// This file was generated in part with the assistance of generative AI.
+
 #include <cmath>
 #include <iostream>
 
 #include <string>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include <ports-of-call/portability.hpp>
 #include <ports-of-call/portable_arrays.hpp>
