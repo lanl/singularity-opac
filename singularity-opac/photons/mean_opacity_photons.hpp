@@ -521,6 +521,7 @@ class MeanOpacity {
     if (nu == GroupBoundAt_(groupBounds_, ngroups_)) {
       return ngroups_ - 1;
     }
+    // Binary search to find group index containing nu
     int lower = 0;
     int upper = ngroups_;
     while (upper - lower > 1) {
