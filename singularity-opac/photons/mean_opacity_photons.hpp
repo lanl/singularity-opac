@@ -26,6 +26,7 @@
 #include <vector>
 
 #include <ports-of-call/portability.hpp>
+#include <ports-of-call/portable_errors.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/robust_utils.hpp>
 #include <singularity-opac/base/sp5.hpp>
@@ -167,12 +168,18 @@ class MeanOpacity {
 
   PORTABLE_INLINE_FUNCTION
   Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
+    PORTABLE_REQUIRE(ngroups_ == 1,
+      "PlanckMeanAbsorptionCoefficient only valid for ngroups==1. "
+      "Use PlanckGroupAbsorptionCoefficient(rho, temp, group) for multigroup.");
     return PlanckGroupAbsorptionCoefficient(rho, temp, 0);
   }
 
   PORTABLE_INLINE_FUNCTION
   Real RosselandMeanAbsorptionCoefficient(const Real rho,
                                           const Real temp) const {
+    PORTABLE_REQUIRE(ngroups_ == 1,
+      "RosselandMeanAbsorptionCoefficient only valid for ngroups==1. "
+      "Use RosselandGroupAbsorptionCoefficient(rho, temp, group) for multigroup.");
     return RosselandGroupAbsorptionCoefficient(rho, temp, 0);
   }
 
