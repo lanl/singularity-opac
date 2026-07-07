@@ -518,7 +518,11 @@ class MeanOpacity {
 
   PORTABLE_INLINE_FUNCTION
   int GroupOfNuImpl_(const Real nu) const {
-    if (nu == GroupBoundAt_(groupBounds_, ngroups_)) {
+    // Shortcuts for boundary cases
+    if (nu <= GroupBoundAt_(groupBounds_, 0)) {
+      return 0;
+    }
+    if (nu >= GroupBoundAt_(groupBounds_, ngroups_)) {
       return ngroups_ - 1;
     }
     // Binary search to find group index containing nu
