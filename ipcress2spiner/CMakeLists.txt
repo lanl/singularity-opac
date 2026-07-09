@@ -14,14 +14,8 @@
 project(ipcress2spiner LANGUAGES CXX Fortran)
 
 add_executable(ipcress2spiner
-  #io_eospac.cpp
-  #io_eospac.hpp
-  #generate_files.cpp
-  #generate_files.hpp
   parse_cli.cpp
   parse_cli.hpp
-  #parser.cpp
-  #parser.hpp
   main.cpp
 )
 
