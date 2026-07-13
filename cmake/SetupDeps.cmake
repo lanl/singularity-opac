@@ -1,3 +1,5 @@
+# This file was generated in part with the assistance of generative AI.
+
 include(FeatureSummary)
 include(CMakeDependentOption)
 #=======================================
@@ -97,5 +99,5 @@ cmake_dependent_option(SINGULARITY_USE_MPI
 # - provides Catch2::Catch2
 #=======================================
 if (NOT TARGET Catch2::Catch2)
-  find_package(Catch2 QUIET)
+  find_package(Catch2 3 CONFIG QUIET)
 endif()

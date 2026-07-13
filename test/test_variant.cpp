@@ -13,6 +13,8 @@
 // publicly, and to permit others to do so.
 // ======================================================================
 
+// This file was generated in part with the assistance of generative AI.
+
 /*
  * Variants are finicky things. If a method is missing in any class
  * the variant contains, that method will be deleted from the entire
@@ -20,7 +22,7 @@
  * operators are available for the photon and neutrino variants.
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include <ports-of-call/portability.hpp>
 

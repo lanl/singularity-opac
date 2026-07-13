@@ -1,4 +1,5 @@
 # dependency package for singulary-opac
+# This file was generated in part with the assistance of generative AI.
 
 import os
 from spack import *
@@ -14,7 +15,7 @@ class SingularityOpacDeps(BundlePackage):
     depends_on("cmake", type="build")
     depends_on("hdf5~mpi+cxx+hl", type=("build", "run"))
     depends_on("kokkos@3:~shared+cuda+wrapper+serial+cuda_lambda+cuda_relocatable_device_code cuda_arch=70", when="+cuda", type=("build", "run"))
-    depends_on("catch2", type=("build", "run"))
+    depends_on("catch2@3:", type="build")
 
     phases=["install"]
 
@@ -31,5 +32,3 @@ class SingularityOpacDeps(BundlePackage):
             f.write("")
             for dep in spec.dependencies(deptype="build"):
                 f.write(dep.format())
-
-

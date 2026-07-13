@@ -19,7 +19,7 @@
 #include <cmath>
 #include <utility>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include <ports-of-call/portability.hpp>
 #include <spiner/databox.hpp>
