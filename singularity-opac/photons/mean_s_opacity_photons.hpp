@@ -53,18 +53,17 @@ class MeanSOpacity {
   MeanSOpacity() = default;
 
   template <typename SOpacity, typename GroupBoundsIndexer>
-  MeanSOpacity(const SOpacity &s_opac, const Real lRhoMin,
-                     const Real lRhoMax, const int NRho, const Real lTMin,
-                     const Real lTMax, const int NT,
-                     const GroupBoundsIndexer &group_bounds, const int ngroups,
-                     const int NNuPerGroup = 64, Real *lambda = nullptr) {
+  MeanSOpacity(const SOpacity &s_opac, const Real lRhoMin, const Real lRhoMax,
+               const int NRho, const Real lTMin, const Real lTMax, const int NT,
+               const GroupBoundsIndexer &group_bounds, const int ngroups,
+               const int NNuPerGroup = 64, Real *lambda = nullptr) {
     MeanSOpacityImpl_(s_opac, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT,
-                            group_bounds, ngroups, NNuPerGroup, lambda);
+                      group_bounds, ngroups, NNuPerGroup, lambda);
   }
 
   template <typename GroupBoundsIndexer>
   MeanSOpacity(const DataBox &sigmaPlanck, const DataBox &sigmaRosseland,
-                     const GroupBoundsIndexer &group_bounds) {
+               const GroupBoundsIndexer &group_bounds) {
     LoadScatteringTables_(sigmaPlanck, sigmaRosseland, group_bounds);
   }
 
@@ -174,8 +173,7 @@ class MeanSOpacity {
   int GroupOfNu(const Real nu) const {
     if (!(nu >= GroupBoundAt_(groupBounds_, 0) &&
           nu <= GroupBoundAt_(groupBounds_, ngroups_))) {
-      OPAC_ERROR(
-          "photons::MeanSOpacity: frequency is outside group bounds");
+      OPAC_ERROR("photons::MeanSOpacity: frequency is outside group bounds");
     }
     return GroupOfNuImpl_(nu);
   }
@@ -233,8 +231,7 @@ class MeanSOpacity {
                    "or IEEE +infinity");
       }
       if (std::isinf(bound) && bound < 0.) {
-        OPAC_ERROR(
-            "photons::MeanSOpacity: group bounds may not be -infinity");
+        OPAC_ERROR("photons::MeanSOpacity: group bounds may not be -infinity");
       }
       if (group == 0) {
         if (!(bound >= 0.)) {
@@ -246,9 +243,8 @@ class MeanSOpacity {
                    "increasing");
       }
       if (!std::isfinite(bound) && group != ngroups) {
-        OPAC_ERROR(
-            "photons::MeanSOpacity: only the final group bound may be "
-            "IEEE +infinity");
+        OPAC_ERROR("photons::MeanSOpacity: only the final group bound may be "
+                   "IEEE +infinity");
       }
     }
   }
@@ -256,13 +252,11 @@ class MeanSOpacity {
   void ValidateScatteringTables_(const DataBox &sigmaPlanck,
                                  const DataBox &sigmaRosseland) const {
     if (sigmaPlanck.rank() != 3 || sigmaRosseland.rank() != 3) {
-      OPAC_ERROR(
-          "photons::MeanSOpacity: scattering tables must be rank 3");
+      OPAC_ERROR("photons::MeanSOpacity: scattering tables must be rank 3");
     }
     for (int dim = 1; dim <= 3; ++dim) {
       if (sigmaPlanck.dim(dim) != sigmaRosseland.dim(dim)) {
-        OPAC_ERROR(
-            "photons::MeanSOpacity: table dimensions do not match");
+        OPAC_ERROR("photons::MeanSOpacity: table dimensions do not match");
       }
     }
     if (sigmaPlanck.dim(1) <= 0) {
@@ -326,14 +320,17 @@ class MeanSOpacity {
     const Real nu_thermal_max = 1.e3 * PC::kb * temp / PC::h;
 
     // Determine if we need special handling
-    const bool is_lower_extreme = (nuMin == 0.) || (nuMin < 0.1 * nu_thermal_min);
-    const bool is_upper_extreme = !std::isfinite(nuMax) || (nuMax > 10. * nu_thermal_max);
+    const bool is_lower_extreme =
+        (nuMin == 0.) || (nuMin < 0.1 * nu_thermal_min);
+    const bool is_upper_extreme =
+        !std::isfinite(nuMax) || (nuMax > 10. * nu_thermal_max);
 
     // Set integration bounds, but ensure they're valid
     Real nu_sample_min = is_lower_extreme ? nu_thermal_min : nuMin;
     Real nu_sample_max = is_upper_extreme ? nu_thermal_max : nuMax;
 
-    // If thermal-aware bounds are invalid, use a small but valid range within group bounds
+    // If thermal-aware bounds are invalid, use a small but valid range within
+    // group bounds
     if (nu_sample_min >= nu_sample_max) {
       if (std::isfinite(nuMax) && nuMax > 0.) {
         // Group is [0 or small, nuMax]: sample near nuMax
@@ -360,7 +357,7 @@ class MeanSOpacity {
   void ThermalWeightsAtNu_(const PlanckDistribution<PC> &dist, const Real temp,
                            const Real nu, Real &B, Real &dBdT) const {
     const Real x = PC::h * nu / (PC::kb * temp);
-    if (x < 80.) {
+    if (x < wien_tail_x) {
       B = dist.ThermalDistributionOfTNu(temp, nu);
       dBdT = dist.DThermalDistributionOfTNuDT(temp, nu);
       return;
@@ -374,11 +371,11 @@ class MeanSOpacity {
 
   template <typename SOpacity, typename GroupBoundsIndexer>
   void MeanSOpacityImpl_(const SOpacity &s_opac, const Real lRhoMin,
-                               const Real lRhoMax, const int NRho,
-                               const Real lTMin, const Real lTMax, const int NT,
-                               const GroupBoundsIndexer &group_bounds,
-                               const int ngroups, const int NNuPerGroup,
-                               Real *lambda = nullptr) {
+                         const Real lRhoMax, const int NRho, const Real lTMin,
+                         const Real lTMax, const int NT,
+                         const GroupBoundsIndexer &group_bounds,
+                         const int ngroups, const int NNuPerGroup,
+                         Real *lambda = nullptr) {
 #ifndef NDEBUG
     auto RPC = RuntimePhysicalConstants(PC());
     auto opc = s_opac.GetRuntimePhysicalConstants();
@@ -460,8 +457,7 @@ class MeanSOpacity {
           lsigmaRosseland_(iRho, iT, group) = toLog_(sigmaRosseland);
           if (std::isnan(lsigmaPlanck_(iRho, iT, group)) ||
               std::isnan(lsigmaRosseland_(iRho, iT, group))) {
-            OPAC_ERROR(
-                "photons::MeanSOpacity: NAN in opacity evaluations");
+            OPAC_ERROR("photons::MeanSOpacity: NAN in opacity evaluations");
           }
         }
       }

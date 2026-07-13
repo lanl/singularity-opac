@@ -79,7 +79,6 @@ with the following function signatures:
     AbsorptionCoefficientFromNu(density, temperature, frequency, gmode [Planck, Rosseland])
 
 Mean absorption opacities can either be constructed from a frequency-dependent
-Mean absorption opacities can either be constructed from a frequency-dependent
 opacity model plus user-provided group bounds, or loaded directly from
 precomputed Spiner tables of group Planck and Rosseland opacities. The direct
 table-backed path does not require singularity-opac to recompute opacity

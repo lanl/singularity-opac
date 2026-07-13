@@ -56,17 +56,16 @@ class MeanOpacity {
 
   template <typename Opacity, typename GroupBoundsIndexer>
   MeanOpacity(const Opacity &opac, const Real lRhoMin, const Real lRhoMax,
-                    const int NRho, const Real lTMin, const Real lTMax,
-                    const int NT, const GroupBoundsIndexer &group_bounds,
-                    const int ngroups, const int NNuPerGroup = 64,
-                    Real *lambda = nullptr) {
+              const int NRho, const Real lTMin, const Real lTMax, const int NT,
+              const GroupBoundsIndexer &group_bounds, const int ngroups,
+              const int NNuPerGroup = 64, Real *lambda = nullptr) {
     MeanOpacityImpl_(opac, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT,
-                           group_bounds, ngroups, NNuPerGroup, lambda);
+                     group_bounds, ngroups, NNuPerGroup, lambda);
   }
 
   template <typename GroupBoundsIndexer>
   MeanOpacity(const DataBox &kappaPlanck, const DataBox &kappaRosseland,
-                    const GroupBoundsIndexer &group_bounds) {
+              const GroupBoundsIndexer &group_bounds) {
     // Table-backed multigroup opacities always carry explicit group bounds.
     // To represent [nu_max, infinity), the final bound must literally be
     // IEEE +infinity, not a large finite proxy value.
@@ -168,18 +167,22 @@ class MeanOpacity {
 
   PORTABLE_INLINE_FUNCTION
   Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
-    PORTABLE_REQUIRE(ngroups_ == 1,
-      "PlanckMeanAbsorptionCoefficient only valid for ngroups==1. "
-      "Use PlanckGroupAbsorptionCoefficient(rho, temp, group) for multigroup.");
+    PORTABLE_REQUIRE(
+        ngroups_ == 1,
+        "PlanckMeanAbsorptionCoefficient only valid for ngroups==1. "
+        "Use PlanckGroupAbsorptionCoefficient(rho, temp, group) for "
+        "multigroup.");
     return PlanckGroupAbsorptionCoefficient(rho, temp, 0);
   }
 
   PORTABLE_INLINE_FUNCTION
   Real RosselandMeanAbsorptionCoefficient(const Real rho,
                                           const Real temp) const {
-    PORTABLE_REQUIRE(ngroups_ == 1,
-      "RosselandMeanAbsorptionCoefficient only valid for ngroups==1. "
-      "Use RosselandGroupAbsorptionCoefficient(rho, temp, group) for multigroup.");
+    PORTABLE_REQUIRE(
+        ngroups_ == 1,
+        "RosselandMeanAbsorptionCoefficient only valid for ngroups==1. "
+        "Use RosselandGroupAbsorptionCoefficient(rho, temp, group) for "
+        "multigroup.");
     return RosselandGroupAbsorptionCoefficient(rho, temp, 0);
   }
 
@@ -218,8 +221,7 @@ class MeanOpacity {
   int GroupOfNu(const Real nu) const {
     if (!(nu >= GroupBoundAt_(groupBounds_, 0) &&
           nu <= GroupBoundAt_(groupBounds_, ngroups_))) {
-      OPAC_ERROR(
-          "photons::MeanOpacity: frequency is outside group bounds");
+      OPAC_ERROR("photons::MeanOpacity: frequency is outside group bounds");
     }
     return GroupOfNuImpl_(nu);
   }
@@ -277,8 +279,7 @@ class MeanOpacity {
                    "or IEEE +infinity");
       }
       if (std::isinf(bound) && bound < 0.) {
-        OPAC_ERROR(
-            "photons::MeanOpacity: group bounds may not be -infinity");
+        OPAC_ERROR("photons::MeanOpacity: group bounds may not be -infinity");
       }
       if (group == 0) {
         if (!(bound >= 0.)) {
@@ -290,9 +291,8 @@ class MeanOpacity {
                    "increasing");
       }
       if (!std::isfinite(bound) && group != ngroups) {
-        OPAC_ERROR(
-            "photons::MeanOpacity: only the final group bound may be "
-            "IEEE +infinity");
+        OPAC_ERROR("photons::MeanOpacity: only the final group bound may be "
+                   "IEEE +infinity");
       }
     }
   }
@@ -368,14 +368,17 @@ class MeanOpacity {
     const Real nu_thermal_max = 1.e3 * PC::kb * temp / PC::h;
 
     // Determine if we need special handling
-    const bool is_lower_extreme = (nuMin == 0.) || (nuMin < 0.1 * nu_thermal_min);
-    const bool is_upper_extreme = !std::isfinite(nuMax) || (nuMax > 10. * nu_thermal_max);
+    const bool is_lower_extreme =
+        (nuMin == 0.) || (nuMin < 0.1 * nu_thermal_min);
+    const bool is_upper_extreme =
+        !std::isfinite(nuMax) || (nuMax > 10. * nu_thermal_max);
 
     // Set integration bounds, but ensure they're valid
     Real nu_sample_min = is_lower_extreme ? nu_thermal_min : nuMin;
     Real nu_sample_max = is_upper_extreme ? nu_thermal_max : nuMax;
 
-    // If thermal-aware bounds are invalid, use a small but valid range within group bounds
+    // If thermal-aware bounds are invalid, use a small but valid range within
+    // group bounds
     if (nu_sample_min >= nu_sample_max) {
       if (std::isfinite(nuMax) && nuMax > 0.) {
         // Group is [0 or small, nuMax]: sample near nuMax
@@ -402,7 +405,7 @@ class MeanOpacity {
   void ThermalWeightsAtNu_(const PlanckDistribution<PC> &dist, const Real temp,
                            const Real nu, Real &B, Real &dBdT) const {
     const Real x = PC::h * nu / (PC::kb * temp);
-    if (x < 80.) {
+    if (x < wien_tail_x) {
       B = dist.ThermalDistributionOfTNu(temp, nu);
       dBdT = dist.DThermalDistributionOfTNuDT(temp, nu);
       return;
@@ -416,11 +419,11 @@ class MeanOpacity {
 
   template <typename Opacity, typename GroupBoundsIndexer>
   void MeanOpacityImpl_(const Opacity &opac, const Real lRhoMin,
-                              const Real lRhoMax, const int NRho,
-                              const Real lTMin, const Real lTMax, const int NT,
-                              const GroupBoundsIndexer &group_bounds,
-                              const int ngroups, const int NNuPerGroup,
-                              Real *lambda = nullptr) {
+                        const Real lRhoMax, const int NRho, const Real lTMin,
+                        const Real lTMax, const int NT,
+                        const GroupBoundsIndexer &group_bounds,
+                        const int ngroups, const int NNuPerGroup,
+                        Real *lambda = nullptr) {
 #ifndef NDEBUG
     auto RPC = RuntimePhysicalConstants(PC());
     auto opc = opac.GetRuntimePhysicalConstants();
@@ -502,8 +505,7 @@ class MeanOpacity {
           lkappaRosseland_(iRho, iT, group) = toLog_(kappaRosseland);
           if (std::isnan(lkappaPlanck_(iRho, iT, group)) ||
               std::isnan(lkappaRosseland_(iRho, iT, group))) {
-            OPAC_ERROR(
-                "photons::MeanOpacity: NAN in opacity evaluations");
+            OPAC_ERROR("photons::MeanOpacity: NAN in opacity evaluations");
           }
         }
       }
@@ -551,8 +553,7 @@ class MeanOpacity {
 
 using MeanOpacityBase = impl::MeanOpacity<PhysicalConstantsCGS>;
 using MeanOpacity =
-    impl::MeanVariant<MeanOpacityBase,
-                            MeanNonCGSUnits<MeanOpacityBase>>;
+    impl::MeanVariant<MeanOpacityBase, MeanNonCGSUnits<MeanOpacityBase>>;
 
 } // namespace photons
 } // namespace singularity
