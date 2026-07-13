@@ -545,7 +545,7 @@ TEST_CASE("Photon multigroup non-CGS wrapper works for monochromatic-built "
   reference_host.Finalize();
 }
 
-TEST_CASE("Photon multigroup with extreme bounds [0, infinity] recovers gray "
+TEST_CASE("Photon multigroup with extreme bounds 0 to infinity recovers gray "
           "solution",
           "[MultigroupPhotons]") {
   constexpr Real rho = 3.e-5;
@@ -600,8 +600,8 @@ TEST_CASE("Photon multigroup with extreme bounds [0, infinity] recovers gray "
   multigroup_host.Finalize();
 }
 
-TEST_CASE("Photon multigroup with tail groups [0, nu_mid] and [nu_mid, "
-          "infinity] are numerically stable",
+TEST_CASE("Photon multigroup with tail groups 0 to nu_mid and nu_mid to "
+          "infinity are numerically stable",
           "[MultigroupPhotons]") {
   constexpr Real rho = 7.e-4;
   constexpr Real temp = 5.e5;
@@ -718,7 +718,7 @@ TEST_CASE("Photon multigroup with asymmetric tail groups is numerically stable",
   multigroup_host.Finalize();
 }
 
-TEST_CASE("Photon multigroup with single group [0, nuMax) recovers gray "
+TEST_CASE("Photon multigroup with single group 0 to nuMax recovers gray "
           "solution",
           "[MultigroupPhotons]") {
   constexpr Real rho = 4.e-4;
@@ -778,7 +778,7 @@ TEST_CASE("Photon multigroup with single group [0, nuMax) recovers gray "
   multigroup_host.Finalize();
 }
 
-TEST_CASE("Photon multigroup with single group [nuMin, infinity) recovers "
+TEST_CASE("Photon multigroup with single group nuMin to infinity recovers "
           "gray solution",
           "[MultigroupPhotons]") {
   constexpr Real rho = 6.e-3;
@@ -957,7 +957,7 @@ TEST_CASE("Photon multigroup gray scattering opacities are exact",
   multigroup_host.Finalize();
 }
 
-TEST_CASE("Photon multigroup scattering with extreme bounds [0, infinity] "
+TEST_CASE("Photon multigroup scattering with extreme bounds 0 to infinity "
           "works correctly",
           "[MultigroupPhotons][MultigroupScattering]") {
   constexpr Real rho = 2.e-4;
