@@ -21,7 +21,6 @@
 #include <cassert>
 #include <cmath>
 #include <cstdio>
-#include <limits>
 #include <string>
 #include <vector>
 
@@ -32,6 +31,7 @@
 #include <singularity-opac/base/sp5.hpp>
 #include <singularity-opac/constants/constants.hpp>
 #include <singularity-opac/photons/mean_photon_types.hpp>
+#include <singularity-opac/photons/mean_photon_utils.hpp>
 #include <singularity-opac/photons/mean_photon_variant.hpp>
 #include <singularity-opac/photons/non_cgs_photons.hpp>
 #include <singularity-opac/photons/thermal_distributions_photons.hpp>
@@ -40,8 +40,6 @@
 namespace singularity {
 namespace photons {
 namespace impl {
-
-#define EPS (10.0 * std::numeric_limits<Real>::min())
 
 // TODO(BRR) Note: It is assumed that lambda is constant for all densities and
 // temperatures
@@ -104,7 +102,7 @@ class MeanOpacity {
     DataBox kappaRosseland;
     DataBox groupBounds;
     ExportOpacityTables_(kappaPlanck, kappaRosseland);
-    ExportGroupBounds_(groupBounds);
+    ExportGroupBounds(groupBounds, groupBounds_, ngroups_);
 
     herr_t status = H5_SUCCESS;
     hid_t file =
@@ -165,6 +163,12 @@ class MeanOpacity {
     return bounds;
   }
 
+  // The group-index-less "mean" accessors only make sense when there is a
+  // single group. In that case the lone group spans the entire spectrum, so
+  // its group-integrated coefficient (stored at group 0) IS the traditional
+  // gray mean. We therefore require ngroups==1 and forward to group 0. This is
+  // not a distinguished "mean slot": for ngroups>1, group 0 is simply the
+  // lowest-frequency group and callers must use the group-index API.
   PORTABLE_INLINE_FUNCTION
   Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
     PORTABLE_REQUIRE(
@@ -175,6 +179,7 @@ class MeanOpacity {
     return PlanckGroupAbsorptionCoefficient(rho, temp, 0);
   }
 
+  // See PlanckMeanAbsorptionCoefficient: the gray mean is the single group 0.
   PORTABLE_INLINE_FUNCTION
   Real RosselandMeanAbsorptionCoefficient(const Real rho,
                                           const Real temp) const {
@@ -206,6 +211,9 @@ class MeanOpacity {
                : RosselandGroupAbsorptionCoefficient(rho, temp, group);
   }
 
+  // Like the mean accessors above, Emissivity has no group-index argument and
+  // so is only defined for ngroups==1, where group 0 is the whole-spectrum
+  // (gray) group.
   PORTABLE_INLINE_FUNCTION
   Real Emissivity(const Real rho, const Real temp, const int gmode = Rosseland,
                   Real *lambda = nullptr) const {
@@ -219,8 +227,8 @@ class MeanOpacity {
 
   PORTABLE_INLINE_FUNCTION
   int GroupOfNu(const Real nu) const {
-    if (!(nu >= GroupBoundAt_(groupBounds_, 0) &&
-          nu <= GroupBoundAt_(groupBounds_, ngroups_))) {
+    if (!(nu >= GroupBoundAt(groupBounds_, 0) &&
+          nu <= GroupBoundAt(groupBounds_, ngroups_))) {
       OPAC_ERROR("photons::MeanOpacity: frequency is outside group bounds");
     }
     return GroupOfNuImpl_(nu);
@@ -250,51 +258,9 @@ class MeanOpacity {
   PORTABLE_INLINE_FUNCTION
   Real GroupAbsorptionCoefficient_(const DataBox &lkappa, const Real rho,
                                    const Real temp, const int group) const {
-    const Real lRho = toLog_(rho);
-    const Real lT = toLog_(temp);
-    return rho * fromLog_(lkappa.interpToReal(lRho, lT, group));
-  }
-
-  template <typename GroupBoundsIndexer>
-  PORTABLE_INLINE_FUNCTION Real
-  GroupBoundAt_(const GroupBoundsIndexer &group_bounds, const int group) const {
-    return group_bounds[group];
-  }
-
-  PORTABLE_INLINE_FUNCTION
-  Real GroupBoundAt_(const DataBox &group_bounds, const int group) const {
-    return group_bounds(group);
-  }
-
-  template <typename GroupBoundsIndexer>
-  void ValidateGroupBounds_(const GroupBoundsIndexer &group_bounds,
-                            const int ngroups) const {
-    if (ngroups <= 0) {
-      OPAC_ERROR("photons::MeanOpacity: ngroups must be positive");
-    }
-    for (int group = 0; group <= ngroups; ++group) {
-      const Real bound = GroupBoundAt_(group_bounds, group);
-      if (std::isnan(bound)) {
-        OPAC_ERROR("photons::MeanOpacity: group bounds must be finite "
-                   "or IEEE +infinity");
-      }
-      if (std::isinf(bound) && bound < 0.) {
-        OPAC_ERROR("photons::MeanOpacity: group bounds may not be -infinity");
-      }
-      if (group == 0) {
-        if (!(bound >= 0.)) {
-          OPAC_ERROR("photons::MeanOpacity: first group bound must be "
-                     "nonnegative");
-        }
-      } else if (!(bound > GroupBoundAt_(group_bounds, group - 1))) {
-        OPAC_ERROR("photons::MeanOpacity: group bounds must be strictly "
-                   "increasing");
-      }
-      if (!std::isfinite(bound) && group != ngroups) {
-        OPAC_ERROR("photons::MeanOpacity: only the final group bound may be "
-                   "IEEE +infinity");
-      }
-    }
+    const Real lRho = ToLog(rho);
+    const Real lT = ToLog(temp);
+    return rho * FromLog(lkappa.interpToReal(lRho, lT, group));
   }
 
   void ValidateOpacityTables_(const DataBox &kappaPlanck,
@@ -322,13 +288,13 @@ class MeanOpacity {
                           const GroupBoundsIndexer &group_bounds) {
     ValidateOpacityTables_(kappaPlanck, kappaRosseland);
     ngroups_ = kappaPlanck.dim(1);
-    ValidateGroupBounds_(group_bounds, ngroups_);
-    SetGroupBounds_(group_bounds, ngroups_);
+    ValidateGroupBounds(group_bounds, ngroups_);
+    SetGroupBounds(groupBounds_, group_bounds, ngroups_);
     lkappaPlanck_.copyMetadata(kappaPlanck);
     lkappaRosseland_.copyMetadata(kappaRosseland);
     for (int i = 0; i < kappaPlanck.size(); ++i) {
-      lkappaPlanck_(i) = toLog_(kappaPlanck(i));
-      lkappaRosseland_(i) = toLog_(kappaRosseland(i));
+      lkappaPlanck_(i) = ToLog(kappaPlanck(i));
+      lkappaRosseland_(i) = ToLog(kappaRosseland(i));
     }
   }
 
@@ -337,84 +303,9 @@ class MeanOpacity {
     kappaPlanck.copyMetadata(lkappaPlanck_);
     kappaRosseland.copyMetadata(lkappaRosseland_);
     for (int i = 0; i < lkappaPlanck_.size(); ++i) {
-      kappaPlanck(i) = fromLog_(lkappaPlanck_(i));
-      kappaRosseland(i) = fromLog_(lkappaRosseland_(i));
+      kappaPlanck(i) = FromLog(lkappaPlanck_(i));
+      kappaRosseland(i) = FromLog(lkappaRosseland_(i));
     }
-  }
-
-  void ExportGroupBounds_(DataBox &groupBounds) const {
-    groupBounds.resize(ngroups_ + 1);
-    for (int group = 0; group <= ngroups_; ++group) {
-      groupBounds(group) = groupBounds_(group);
-    }
-  }
-
-  template <typename GroupBoundsIndexer>
-  void SetGroupBounds_(const GroupBoundsIndexer &group_bounds,
-                       const int ngroups) {
-    groupBounds_.resize(ngroups + 1);
-    for (int group = 0; group <= ngroups; ++group) {
-      groupBounds_(group) = GroupBoundAt_(group_bounds, group);
-    }
-  }
-
-  template <typename SampleOp>
-  void ForEachGroupFrequencySample_(const Real temp, const Real nuMin,
-                                    const Real nuMax, const int NNuPerGroup,
-                                    SampleOp &&sample_op) const {
-    // For [0, ∞) or very wide ranges, use thermal-aware sampling
-    // For reasonable finite ranges, integrate over the full group bounds
-    const Real nu_thermal_min = 1.e-3 * PC::kb * temp / PC::h;
-    const Real nu_thermal_max = 1.e3 * PC::kb * temp / PC::h;
-
-    // Determine if we need special handling
-    const bool is_lower_extreme =
-        (nuMin == 0.) || (nuMin < 0.1 * nu_thermal_min);
-    const bool is_upper_extreme =
-        !std::isfinite(nuMax) || (nuMax > 10. * nu_thermal_max);
-
-    // Set integration bounds, but ensure they're valid
-    Real nu_sample_min = is_lower_extreme ? nu_thermal_min : nuMin;
-    Real nu_sample_max = is_upper_extreme ? nu_thermal_max : nuMax;
-
-    // If thermal-aware bounds are invalid, use a small but valid range within
-    // group bounds
-    if (nu_sample_min >= nu_sample_max) {
-      if (std::isfinite(nuMax) && nuMax > 0.) {
-        // Group is [0 or small, nuMax]: sample near nuMax
-        nu_sample_min = 0.5 * nuMax;
-        nu_sample_max = nuMax;
-      } else {
-        // Group extends to infinity: sample around thermal peak
-        nu_sample_min = 0.1 * nu_thermal_max;
-        nu_sample_max = nu_thermal_max;
-      }
-    }
-
-    // Use logarithmic spacing with midpoint rule
-    const Real lNuMin = toLog_(nu_sample_min);
-    const Real lNuMax = toLog_(nu_sample_max);
-    const Real dlnu = (lNuMax - lNuMin) / NNuPerGroup;
-    for (int inu = 0; inu < NNuPerGroup; ++inu) {
-      const Real lnu = lNuMin + (inu + 0.5) * dlnu;
-      const Real nu = fromLog_(lnu);
-      sample_op(nu, nu * dlnu);
-    }
-  }
-
-  void ThermalWeightsAtNu_(const PlanckDistribution<PC> &dist, const Real temp,
-                           const Real nu, Real &B, Real &dBdT) const {
-    const Real x = PC::h * nu / (PC::kb * temp);
-    if (x < wien_tail_x) {
-      B = dist.ThermalDistributionOfTNu(temp, nu);
-      dBdT = dist.DThermalDistributionOfTNuDT(temp, nu);
-      return;
-    }
-
-    const Real expMinusX = std::exp(-x);
-    B = (2. * PC::h * nu * nu * nu / (PC::c * PC::c)) * expMinusX;
-    dBdT = 2. * PC::h * PC::h * nu * nu * nu * nu * expMinusX /
-           (temp * temp * PC::c * PC::c * PC::kb);
   }
 
   template <typename Opacity, typename GroupBoundsIndexer>
@@ -433,10 +324,10 @@ class MeanOpacity {
     if (NNuPerGroup < 2) {
       OPAC_ERROR("photons::MeanOpacity: NNuPerGroup must be at least 2");
     }
-    ValidateGroupBounds_(group_bounds, ngroups);
+    ValidateGroupBounds(group_bounds, ngroups);
 
     ngroups_ = ngroups;
-    SetGroupBounds_(group_bounds, ngroups_);
+    SetGroupBounds(groupBounds_, group_bounds, ngroups_);
     lkappaPlanck_.resize(NRho, NT, ngroups_);
     lkappaPlanck_.setRange(1, lTMin, lTMax, NT);
     lkappaPlanck_.setRange(2, lRhoMin, lRhoMax, NRho);
@@ -448,18 +339,18 @@ class MeanOpacity {
 
     for (int iT = 0; iT < NT; ++iT) {
       const Real lT = lkappaPlanck_.range(1).x(iT);
-      const Real T = fromLog_(lT);
+      const Real T = FromLog(lT);
 
       for (int group = 0; group < ngroups_; ++group) {
         Real Baccum = 0.;
         Real dBdTaccum = 0.;
-        const Real nuMin = GroupBoundAt_(group_bounds, group);
-        const Real nuMax = GroupBoundAt_(group_bounds, group + 1);
-        ForEachGroupFrequencySample_(
+        const Real nuMin = GroupBoundAt(group_bounds, group);
+        const Real nuMax = GroupBoundAt(group_bounds, group + 1);
+        ForEachGroupFrequencySample<PC>(
             T, nuMin, nuMax, NNuPerGroup, [&](const Real nu, const Real dnu) {
               Real B = 0.;
               Real dBdT = 0.;
-              ThermalWeightsAtNu_(dist, T, nu, B, dBdT);
+              ThermalWeightsAtNu<PC>(dist, T, nu, B, dBdT);
               Baccum += B * dnu;
               dBdTaccum += dBdT * dnu;
             });
@@ -470,20 +361,20 @@ class MeanOpacity {
 
       for (int iRho = 0; iRho < NRho; ++iRho) {
         const Real lRho = lkappaPlanck_.range(2).x(iRho);
-        const Real rho = fromLog_(lRho);
+        const Real rho = FromLog(lRho);
 
         for (int group = 0; group < ngroups_; ++group) {
           Real kappaPlanckNum = 0.;
           Real kappaRosselandNum = 0.;
-          const Real nuMin = GroupBoundAt_(group_bounds, group);
-          const Real nuMax = GroupBoundAt_(group_bounds, group + 1);
-          ForEachGroupFrequencySample_(
+          const Real nuMin = GroupBoundAt(group_bounds, group);
+          const Real nuMax = GroupBoundAt(group_bounds, group + 1);
+          ForEachGroupFrequencySample<PC>(
               T, nuMin, nuMax, NNuPerGroup, [&](const Real nu, const Real dnu) {
                 const Real alpha =
                     opac.AbsorptionCoefficient(rho, T, nu, lambda);
                 Real B = 0.;
                 Real dBdT = 0.;
-                ThermalWeightsAtNu_(dist, T, nu, B, dBdT);
+                ThermalWeightsAtNu<PC>(dist, T, nu, B, dBdT);
                 kappaPlanckNum += alpha / rho * B * dnu;
 
                 if (alpha > singularity_opac::robust::SMALL()) {
@@ -501,8 +392,8 @@ class MeanOpacity {
                                                     kappaRosselandNum)
                   : 0.;
 
-          lkappaPlanck_(iRho, iT, group) = toLog_(kappaPlanck);
-          lkappaRosseland_(iRho, iT, group) = toLog_(kappaRosseland);
+          lkappaPlanck_(iRho, iT, group) = ToLog(kappaPlanck);
+          lkappaRosseland_(iRho, iT, group) = ToLog(kappaRosseland);
           if (std::isnan(lkappaPlanck_(iRho, iT, group)) ||
               std::isnan(lkappaRosseland_(iRho, iT, group))) {
             OPAC_ERROR("photons::MeanOpacity: NAN in opacity evaluations");
@@ -513,18 +404,12 @@ class MeanOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real toLog_(const Real x) const { return std::log10(std::abs(x) + EPS); }
-
-  PORTABLE_INLINE_FUNCTION
-  Real fromLog_(const Real lx) const { return std::pow(10., lx); }
-
-  PORTABLE_INLINE_FUNCTION
   int GroupOfNuImpl_(const Real nu) const {
     // Shortcuts for boundary cases
-    if (nu <= GroupBoundAt_(groupBounds_, 0)) {
+    if (nu <= GroupBoundAt(groupBounds_, 0)) {
       return 0;
     }
-    if (nu >= GroupBoundAt_(groupBounds_, ngroups_)) {
+    if (nu >= GroupBoundAt(groupBounds_, ngroups_)) {
       return ngroups_ - 1;
     }
     // Binary search to find group index containing nu
@@ -532,7 +417,7 @@ class MeanOpacity {
     int upper = ngroups_;
     while (upper - lower > 1) {
       const int middle = (lower + upper) / 2;
-      if (nu < GroupBoundAt_(groupBounds_, middle)) {
+      if (nu < GroupBoundAt(groupBounds_, middle)) {
         upper = middle;
       } else {
         lower = middle;
@@ -546,8 +431,6 @@ class MeanOpacity {
   DataBox groupBounds_;
   int ngroups_ = 0;
 };
-
-#undef EPS
 
 } // namespace impl
 
