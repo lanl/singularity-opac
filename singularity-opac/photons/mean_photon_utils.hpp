@@ -31,11 +31,6 @@ namespace singularity {
 namespace photons {
 namespace impl {
 
-// Machinery shared verbatim between the photon mean absorption and mean
-// scattering opacity classes. Only helpers that are byte-for-byte identical
-// between the two classes live here; class-specific pieces (e.g. the group
-// integral kernels and the group-index boundary conventions) remain in place.
-
 using MeanUtilsDataBox = Spiner::DataBox<Real>;
 
 // Log/anti-log transforms used to store and interpolate opacities. A small
