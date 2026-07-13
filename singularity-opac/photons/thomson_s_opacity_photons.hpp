@@ -12,7 +12,6 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
-
 #ifndef SINGULARITY_OPAC_PHOTONS_THOMSON_S_OPACITY_PHOTONS_
 #define SINGULARITY_OPAC_PHOTONS_THOMSON_S_OPACITY_PHOTONS_
 

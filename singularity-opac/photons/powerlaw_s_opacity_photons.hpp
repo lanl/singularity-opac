@@ -12,10 +12,8 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
-
 #ifndef SINGULARITY_OPAC_PHOTONS_POWERLAW_S_OPACITY_PHOTONS_
 #define SINGULARITY_OPAC_PHOTONS_POWERLAW_S_OPACITY_PHOTONS_
-
 // This file was partly copied from a file made in part with generative AI.
 
 #include <cassert>
@@ -33,13 +31,14 @@ class PowerLawSOpacity {
  public:
   PowerLawSOpacity() = default;
   PowerLawSOpacity(const Real kappa0, const Real rho_exp, const Real temp_exp,
-                   const Real nu_exp = 0., const Real nu_ref = 1., const Real nu_off = 0.,
-                   const Real rho_ref = 1., const Real rho_off = 0.,
-                   const Real temp_ref = 1., const Real temp_off = 0.,
-                   const Real avg_particle_mass = 1.)
+                   const Real nu_exp = 0., const Real nu_ref = 1.,
+                   const Real nu_off = 0., const Real rho_ref = 1.,
+                   const Real rho_off = 0., const Real temp_ref = 1.,
+                   const Real temp_off = 0., const Real avg_particle_mass = 1.)
       : kappa0_(kappa0), rho_exp_(rho_exp), temp_exp_(temp_exp),
-        rho_ref_(rho_ref), rho_off_(rho_off), temp_ref_(temp_ref), temp_off_(temp_off),
-        nu_exp_(nu_exp), nu_ref_(nu_ref), nu_off_(nu_off), apm_(avg_particle_mass) {
+        rho_ref_(rho_ref), rho_off_(rho_off), temp_ref_(temp_ref),
+        temp_off_(temp_off), nu_exp_(nu_exp), nu_ref_(nu_ref), nu_off_(nu_off),
+        apm_(avg_particle_mass) {
     if (!(nu_ref_ > 0.)) {
       OPAC_ERROR("PowerLawSOpacity: nu_ref must be positive");
     }
@@ -65,12 +64,12 @@ class PowerLawSOpacity {
   int nlambda() const noexcept { return 0; }
   PORTABLE_INLINE_FUNCTION
   void PrintParams() const noexcept {
-    printf("Power law scattering opacity. kappa0 = %g rho_exp = %g temp_exp = %g "
-           "nu_exp = %g nu_ref = %g nu_off = %g rho_ref = %g rho_off = %g"
-           "temp_ref = %g temp_off = %g avg particle mass = %g\n",
-           kappa0_, rho_exp_, temp_exp_, nu_exp_, nu_ref_,
-           nu_off_, rho_ref_, rho_off_, temp_ref_, temp_off_,
-           apm_);
+    printf(
+        "Power law scattering opacity. kappa0 = %g rho_exp = %g temp_exp = %g "
+        "nu_exp = %g nu_ref = %g nu_off = %g rho_ref = %g rho_off = %g"
+        "temp_ref = %g temp_off = %g avg particle mass = %g\n",
+        kappa0_, rho_exp_, temp_exp_, nu_exp_, nu_ref_, nu_off_, rho_ref_,
+        rho_off_, temp_ref_, temp_off_, apm_);
   }
   inline void Finalize() noexcept {}
 
@@ -96,7 +95,8 @@ class PowerLawSOpacity {
  private:
   PORTABLE_INLINE_FUNCTION
   Real OpacityScale_(const Real rho, const Real temp, const Real nu) const {
-    return OpacityPrefactor_(rho, temp) * std::pow((nu + nu_off_) / nu_ref_, nu_exp_);
+    return OpacityPrefactor_(rho, temp) *
+           std::pow((nu + nu_off_) / nu_ref_, nu_exp_);
   }
 
   PORTABLE_INLINE_FUNCTION
@@ -106,17 +106,17 @@ class PowerLawSOpacity {
     return kappa0_ * std::pow(rhom, rho_exp_) * std::pow(tempm, temp_exp_);
   }
 
-  Real kappa0_;        // Opacity scale. Units depend on nu_exp and nu_ref.
-  Real rho_exp_;       // Power law index of density
-  Real temp_exp_;      // Power law index of temperature
-  Real rho_ref_;       // Density normalization for rho_exp. Units of g/cm^3
-  Real rho_off_;       // Density offset (same units as rho_ref). Units of g/cm^3
-  Real temp_ref_;      // Temperature normalization for temp_exp. Units of K
-  Real temp_off_;      // Temperature offset (same units as temp_ref). Units of K
-  Real nu_exp_;        // Power law index of frequency
-  Real nu_ref_;        // Frequency normalization for nu_exp. Units of 1/s
-  Real nu_off_;        // Frequency offset (same units as nu_ref). Units of 1/s
-  Real apm_;           // Mean molecular weight. Units of g
+  Real kappa0_;   // Opacity scale. Units depend on nu_exp and nu_ref.
+  Real rho_exp_;  // Power law index of density
+  Real temp_exp_; // Power law index of temperature
+  Real rho_ref_;  // Density normalization for rho_exp. Units of g/cm^3
+  Real rho_off_;  // Density offset (same units as rho_ref). Units of g/cm^3
+  Real temp_ref_; // Temperature normalization for temp_exp. Units of K
+  Real temp_off_; // Temperature offset (same units as temp_ref). Units of K
+  Real nu_exp_;   // Power law index of frequency
+  Real nu_ref_;   // Frequency normalization for nu_exp. Units of 1/s
+  Real nu_off_;   // Frequency offset (same units as nu_ref). Units of 1/s
+  Real apm_;      // Mean molecular weight. Units of g
 };
 
 } // namespace photons

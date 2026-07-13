@@ -12,13 +12,12 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
-
 #ifndef SINGULARITY_OPAC_BASE_INDEXERS_
 #define SINGULARITY_OPAC_BASE_INDEXERS_
 
 #include <fast-math/logs.hpp>
-#include <spiner/databox.hpp>
 #include <ports-of-call/variant.hpp>
+#include <spiner/databox.hpp>
 
 #include <singularity-opac/chebyshev/chebyshev.hpp>
 
@@ -59,8 +58,8 @@ class Linear {
     SetRange_(numin, numax, N);
   }
 
-  PORTABLE_INLINE_FUNCTION Linear(const DataBox &data, Real numin,
-                                  Real numax, int N)
+  PORTABLE_INLINE_FUNCTION Linear(const DataBox &data, Real numin, Real numax,
+                                  int N)
       : data_(data) {
     SetRange_(numin, numax, N);
   }
@@ -99,8 +98,7 @@ class LogLinear {
   }
 
   PORTABLE_INLINE_FUNCTION
-  LogLinear(const DataBox &data, Real numin, Real numax, int N)
-      : data_(data) {
+  LogLinear(const DataBox &data, Real numin, Real numax, int N) : data_(data) {
     SetRange_(numin, numax, N);
   }
 

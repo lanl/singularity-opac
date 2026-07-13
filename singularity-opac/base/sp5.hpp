@@ -12,10 +12,8 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
-
 #ifndef SINGULARITY_OPAC_BASE_SP5_
 #define SINGULARITY_OPAC_BASE_SP5_
-
 // This file was made in part with generative AI.
 
 namespace SP5 {

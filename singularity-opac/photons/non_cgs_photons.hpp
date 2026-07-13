@@ -12,10 +12,8 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
-
 #ifndef SINGULARITY_OPAC_PHOTONS_NON_CGS_PHOTONS_
 #define SINGULARITY_OPAC_PHOTONS_NON_CGS_PHOTONS_
-
 // This file was made in part with generative AI.
 
 #include <cassert>
@@ -246,8 +244,8 @@ class MeanNonCGSUnits {
 
   MeanNonCGSUnits() = default;
   MeanNonCGSUnits(MeanOpac &&multigroup_opac, const Real time_unit,
-                        const Real mass_unit, const Real length_unit,
-                        const Real temp_unit)
+                  const Real mass_unit, const Real length_unit,
+                  const Real temp_unit)
       : multigroup_opac_(std::forward<MeanOpac>(multigroup_opac)),
         time_unit_(time_unit), mass_unit_(mass_unit), length_unit_(length_unit),
         temp_unit_(temp_unit),
@@ -255,9 +253,8 @@ class MeanNonCGSUnits {
         freq_unit_(1. / time_unit_) {}
 
   auto GetOnDevice() {
-    return MeanNonCGSUnits<MeanOpac>(multigroup_opac_.GetOnDevice(),
-                                                 time_unit_, mass_unit_,
-                                                 length_unit_, temp_unit_);
+    return MeanNonCGSUnits<MeanOpac>(multigroup_opac_.GetOnDevice(), time_unit_,
+                                     mass_unit_, length_unit_, temp_unit_);
   }
   inline void Finalize() noexcept { multigroup_opac_.Finalize(); }
 

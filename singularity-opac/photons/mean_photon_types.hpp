@@ -12,10 +12,8 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
-
 #ifndef SINGULARITY_OPAC_PHOTONS_MEAN_PHOTON_TYPES_
 #define SINGULARITY_OPAC_PHOTONS_MEAN_PHOTON_TYPES_
-
 // This file was made in part with generative AI.
 
 #include <ports-of-call/portability.hpp>

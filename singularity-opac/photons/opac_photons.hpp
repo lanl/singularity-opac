@@ -12,10 +12,8 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
-
 #ifndef SINGULARITY_OPAC_PHOTONS_OPAC_PHOTONS_
 #define SINGULARITY_OPAC_PHOTONS_OPAC_PHOTONS_
-
 // This file was made in part with generative AI.
 
 #include <singularity-opac/photons/epbremsstrahlung_opacity_photons.hpp>

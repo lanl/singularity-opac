@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2022. Triad National Security, LLC. All rights reserved.  This
+// © 2022-2026. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -12,9 +12,9 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
-
 #ifndef SINGULARITY_OPAC_PHOTONS_MEAN_PHOTON_S_VARIANT_
 #define SINGULARITY_OPAC_PHOTONS_MEAN_PHOTON_S_VARIANT_
+// This file was made in part with generative AI.
 
 #include <utility>
 
@@ -90,8 +90,8 @@ class MeanSVariant {
 
   PORTABLE_INLINE_FUNCTION
   int ngroups() const noexcept {
-    return PortsOfCall::visit([](const auto &s_opac) { return s_opac.ngroups(); },
-                              s_opac_);
+    return PortsOfCall::visit(
+        [](const auto &s_opac) { return s_opac.ngroups(); }, s_opac_);
   }
 
   PORTABLE_INLINE_FUNCTION
