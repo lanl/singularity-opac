@@ -12,7 +12,6 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
-
 #ifndef SINGULARITY_OPAC_PHOTONS_PHOTON_VARIANT_
 #define SINGULARITY_OPAC_PHOTONS_PHOTON_VARIANT_
 
@@ -267,7 +266,8 @@ class Variant {
 
   PORTABLE_INLINE_FUNCTION
   int nlambda() const noexcept {
-    return PortsOfCall::visit([](const auto &opac) { return opac.nlambda(); }, opac_);
+    return PortsOfCall::visit([](const auto &opac) { return opac.nlambda(); },
+                              opac_);
   }
 
   template <typename T>
@@ -277,12 +277,13 @@ class Variant {
 
   PORTABLE_INLINE_FUNCTION
   void PrintParams() const noexcept {
-    return PortsOfCall::visit([](const auto &opac) { return opac.PrintParams(); },
-                        opac_);
+    return PortsOfCall::visit(
+        [](const auto &opac) { return opac.PrintParams(); }, opac_);
   }
 
   inline void Finalize() noexcept {
-    return PortsOfCall::visit([](auto &opac) { return opac.Finalize(); }, opac_);
+    return PortsOfCall::visit([](auto &opac) { return opac.Finalize(); },
+                              opac_);
   }
 };
 

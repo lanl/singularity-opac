@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2022. Triad National Security, LLC. All rights reserved.  This
+// © 2022-2026. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -12,9 +12,9 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
-
 #ifndef SINGULARITY_OPAC_NEUTRINOS_MEAN_S_OPACITY_NEUTRINOS_
 #define SINGULARITY_OPAC_NEUTRINOS_MEAN_S_OPACITY_NEUTRINOS_
+// This file was made in part with generative AI.
 
 #include <cmath>
 
@@ -165,31 +165,30 @@ class MeanSOpacity {
               lNuMin = toLog_(1.e-3 * pc::kb * fromLog_(lTMin) / pc::h);
               lNuMax = toLog_(1.e3 * pc::kb * fromLog_(lTMax) / pc::h);
             }
-            const Real dlnu = (lNuMax - lNuMin) / (NNu - 1);
-            // Integrate over frequency
+            const Real dlnu = (lNuMax - lNuMin) / NNu;
+            // Integrate over frequency using midpoint rule
             for (int inu = 0; inu < NNu; ++inu) {
-              const Real weight =
-                  (inu == 0 || inu == NNu - 1) ? 0.5 : 1.; // Trapezoidal rule
-              const Real lnu = lNuMin + inu * dlnu;
+              const Real lnu = lNuMin + (inu + 0.5) * dlnu;
               const Real nu = fromLog_(lnu);
               const Real alpha = s_opac.TotalScatteringCoefficient(
                   rho, T, Ye, type, nu, lambda);
               const Real B = dist.ThermalDistributionOfTNu(T, type, nu);
               const Real dBdT = dist.DThermalDistributionOfTNuDT(T, type, nu);
-              kappaPlanckNum += weight * alpha / rho * B * nu * dlnu;
-              kappaPlanckDenom += weight * B * nu * dlnu;
+              kappaPlanckNum += alpha / rho * B * nu * dlnu;
+              kappaPlanckDenom += B * nu * dlnu;
 
               if (alpha > singularity_opac::robust::SMALL()) {
                 kappaRosselandNum +=
-                    weight * singularity_opac::robust::ratio(rho, alpha) *
-                    dBdT * nu * dlnu;
-                kappaRosselandDenom += weight * dBdT * nu * dlnu;
+                    singularity_opac::robust::ratio(rho, alpha) * dBdT * nu *
+                    dlnu;
+                kappaRosselandDenom += dBdT * nu * dlnu;
               }
 
               Real kappaPlanck = singularity_opac::robust::ratio(
                   kappaPlanckNum, kappaPlanckDenom);
               Real kappaRosseland =
-                  kappaPlanck > singularity_opac::robust::SMALL()
+                  (kappaPlanck > singularity_opac::robust::SMALL() &&
+                   kappaRosselandNum > singularity_opac::robust::SMALL())
                       ? singularity_opac::robust::ratio(kappaRosselandDenom,
                                                         kappaRosselandNum)
                       : 0.;
@@ -221,13 +220,10 @@ class MeanSOpacity {
 
 } // namespace impl
 
-using MeanSOpacityScaleFree =
-    impl::MeanSOpacity<FermiDiracDistributionNoMu<3, PhysicalConstantsUnity>,
-                       PhysicalConstantsUnity>;
-using MeanSOpacityCGS =
+using MeanSOpacityBase =
     impl::MeanSOpacity<FermiDiracDistributionNoMu<3>, PhysicalConstantsCGS>;
-using MeanSOpacity = impl::MeanSVariant<MeanSOpacityScaleFree, MeanSOpacityCGS,
-                                        MeanNonCGSUnitsS<MeanSOpacityCGS>>;
+using MeanSOpacity =
+    impl::MeanSVariant<MeanSOpacityBase, MeanNonCGSUnitsS<MeanSOpacityBase>>;
 
 } // namespace neutrinos
 } // namespace singularity

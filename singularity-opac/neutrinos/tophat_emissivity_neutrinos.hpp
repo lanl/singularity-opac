@@ -12,7 +12,6 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
-
 #ifndef SINGULARITY_OPAC_NEUTRINOS_TOPHAT_EMISSIVITY_NEUTRINOS_
 #define SINGULARITY_OPAC_NEUTRINOS_TOPHAT_EMISSIVITY_NEUTRINOS_
 
@@ -56,7 +55,7 @@ class TophatEmissivity {
                              const RadiationType type, const Real nu,
                              Real *lambda = nullptr) const {
     return dist_.AbsorptionCoefficientFromKirchhoff(*this, rho, temp, Ye, type,
-                                                   nu, lambda) /
+                                                    nu, lambda) /
            (4. * M_PI);
   }
 

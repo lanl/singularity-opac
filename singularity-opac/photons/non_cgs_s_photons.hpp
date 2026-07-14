@@ -12,7 +12,6 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
-
 #ifndef SINGULARITY_OPAC_PHOTONS_NON_CGS_S_PHOTONS_
 #define SINGULARITY_OPAC_PHOTONS_NON_CGS_S_PHOTONS_
 

@@ -12,7 +12,6 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
-
 #ifndef SINGULARITY_OPAC_PHOTONS_S_OPAC_PHOTONS_
 #define SINGULARITY_OPAC_PHOTONS_S_OPAC_PHOTONS_
 
@@ -32,9 +31,9 @@ using GrayS = GraySOpacity<>;
 using ThomsonS = ThomsonSOpacity<>;
 using PowerLawS = PowerLawSOpacity<>;
 
-using SOpacity = impl::S_Variant<ScaleFreeS, GrayS, ThomsonS, PowerLawS,
-                                 NonCGSUnitsS<GrayS>, NonCGSUnitsS<ThomsonS>,
-                                 NonCGSUnitsS<PowerLawS>>;
+using SOpacity =
+    impl::S_Variant<ScaleFreeS, GrayS, ThomsonS, PowerLawS, NonCGSUnitsS<GrayS>,
+                    NonCGSUnitsS<ThomsonS>, NonCGSUnitsS<PowerLawS>>;
 
 } // namespace photons
 } // namespace singularity

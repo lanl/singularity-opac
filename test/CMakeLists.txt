@@ -56,14 +56,9 @@ PRIVATE
   test_thomson_s_opacities.cpp
   test_chebyshev.cpp
   test_spiner_opac_neutrinos.cpp
-  test_mean_opacities.cpp
+  test_multigroup_opacities.cpp
   test_variant.cpp
 )
-
-# Link data file directory for Zhu table test
-file(CREATE_LINK
-    ${CMAKE_SOURCE_DIR}/singularity-opac/photons/example_ascii/kap_plaw.txt
-    ${CMAKE_CURRENT_BINARY_DIR}/kap_plaw.txt SYMBOLIC)
 
 target_link_libraries(${PROJECT_NAME}_unit_tests
 PRIVATE

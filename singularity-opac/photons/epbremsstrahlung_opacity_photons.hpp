@@ -12,7 +12,6 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
-
 #ifndef SINGULARITY_OPAC_PHOTONS_EPBREMSSTRAHLUNG_OPACITY_PHOTONS_
 #define SINGULARITY_OPAC_PHOTONS_EPBREMSSTRAHLUNG_OPACITY_PHOTONS_
 
@@ -54,7 +53,7 @@ class EPBremsstrahlungOpacity {
   Real AbsorptionCoefficient(const Real rho, const Real temp, const Real nu,
                              Real *lambda = nullptr) const {
     return dist_.AbsorptionCoefficientFromKirchhoff(*this, rho, temp, nu,
-                                                   lambda);
+                                                    lambda);
   }
 
   template <typename FrequencyIndexer, typename DataIndexer>

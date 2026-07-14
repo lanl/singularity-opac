@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2022. Triad National Security, LLC. All rights reserved.  This
+// © 2022-2026. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -12,9 +12,9 @@
 // distribute copies to the public, perform publicly and display
 // publicly, and to permit others to do so.
 // ======================================================================
-
 #ifndef SINGULARITY_OPAC_PHOTONS_MEAN_PHOTON_S_VARIANT_
 #define SINGULARITY_OPAC_PHOTONS_MEAN_PHOTON_S_VARIANT_
+// This file was made in part with generative AI.
 
 #include <utility>
 
@@ -84,6 +84,70 @@ class MeanSVariant {
     return PortsOfCall::visit(
         [=](const auto &s_opac) {
           return s_opac.RosselandMeanTotalScatteringCoefficient(rho, temp);
+        },
+        s_opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  int ngroups() const noexcept {
+    return PortsOfCall::visit(
+        [](const auto &s_opac) { return s_opac.ngroups(); }, s_opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  bool HasGroupBounds() const noexcept {
+    return PortsOfCall::visit(
+        [](const auto &s_opac) { return s_opac.HasGroupBounds(); }, s_opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckGroupScatteringCoefficient(const Real rho, const Real temp,
+                                        const int group) const {
+    return ScatteringCoefficient(rho, temp, group, Planck);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandGroupScatteringCoefficient(const Real rho, const Real temp,
+                                           const int group) const {
+    return ScatteringCoefficient(rho, temp, group, Rosseland);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real ScatteringCoefficient(const Real rho, const Real temp, const int group,
+                             const int gmode = Rosseland) const {
+    return PortsOfCall::visit(
+        [=](const auto &s_opac) {
+          return s_opac.ScatteringCoefficient(rho, temp, group, gmode);
+        },
+        s_opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  int GroupOfNu(const Real nu) const {
+    return PortsOfCall::visit(
+        [=](const auto &s_opac) { return s_opac.GroupOfNu(nu); }, s_opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckGroupScatteringCoefficientFromNu(const Real rho, const Real temp,
+                                              const Real nu) const {
+    return ScatteringCoefficientFromNu(rho, temp, nu, Planck);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandGroupScatteringCoefficientFromNu(const Real rho,
+                                                 const Real temp,
+                                                 const Real nu) const {
+    return ScatteringCoefficientFromNu(rho, temp, nu, Rosseland);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real ScatteringCoefficientFromNu(const Real rho, const Real temp,
+                                   const Real nu,
+                                   const int gmode = Rosseland) const {
+    return PortsOfCall::visit(
+        [=](const auto &s_opac) {
+          return s_opac.ScatteringCoefficientFromNu(rho, temp, nu, gmode);
         },
         s_opac_);
   }
