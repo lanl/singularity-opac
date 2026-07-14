@@ -55,6 +55,34 @@ Real GroupBoundAt(const MeanUtilsDataBox &group_bounds, const int group) {
   return group_bounds(group);
 }
 
+// Locate the group index containing nu via binary search over the cached
+// bounds. Boundary cases are shortcut: nu at or below the first bound maps to
+// group 0, and nu at or above the final bound maps to the last group. Callers
+// are responsible for range-checking nu before invoking this helper.
+PORTABLE_INLINE_FUNCTION
+int GroupOfNuImpl(const MeanUtilsDataBox &groupBounds, const int ngroups,
+                  const Real nu) {
+  // Shortcuts for boundary cases
+  if (nu <= GroupBoundAt(groupBounds, 0)) {
+    return 0;
+  }
+  if (nu >= GroupBoundAt(groupBounds, ngroups)) {
+    return ngroups - 1;
+  }
+  // Binary search to find group index containing nu
+  int lower = 0;
+  int upper = ngroups;
+  while (upper - lower > 1) {
+    const int middle = (lower + upper) / 2;
+    if (nu < GroupBoundAt(groupBounds, middle)) {
+      upper = middle;
+    } else {
+      lower = middle;
+    }
+  }
+  return lower;
+}
+
 // Copy user-provided group bounds into the class-owned DataBox.
 template <typename GroupBoundsIndexer>
 void SetGroupBounds(MeanUtilsDataBox &groupBounds,

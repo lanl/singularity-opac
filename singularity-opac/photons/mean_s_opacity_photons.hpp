@@ -171,7 +171,7 @@ class MeanSOpacity {
           nu <= GroupBoundAt(groupBounds_, ngroups_))) {
       OPAC_ERROR("photons::MeanSOpacity: frequency is outside group bounds");
     }
-    return GroupOfNuImpl_(nu);
+    return GroupOfNuImpl(groupBounds_, ngroups_, nu);
   }
 
   PORTABLE_INLINE_FUNCTION
@@ -341,24 +341,6 @@ class MeanSOpacity {
         }
       }
     }
-  }
-
-  PORTABLE_INLINE_FUNCTION
-  int GroupOfNuImpl_(const Real nu) const {
-    if (nu == GroupBoundAt(groupBounds_, ngroups_)) {
-      return ngroups_ - 1;
-    }
-    int lower = 0;
-    int upper = ngroups_;
-    while (upper - lower > 1) {
-      const int middle = (lower + upper) / 2;
-      if (nu < GroupBoundAt(groupBounds_, middle)) {
-        upper = middle;
-      } else {
-        lower = middle;
-      }
-    }
-    return lower;
   }
 
   DataBox lsigmaPlanck_;
