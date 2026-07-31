@@ -11,11 +11,13 @@
 # prepare derivative works, distribute copies to the public, perform
 # publicly and display publicly, and to permit others to do so.
 #------------------------------------------------------------------------------
-project(ipcress2spiner LANGUAGES CXX Fortran)
+project(ipcress2spiner VERSION 0.8.0.0 LANGUAGES CXX Fortran)
 
 add_executable(ipcress2spiner
   parse_cli.cpp
   parse_cli.hpp
+  make_spiner_databox.hpp
+  interpolate_opacity.hpp
   main.cpp
 )
 
@@ -38,8 +40,12 @@ target_link_libraries(ipcress2spiner
     ${GANDOLF_LIBRARY}
     PortsofCall::PortsofCall
 )
-set_property(TARGET ipcress2spiner PROPERTY LINKER_LANGUAGE Fortran)
 
+set_property(TARGET ipcress2spiner PROPERTY LINKER_LANGUAGE Fortran)
+# Define the full version as a string macro
+target_compile_definitions(ipcress2spiner PRIVATE
+  IPCRESS2SPINER_VERSION=\"${PROJECT_VERSION}\"
+)
 install(TARGETS ipcress2spiner DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 

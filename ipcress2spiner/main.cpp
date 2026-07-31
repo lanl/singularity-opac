@@ -1,7 +1,7 @@
 //======================================================================
-// ipcress2spiner tool for converting eospac to spiner
+// ipcress2spiner tool for converting ipcresse to spiner
 // Author: Alex Long (along@lanl.gov)
-// © 2021-2023. Triad National Security, LLC. All rights reserved.  This
+// © 2026. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract 89233218CNA000001
 // for Los Alamos National Laboratory (LANL), which is operated by Triad
 // National Security, LLC for the U.S.  Department of Energy/National
@@ -37,19 +37,27 @@
 #include <utils/spiner/spiner/interpolation.hpp>
 #include <gandolf.h>
 
-//#include "generate_files.hpp"
-//#include "io_eospac.hpp"
+#include "generate_files.hpp"
+#include "interpolate_opacity.hpp"
 #include "parse_cli.hpp"
+#include "make_spiner_databox.hpp"
 
-/*
- *    Function prototypes for Gandolf C function equivalents
- */
+// ARL: My to-do list
+// \TODO Thread log interpolation points and log interpolation mode options through command line
+// \TODO Add gray opacties
+// \TODO Add ionization state?
+// \TODO clang-format
+// \TODO Add tests
+// \TODO Compare interpolation to draco's routines
+// \TODO Delete char fields from new[]
 
+// Function prototypes for Gandolf C function equivalents, prepend "C" to prevent name mangling
+// gandolf.h does not expose the interface to these functions, which is why they are declared here
 extern "C" void c_gmatids( char*, int*,   int*,   int*,  int*);
 extern "C" void     c_gkeys( char*, int*,char*[],   int*,  int*,  int*);
-extern void   c_gsizeof( char*, int*,  char*,   int*,  int*);
+extern "C" void   c_gsizeof( char*, int*,  char*,   int*,  int*);
 extern "C" void  c_gchgrids( char*, int*,   int*,   int*,  int*,  int*,  int*, int*);
-extern void  c_ggetgray( char*, int*,  char*,double*,  int*,  int*,
+extern "C" void  c_ggetgray( char*, int*,  char*,double*,  int*,  int*,
                        double*, int*,   int*,double*,  int*,  int*,  int*);
 extern "C" void    c_ggetmg( char*, int*,  char*,double*,  int*,  int*,
                        double*, int*,   int*,
@@ -57,10 +65,8 @@ extern "C" void    c_ggetmg( char*, int*,  char*,double*,  int*,  int*,
 extern void  c_ggetdata( char*, int*,  char*,double*,  int*,  int*,  int*);
 extern void  c_ggetchar( char*, int*,  char*,double*,  int*,  int*,  int*);
 
-/*
- *    Function prototypes for Gandolf Fortran subroutines
- */
-
+// Function prototypes for Gandolf Fortran subroutines
+// gandolf.h does not expose the interface to these functions, which is why they are declared here
 extern void   f_gmatids( char*, int*,   int*,  int*,  int*);
 extern void     f_gkeys( char*, int*,  char*,  int*,  int*,   int*);
 extern void   f_gsizeof( char*, int*,  char*,  int*,  int*);
@@ -71,8 +77,6 @@ extern void    f_ggetmg( char*, int*,  char*,double*, int*,   int*,double*,
                           int*, int*,double*,   int*, int*,double*,   int*, int*, int*);
 extern void  f_ggetdata( char*, int*,  char*,double*, int*,   int*,   int*);
 extern void  f_ggetchar( char*, int*,  char*,double*, int*,   int*,   int*);
-
-
 
 //constexpr int H5_SUCCESS = 0; // older HDF5's declare this, just declare it here
 
@@ -109,98 +113,10 @@ void print_ggetmg_output(const int nmg, const int post_ramg_nmg,
     }
 }
 
-double interpolate_mg_opacity_data(const std::vector<double> &T_grid, const std::vector<double> &rho_grid, const std::vector<double> &group_bounds, const std::vector<double>  &op_data,
-  double target_T, double target_rho, double target_hnu) {
-
-  size_t n_T = T_grid.size();
-  size_t n_rho = rho_grid.size();
-  size_t n_groups = group_bounds.size()-1;
-
-  auto T_L = std::distance(T_grid.begin(), std::lower_bound(T_grid.begin(), T_grid.end(), target_T));
-  T_L = (target_T < T_grid[T_L]) ? T_L-1 : T_L;
-  T_L = (T_L == (T_grid.size()-1)) ? T_L-1: T_L;
-  auto T_R = T_L + 1;
-  auto log_T_L = log(T_grid[T_L]);
-  auto log_T_R = log(T_grid[T_R]);
-  auto log_T_target = log(target_T);
-  // fraction of T_2 to use
-  auto T_frac = (log_T_target - log_T_L) / (log_T_R - log_T_L);
-
-  auto rho_L = std::distance(rho_grid.begin(), std::lower_bound(rho_grid.begin(), rho_grid.end(), target_rho));
-  rho_L = (target_rho < rho_grid[rho_L]) ? rho_L-1 : rho_L;
-  rho_L = (rho_L == (rho_grid.size()-1)) ? rho_L-1: rho_L;
-  auto rho_R = rho_L + 1;
-  auto log_rho_L = log(rho_grid[rho_L]);
-  auto log_rho_R = log(rho_grid[rho_R]);
-  auto log_rho_target = log(target_rho);
-  // fraction of rho_2 to use
-  auto rho_frac = (log_rho_target - log_rho_L) / (log_rho_R - log_rho_L);
-
-  auto group = std::distance(group_bounds.begin(), std::lower_bound(group_bounds.begin(), group_bounds.end(), target_hnu));
-  group = (target_hnu < group_bounds[group]) ? group-1 : group;
-  group = (group == (group_bounds.size()-1)) ? group-1 : group;
-
-  //std::cout<<"Targets--T: "<<target_T<<" rho: "<<target_rho<<" hnu: "<<target_hnu<<std::endl;
-
-  // get the adjacent rows of the opacity index, looks like op_[T]_[rho]_[hnu] with L indicating
-  // left or index n and "R" indicating right index (n+1)
-  auto op_L_L = op_data[  T_L * (n_rho*n_groups) + rho_L*(n_groups) + group];
-  auto op_L_R = op_data[  T_L * (n_rho*n_groups) + rho_R*(n_groups) + group];
-  auto op_R_L = op_data[  T_R * (n_rho*n_groups) + rho_L*(n_groups) + group];
-  auto op_R_R = op_data[  T_R * (n_rho*n_groups) + rho_R*(n_groups) + group];
-
-  // reduce in temperature dimension
-  auto op_L =(1.0-T_frac) * op_L_L + T_frac*op_R_L;
-  auto op_R =(1.0-T_frac) * op_L_R + T_frac*op_R_R;
-
-  // reduce in density dimension and return
-  double interp_opac = (1.0-rho_frac) * op_L + rho_frac*op_R;
-  if (false) {
-    std::cout<<"Interpolation box: "<<std::endl;
-    std::cout<<op_L_R<<"--------"<<op_R_R<<" |"<<std::endl;
-    std::cout<<"|          |"<<std::endl;
-    std::cout<<"|          |"<<std::endl;
-    std::cout<<"|  "<<interp_opac<<"     |"<<std::endl;
-    std::cout<<"|          |"<<std::endl;
-    std::cout<<"|          |"<<std::endl;
-    std::cout<<op_L_L<<"--------"<<op_R_L<<std::endl;
-  }
-  return interp_opac;
-}
-
-Spiner::DataBox<double> build_opacity_spiner_databox(const std::vector<double> &temperature_points, const std::vector<double> &density_points, const std::vector<double> &group_bounds, const std::vector<double> &ramg) {
-
-    Spiner::RegularGrid1D<double> new_temperature(temperature_points.front(), temperature_points.back(), temperature_points.size());
-    Spiner::RegularGrid1D<double> new_density(density_points.front(), density_points.back(), density_points.size());
-    Spiner::RegularGrid1D<double> new_group_bounds(group_bounds.front(), group_bounds.back(), 2*group_bounds.size());
-    Spiner::DataBox<double> opacity_databox(temperature_points.size(), density_points.size(), 2*group_bounds.size());
-    opacity_databox.setRange(0, new_temperature);
-    opacity_databox.setRange(1, new_density);
-    opacity_databox.setRange(2, new_group_bounds);
-
-    std::cout<<"T     rho   hnu      opac(sq_cm/g)"<<std::endl;
-    size_t flat_index=0;
-    for (size_t k=0; k<new_temperature.nPoints();++k) {
-      for (size_t j=0; j<new_density.nPoints();++j) {
-        for (size_t i=0; i<(new_group_bounds.nPoints()-1);++i) {
-          double new_group_center = 0.5*(new_group_bounds.x(i) + new_group_bounds.x(i+1));
-          double interp_op = interpolate_mg_opacity_data(temperature_points, density_points, group_bounds, ramg, new_temperature.x(k), new_density.x(j), new_group_center);
-          opacity_databox(k,j,i) = interp_op;
-          std::cout<<new_temperature.x(k)<<"   "<<new_density.x(j)<<"    "<<new_group_center<<"     "<<opacity_databox(k,j,i)<<std::endl;
-        }
-      }
-    }
-  return opacity_databox;
-}
-
-
 int main(int argc, char *argv[]) {
-
-  // ARL: Need these same parameters
 
   std::string filename;
   std::string savename, helpMessage;
-  //Verbosity eospacWarn = Verbosity::Quiet;
   bool printMetadata = false;
   herr_t status = H5_SUCCESS;
 
@@ -222,31 +138,56 @@ int main(int argc, char *argv[]) {
   c_gmatids(filename_char, mat_ids.data(), &kmats, &nmats, &ier);
 
   std::cout<<"nmats: "<<nmats<<std::endl;
+
+  // output HDF5 setup
+  std::cout << "Saving to file " << savename << std::endl;
+  auto file_loc = H5Fcreate(savename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  H5LTset_attribute_string(file_loc, "/", "ipcress2spiner version", IPCRESS2SPINER_VERSION);
+
   for (int imat=0;imat<nmats;++imat) {
     int mat_ID = mat_ids[imat];
+    std::cout<<"Processing material "<<mat_ID<<std::endl;
+    // create this mat ID in the HDF5 file
+    herr_t status = 0;
+    auto sMatID = std::to_string(mat_ID);
+
+    hid_t matGroup = H5Gcreate(file_loc, sMatID.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    // ARL: Is this softlink necessary?
+    //status += H5Lcreate_soft(sMatID.c_str(), file_loc, savename.c_str(), H5P_DEFAULT, H5P_DEFAULT);
+    if (status != H5_SUCCESS) {
+      std::cerr << "WARNING: problem with HDf5 post H5GCreate call" << std::endl;
+    }
+
     // return values from c_gchrids, initialized to invalid values
     int nt = -100;
     int nrho = -100;
     int nhnu = -100;
     int ngray = -100;
     int nmg = -100;
-    // TODO ARL: Delete these...
+    // 32 keys has been enough for all keys in the files so far
+    constexpr size_t total_keys = 32;
+    constexpr size_t max_key_length = 16;
     std::vector<char *> keys;
-    for(int ikey = 0;ikey<32;++ikey) {
-      keys.push_back(new char(16));
+    for (size_t ikey =0;ikey<total_keys;++ikey) {
+      keys.push_back(new char[max_key_length]);
     }
+
     int kkeys = static_cast<int>(keys.size());
     int nkeys = -1;
     c_gkeys(filename_char, &mat_ID, keys.data(), &kkeys, &nkeys, &ier);
-    std::cout<<"nkeys: "<<nkeys<<std::endl;
+    if(nkeys > total_keys) {
+      std::cout<<"POTENTIAL ERROR: nkeys: "<<nkeys<<" is larger than current max keys"<<total_keys<<std::endl;
+    }
     std::vector<std::string> nice_keys;
     for (int j=0;j<nkeys;++j) {
       int key_length = 0;
-      for (int k=0;k<16;++k) {
+      for (int k=0;k<max_key_length;++k) {
         if (keys[j][k] != '\0') key_length++;
       }
       nice_keys.push_back(std::string(keys[j], key_length));
     }
+
+    // print the nice string form of the keys
     for (auto ikey : nice_keys) {
       std::cout<<ikey<<" ";
     }
@@ -269,10 +210,16 @@ int main(int argc, char *argv[]) {
     std::string pmg_keyword = "pmg";
 
     std::array<std::string, 3> mg_opac_keywords{ramg_keyword, rsmg_keyword, pmg_keyword};
+    std::array<std::string, 3> mg_fields{ SP5::Fields::ramg, SP5::Fields::rsmg, SP5::Fields::pmg};
 
-    for (auto key : mg_opac_keywords) {
+    // TODO Thread these variables through the input
+    bool log_T_rho_hnu = true; // form a new grid from max and min evenly spaced in log10
+    bool log_interpolation = true; // interpolate logarithmically
 
-      std::cout<<"Interpolating and building databox for "<<key<<std::endl;
+    for (size_t i=0;i<mg_opac_keywords.size();++i) {
+      auto key = mg_opac_keywords[i];
+      auto sp5_field_name = mg_fields[i];
+      std::cout<<"Interpolating and building databox for "<<mat_ID<<" and "<<key<<std::endl;
       std::vector<double> opacity_data(nmg, 0.0);
       c_ggetmg(filename_char, &mat_ID, key.data(),
         temperature_points.data(), &nt, &post_nt,
@@ -280,9 +227,29 @@ int main(int argc, char *argv[]) {
         group_bounds.data(), &nhnu, &post_nhnu,
         opacity_data.data(), &nmg, &post_nmg, &ier);
 
-      auto spiner_opacity_databox = build_opacity_spiner_databox(temperature_points, density_points, group_bounds, opacity_data);
-      // save here with keyword?
+      auto [spiner_opacity_databox, new_group_bounds] = build_opacity_spiner_databox(
+        temperature_points, density_points, group_bounds, opacity_data, log_T_rho_hnu,
+        log_interpolation);
+
+      // only save the group bounds once for this material
+      if (i==0) {
+        const hsize_t dimensions[] = {static_cast<hsize_t>(new_group_bounds.size())};
+        std::string dataset_name("group bounds");
+        hid_t dataspace_id = H5Screate_simple(1, dimensions, nullptr);
+        hid_t dataset_id = H5Dcreate2(matGroup, dataset_name.c_str(), H5T_IEEE_F64LE, dataspace_id,
+          H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        const herr_t status = H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            new_group_bounds.data());
+      }
+      std::cout<<"Saving databox for "<<mat_ID<<" and "<<key<<std::endl;
+      saveMaterial(file_loc, matGroup, mat_ID, sMatID, sp5_field_name, new_group_bounds, spiner_opacity_databox);
     }
+    status += H5Gclose(matGroup);
+  }
+
+  status += H5Fclose(file_loc);
+  if (status != H5_SUCCESS) {
+    std::cerr << "WARNING: problem with HDf5" << std::endl;
   }
 
   std::cout << "Done." << std::endl;
