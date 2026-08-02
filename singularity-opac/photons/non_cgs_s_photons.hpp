@@ -21,6 +21,7 @@
 
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
+#include <singularity-opac/photons/mean_photon_types.hpp>
 
 namespace singularity {
 namespace photons {
@@ -83,51 +84,84 @@ template <typename MeanSOpac>
 class MeanNonCGSUnitsS {
  public:
   MeanNonCGSUnitsS() = default;
-  MeanNonCGSUnitsS(MeanSOpac &&mean_s_opac, const Real time_unit,
+  MeanNonCGSUnitsS(MeanSOpac &&multigroup_s_opac, const Real time_unit,
                    const Real mass_unit, const Real length_unit,
                    const Real temp_unit)
-      : mean_s_opac_(std::forward<MeanSOpac>(mean_s_opac)),
+      : multigroup_s_opac_(std::forward<MeanSOpac>(multigroup_s_opac)),
         time_unit_(time_unit), mass_unit_(mass_unit), length_unit_(length_unit),
         temp_unit_(temp_unit),
-        rho_unit_(mass_unit_ / (length_unit_ * length_unit_ * length_unit_)) {}
+        rho_unit_(mass_unit_ / (length_unit_ * length_unit_ * length_unit_)),
+        freq_unit_(1. / time_unit_) {}
 
   auto GetOnDevice() {
-    return MeanNonCGSUnitsS<MeanSOpac>(mean_s_opac_.GetOnDevice(), time_unit_,
+    return MeanNonCGSUnitsS<MeanSOpac>(multigroup_s_opac_.GetOnDevice(), time_unit_,
                                        mass_unit_, length_unit_, temp_unit_);
   }
-  inline void Finalize() noexcept { mean_s_opac_.Finalize(); }
+  inline void Finalize() noexcept { multigroup_s_opac_.Finalize(); }
 
   PORTABLE_INLINE_FUNCTION
-  int nlambda() const noexcept { return mean_s_opac_.nlambda(); }
+  bool HasGroupBounds() const noexcept {
+    return multigroup_s_opac_.HasGroupBounds();
+  }
+
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return multigroup_s_opac_.GetRuntimePhysicalConstants();
+  }
 
   PORTABLE_INLINE_FUNCTION
-  Real PlanckMeanTotalScatteringCoefficient(const Real rho,
-                                            const Real temp) const {
-    const Real alpha = mean_s_opac_.PlanckMeanTotalScatteringCoefficient(
-        rho_unit_ * rho, temp_unit_ * temp);
-    // alpha output in units of 1/cm. Want to convert out of CGS.
-    // multiplication by length_unit converts length to cm.
-    // division converts length from cm to unit system.
-    // thus multiplication converts (1/cm) to unit system.
+  Real PlanckGroupScatteringCoefficient(const Real rho,
+                                        const Real temp,
+                                        const int group) const {
+    return ScatteringCoefficient(rho, temp, group, Planck);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandGroupScatteringCoefficient(const Real rho,
+                                           const Real temp,
+                                           const int group) const {
+    return ScatteringCoefficient(rho, temp, group, Rosseland);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real ScatteringCoefficient(const Real rho, const Real temp, const int group,
+                             const int gmode = Rosseland) const {
+    const Real alpha = multigroup_s_opac_.ScatteringCoefficient(
+        rho_unit_ * rho, temp_unit_ * temp, group, gmode);
     return alpha * length_unit_;
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real RosselandMeanTotalScatteringCoefficient(const Real rho,
-                                               const Real temp) const {
-    const Real alpha = mean_s_opac_.RosselandMeanTotalScatteringCoefficient(
-        rho_unit_ * rho, temp_unit_ * temp);
-    // alpha output in units of 1/cm. Want to convert out of CGS.
-    // multiplication by length_unit converts length to cm.
-    // division converts length from cm to unit system.
-    // thus multiplication converts (1/cm) to unit system.
+  int GroupOfNu(const Real nu) const {
+    return multigroup_s_opac_.GroupOfNu(nu * freq_unit_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckGroupScatteringCoefficientFromNu(const Real rho, const Real temp,
+                                              const Real nu) const {
+    return ScatteringCoefficientFromNu(rho, temp, nu, Planck);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandGroupScatteringCoefficientFromNu(const Real rho,
+                                                 const Real temp,
+                                                 const Real nu) const {
+    return ScatteringCoefficientFromNu(rho, temp, nu, Rosseland);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real ScatteringCoefficientFromNu(const Real rho, const Real temp,
+                                   const Real nu,
+                                   const int gmode = Rosseland) const {
+    const Real alpha = multigroup_s_opac_.ScatteringCoefficientFromNu(
+              rho_unit_ * rho, temp_unit_ * temp, nu * freq_unit_, gmode);
     return alpha * length_unit_;
   }
 
  private:
-  MeanSOpac mean_s_opac_;
+  MeanSOpac multigroup_s_opac_;
   Real time_unit_, mass_unit_, length_unit_, temp_unit_;
-  Real rho_unit_;
+  Real rho_unit_, freq_unit_;
 };
 
 } // namespace photons
