@@ -22,7 +22,6 @@
 #include <string>
 #include <vector>
 
-//#include "io_eospac.hpp"
 #include "parse_cli.hpp"
 
 void parseCLI(int argc, char *argv[], std::string &savename,
@@ -43,9 +42,6 @@ void parseCLI(int argc, char *argv[], std::string &savename,
              << "\t-d:  same as -vv\n"
              << "\t-h:  print this message\n"
              << "\n"
-             // ARL: Don't have input filenames
-             //<< "Several example input files:\n"
-             //<< EXAMPLESTRING << "\n"
              << std::endl;
   helpMessage = helpStream.str();
 
@@ -65,12 +61,6 @@ void parseCLI(int argc, char *argv[], std::string &savename,
       std::exit(0);
     } else if (std::strcmp(argv[i], "-p") == 0) {
       printMetadata = true;
-    //} else if ((std::strcmp(argv[i], "-w") == 0 || std::strcmp(argv[i], "-v") == 0) &&
-    //           eospacWarn == Verbosity::Quiet) {
-    //  eospacWarn = Verbosity::Verbose;
-    //} else if ((std::strcmp(argv[i], "-d") == 0 || std::strcmp(argv[i], "-vv") == 0) &&
-    //           eospacWarn != Verbosity::Debug) {
-    //  eospacWarn = Verbosity::Debug;
     } else if (std::strcmp(argv[i], "-s") == 0) {
       savename = argv[++i];
     } else {
