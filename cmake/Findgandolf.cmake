@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------#
-# © 2021-2023. Triad National Security, LLC. All rights reserved.  This
+# © 2026. Triad National Security, LLC. All rights reserved.  This
 # program was produced under U.S. Government contract 89233218CNA000001
 # for Los Alamos National Laboratory (LANL), which is operated by Triad
 # National Security, LLC for the U.S.  Department of Energy/National
@@ -12,22 +12,37 @@
 # publicly and display publicly, and to permit others to do so.
 #------------------------------------------------------------------------------#
 
-# Find the native EOSPAC headers and libraries.
-#
-#  EOSPAC_INCLUDE_DIRS - where to find eos_Interface.h, etc.
-#  EOSPAC_LIBRARIES    - List of libraries when using eospac6.
-#  EOSPAC_FOUND        - True if eospac found.
+# ARL NOTE: Based off FindEOSPAC.cmake from singularity-eos
 
-#TODO: Add EOSPAC_MODULES (possibly part of include dirs) and clarify which interface we need
+# Find the native GANDOLF headers and libraries.
+#
+#  GANDOLF_INCLUDE_DIRECTORY - Where to find gandolf.h, etc.
+#  GANDOLF_LIBRARY           - Gandolf library
+#  GANDOLF_FOUND             - True if gandolf found.
+#
+#  Current modules set GANDOLF_INC_DIR and GANDOLF_LIB_DIR and prepend the top
+#  level of the Gandolf build to CMAKE_PREFIX_PATH
+
+
+# if environment variables are set, use them as hints to FIND calls
+set(GANDOLF_INC_DIR_HINTS "")
+if(DEFINED ENV{GANDOLF_INC_DIR})
+    list(APPEND GANDOLF_INC_DIR_HINTS "$ENV{GANDOLF_INC_DIR}")
+endif()
+
+set(GANDOLF_LIB_DIR_HINTS "")
+if(DEFINED ENV{GANDOLF_LIB_DIR})
+    list(APPEND GANDOLF_LIB_DIR_HINTS "$ENV{GANDOLF_LIB_DIR}")
+endif()
+
 
 # Look for the header file.
-FIND_PATH(GANDOLF_INC_DIR NAMES gandolf.h)
+FIND_PATH(GANDOLF_INC_DIR NAMES gandolf.h HINTS ${GANDOLF_INC_DIR_HINTS})
 
 # Look for the library.
-FIND_LIBRARY(GANDOLF_LIB_DIR NAMES libgandolf.a)
-#message("Gandolf lib dir; ${GANDOLF_LIB_DIR}")
+FIND_LIBRARY(GANDOLF_LIB_DIR NAMES libgandolf.a HINTS ${GANDOLF_LIB_DIR_HINTS})
 
-# handle the QUIETLY and REQUIRED arguments and set EOSPAC_FOUND to TRUE if
+# handle the QUIETLY and REQUIRED arguments and set GANDOLF_FOUND to TRUE if
 # all listed variables are TRUE
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(gandolf DEFAULT_MSG GANDOLF_LIB_DIR GANDOLF_INC_DIR)
@@ -44,4 +59,3 @@ if(GANDOLF_INCLUDE_DIRECTORY AND GANDOLF_LIBRARY)
 		IMPORTED_LOCATION "${GANDOLF_LIBRARY}"
 		INTERFACE_INCLUDE_DIRECTORIES "${GANDOLF_INCLUDE_DIRECTORY}")
 endif()
-

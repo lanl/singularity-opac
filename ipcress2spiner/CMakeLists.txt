@@ -13,6 +13,9 @@
 #------------------------------------------------------------------------------
 project(ipcress2spiner VERSION 0.8.0.0 LANGUAGES CXX Fortran)
 
+find_package(gandolf)
+
+if(GANDOLF_FOUND)
 add_executable(ipcress2spiner
   parse_cli.cpp
   parse_cli.hpp
@@ -21,10 +24,6 @@ add_executable(ipcress2spiner
   main.cpp
 )
 
-# Turn on verbosity right before your package search
-#set(CMAKE_FIND_DEBUG_MODE ON)
-find_package(gandolf)
-#set(CMAKE_FIND_DEBUG_MODE OFF)
 
 target_include_directories(ipcress2spiner
   PUBLIC
@@ -47,6 +46,6 @@ target_compile_definitions(ipcress2spiner PRIVATE
   IPCRESS2SPINER_VERSION=\"${PROJECT_VERSION}\"
 )
 install(TARGETS ipcress2spiner DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-
-# TODO: Add tests for sesame2spiner here.
+else()
+message("GANDOLF was not found, not building ipcress2spiner")
+endif()

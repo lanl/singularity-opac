@@ -61,9 +61,9 @@ inline std::pair<Spiner::DataBox<double>, std::vector<double>>  build_opacity_sp
   }
 
   // return new group bounds to write separately to hdf5 file
-  std::vector<double> vector_new_group_bounds;
+  std::vector<double> vector_new_group_bounds(group_bounds.size());
   for (size_t i=0;i<group_bounds.size();++i) {
-    vector_new_group_bounds.push_back(new_group_bounds.x(i));
+    vector_new_group_bounds[i]= new_group_bounds.x(i);
   }
 
   return {opacity_databox, vector_new_group_bounds};

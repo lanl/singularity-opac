@@ -44,6 +44,7 @@
 
 // ARL: My to-do list
 // \TODO Thread log interpolation points and log interpolation mode options through command line
+// \TODO Thread verbosity option through command-line options to print more info
 // \TODO Add gray opacties
 // \TODO Add ionization state?
 // \TODO clang-format
