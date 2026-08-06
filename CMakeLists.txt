@@ -109,6 +109,10 @@ if(SINGULARITY_BUILD_TESTS)
   add_subdirectory(test)
 endif()
 
+if(SINGULARITY_BUILD_IPCRESS2SPINER)
+  add_subdirectory(ipcress2spiner)
+endif()
+
 set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 
 include(CPack)
