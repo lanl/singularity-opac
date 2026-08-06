@@ -145,6 +145,42 @@ class MeanSOpacity {
   PORTABLE_INLINE_FUNCTION
   bool HasGroupBounds() const noexcept { return true; }
 
+  std::vector<Real> GetGroupBounds() const {
+    std::vector<Real> bounds(ngroups_ + 1);
+    for (int group = 0; group <= ngroups_; ++group) {
+      bounds[group] = groupBounds_(group);
+    }
+    return bounds;
+  }
+
+  // The group-index-less "mean" accessors only make sense when there is a
+  // single group. In that case the lone group spans the entire spectrum, so
+  // its group-integrated coefficient (stored at group 0) IS the traditional
+  // gray mean. We therefore require ngroups==1 and forward to group 0. This is
+  // not a distinguished "mean slot": for ngroups>1, group 0 is simply the
+  // lowest-frequency group and callers must use the group-index API.
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckMeanScatteringCoefficient(const Real rho, const Real temp) const {
+    PORTABLE_REQUIRE(
+        ngroups_ == 1,
+        "PlanckMeanScatteringCoefficient only valid for ngroups==1. "
+        "Use PlanckGroupScatteringCoefficient(rho, temp, group) for "
+        "multigroup.");
+    return PlanckGroupScatteringCoefficient(rho, temp, 0);
+  }
+
+  // See PlanckMeanScatteringCoefficient: the gray mean is the single group 0.
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandMeanScatteringCoefficient(const Real rho,
+                                          const Real temp) const {
+    PORTABLE_REQUIRE(
+        ngroups_ == 1,
+        "RosselandMeanScatteringCoefficient only valid for ngroups==1. "
+        "Use RosselandGroupScatteringCoefficient(rho, temp, group) for "
+        "multigroup.");
+    return RosselandGroupScatteringCoefficient(rho, temp, 0);
+  }
+
   PORTABLE_INLINE_FUNCTION
   Real PlanckGroupScatteringCoefficient(const Real rho, const Real temp,
                                         const int group) const {
@@ -163,6 +199,31 @@ class MeanSOpacity {
     return (gmode == Planck)
                ? PlanckGroupScatteringCoefficient(rho, temp, group)
                : RosselandGroupScatteringCoefficient(rho, temp, group);
+  }
+
+  // Logarithmic temperature derivative of the group scattering coefficient,
+  // d(log alpha_g)/d(log T) at fixed rho, where alpha_g = rho * sigma_g
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckGroupDLogScatteringCoefficientDLogT(const Real rho,
+                                                 const Real temp,
+                                                 const int group) const {
+    return GroupDLogSCoeffDLogT_(lsigmaPlanck_, rho, temp, group);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandGroupDLogScatteringCoefficientDLogT(const Real rho,
+                                                    const Real temp,
+                                                    const int group) const {
+    return GroupDLogSCoeffDLogT_(lsigmaRosseland_, rho, temp, group);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real DLogScatteringCoefficientDLogT(const Real rho, const Real temp,
+                                      const int group,
+                                      const int gmode = Rosseland) const {
+    return (gmode == Planck)
+               ? PlanckGroupDLogScatteringCoefficientDLogT(rho, temp, group)
+               : RosselandGroupDLogScatteringCoefficientDLogT(rho, temp, group);
   }
 
   PORTABLE_INLINE_FUNCTION
@@ -201,6 +262,25 @@ class MeanSOpacity {
     const Real lRho = ToLog(rho);
     const Real lT = ToLog(temp);
     return rho * FromLog(lsigma.interpToReal(lRho, lT, group));
+  }
+
+  // Evaluate slope d(log sigma)/d(log T) via table lookups, which equals
+  // d(log alpha)/d(log T) (the log-base and the rho prefactor drop out of the
+  // ratio).
+  PORTABLE_INLINE_FUNCTION
+  Real GroupDLogSCoeffDLogT_(const DataBox &lsigma, const Real rho,
+                             const Real temp, const int group) const {
+    const Real lRho = ToLog(rho);
+    const Real lT = ToLog(temp);
+    const auto lT_grid =
+        lsigma.range(1); // axis 1 is log10(T) (see setRange in Impl_)
+    const Real dlT = lT_grid.dx();
+    const int iT = lT_grid.index(lT); // clamped to a valid cell [iT, iT+1]
+    const Real lT_lo = lT_grid.x(iT);
+    const Real lT_hi = lT_grid.x(iT + 1);
+    const Real L_lo = lsigma.interpToReal(lRho, lT_lo, group);
+    const Real L_hi = lsigma.interpToReal(lRho, lT_hi, group);
+    return (L_hi - L_lo) / dlT;
   }
 
   void ValidateScatteringTables_(const DataBox &sigmaPlanck,

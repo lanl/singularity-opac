@@ -209,6 +209,31 @@ class MeanOpacity {
                : RosselandGroupAbsorptionCoefficient(rho, temp, group);
   }
 
+  // Logarithmic temperature derivative of the group absorption coefficient,
+  // d(log alpha_g)/d(log T) at fixed rho, where alpha_g = rho * kappa_g
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckGroupDLogAbsorptionCoefficientDLogT(const Real rho,
+                                                 const Real temp,
+                                                 const int group) const {
+    return GroupDLogAbsCoeffDLogT_(lkappaPlanck_, rho, temp, group);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandGroupDLogAbsorptionCoefficientDLogT(const Real rho,
+                                                    const Real temp,
+                                                    const int group) const {
+    return GroupDLogAbsCoeffDLogT_(lkappaRosseland_, rho, temp, group);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real DLogAbsorptionCoefficientDLogT(const Real rho, const Real temp,
+                                      const int group,
+                                      const int gmode = Rosseland) const {
+    return (gmode == Planck)
+               ? PlanckGroupDLogAbsorptionCoefficientDLogT(rho, temp, group)
+               : RosselandGroupDLogAbsorptionCoefficientDLogT(rho, temp, group);
+  }
+
   // Like the mean accessors above, Emissivity has no group-index argument and
   // so is only defined for ngroups==1, where group 0 is the whole-spectrum
   // (gray) group.
@@ -259,6 +284,25 @@ class MeanOpacity {
     const Real lRho = ToLog(rho);
     const Real lT = ToLog(temp);
     return rho * FromLog(lkappa.interpToReal(lRho, lT, group));
+  }
+
+  // Evaluate slope d(log kappa)/d(log T) via table lookups, which equals
+  // d(log alpha)/d(log T) (the log-base and the rho prefactor drop out of the
+  // ratio).
+  PORTABLE_INLINE_FUNCTION
+  Real GroupDLogAbsCoeffDLogT_(const DataBox &lkappa, const Real rho,
+                               const Real temp, const int group) const {
+    const Real lRho = ToLog(rho);
+    const Real lT = ToLog(temp);
+    const auto lT_grid =
+        lkappa.range(1); // axis 1 is log10(T) (see setRange in Impl_)
+    const Real dlT = lT_grid.dx();
+    const int iT = lT_grid.index(lT); // clamped to a valid cell [iT, iT+1]
+    const Real lT_lo = lT_grid.x(iT);
+    const Real lT_hi = lT_grid.x(iT + 1);
+    const Real L_lo = lkappa.interpToReal(lRho, lT_lo, group);
+    const Real L_hi = lkappa.interpToReal(lRho, lT_hi, group);
+    return (L_hi - L_lo) / dlT;
   }
 
   void ValidateOpacityTables_(const DataBox &kappaPlanck,
