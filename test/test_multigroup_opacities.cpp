@@ -380,6 +380,17 @@ TEST_CASE("Photon multigroup non-CGS wrapper converts units",
   REQUIRE(funny_host.ngroups() == ngroups);
   REQUIRE(funny_host.HasGroupBounds());
 
+  const auto constants = funny_host.GetRuntimePhysicalConstants();
+  const RuntimePhysicalConstants expected_constants(
+      PhysicalConstantsCGS(), time_unit, mass_unit, length_unit, temp_unit);
+  REQUIRE(constants.time == time_unit);
+  REQUIRE(constants.mass == mass_unit);
+  REQUIRE(constants.length == length_unit);
+  REQUIRE(constants.temp == temp_unit);
+  REQUIRE(FractionalDifference(constants.c, expected_constants.c) < EPS_TEST);
+  REQUIRE(FractionalDifference(constants.kb, expected_constants.kb) < EPS_TEST);
+  REQUIRE(FractionalDifference(constants.sb, expected_constants.sb) < EPS_TEST);
+
   for (int group = 0; group < ngroups; ++group) {
     const Real alpha_planck_cgs = funny_host.PlanckGroupAbsorptionCoefficient(
                                       rho / rho_unit, temp / temp_unit, group) /
@@ -430,6 +441,29 @@ TEST_CASE("Photon multigroup non-CGS wrapper converts units",
   reference_host.Finalize();
   kappa_planck.finalize();
   kappa_rosseland.finalize();
+}
+
+TEST_CASE("Photon multigroup scattering non-CGS wrapper reports code-unit constants",
+          "[MultigroupPhotons][MultigroupScattering]") {
+  constexpr Real time_unit = 11.;
+  constexpr Real mass_unit = 13.;
+  constexpr Real length_unit = 17.;
+  constexpr Real temp_unit = 19.;
+
+  photons::MeanSOpacityBase mean_scattering;
+  auto funny_host = photons::MeanNonCGSUnitsS<photons::MeanSOpacityBase>(
+      std::move(mean_scattering), time_unit, mass_unit, length_unit, temp_unit);
+
+  const auto constants = funny_host.GetRuntimePhysicalConstants();
+  const RuntimePhysicalConstants expected_constants(
+      PhysicalConstantsCGS(), time_unit, mass_unit, length_unit, temp_unit);
+  REQUIRE(constants.time == time_unit);
+  REQUIRE(constants.mass == mass_unit);
+  REQUIRE(constants.length == length_unit);
+  REQUIRE(constants.temp == temp_unit);
+  REQUIRE(FractionalDifference(constants.c, expected_constants.c) < EPS_TEST);
+  REQUIRE(FractionalDifference(constants.kb, expected_constants.kb) < EPS_TEST);
+  REQUIRE(FractionalDifference(constants.sb, expected_constants.sb) < EPS_TEST);
 }
 
 TEST_CASE("Photon multigroup non-CGS wrapper works for monochromatic-built "

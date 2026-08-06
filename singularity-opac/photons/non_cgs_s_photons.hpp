@@ -83,6 +83,8 @@ class NonCGSUnitsS {
 template <typename MeanSOpac>
 class MeanNonCGSUnitsS {
  public:
+  using PC = typename MeanSOpac::PC;
+
   MeanNonCGSUnitsS() = default;
   MeanNonCGSUnitsS(MeanSOpac &&multigroup_s_opac, const Real time_unit,
                    const Real mass_unit, const Real length_unit,
@@ -106,7 +108,8 @@ class MeanNonCGSUnitsS {
 
   PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
   GetRuntimePhysicalConstants() const {
-    return multigroup_s_opac_.GetRuntimePhysicalConstants();
+    return RuntimePhysicalConstants(PC(), time_unit_, mass_unit_, length_unit_,
+                                    temp_unit_);
   }
 
   PORTABLE_INLINE_FUNCTION
