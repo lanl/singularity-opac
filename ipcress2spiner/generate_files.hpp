@@ -22,12 +22,10 @@
 #include <utils/spiner/spiner/sp5.hpp>
 #include <utils/spiner/spiner/databox.hpp>
 #include <utils/spiner/spiner/interpolation.hpp>
-#include <utils/spiner/spiner/singularity_opac_sp5.hpp>
 
 herr_t saveMaterial(hid_t loc, hid_t matGroup, const int matid,
                     const std::string &sMatid,
                     const std::string &sp5_field_name,
-                    const std::vector<double> &group_bounds,
                     Spiner::DataBox<double> &opacity) {
 
 
