@@ -14,6 +14,7 @@
 // ======================================================================
 #ifndef SINGULARITY_OPAC_BASE_SP5_
 #define SINGULARITY_OPAC_BASE_SP5_
+// This file was made in part with generative AI.
 
 namespace SP5 {
 
@@ -50,19 +51,6 @@ constexpr char GroupBounds[] = "group bounds";
 } // namespace MultigroupSOpac
 
 // constants and fields below used in ipcress2spiner utility
-constexpr char defaultSesFileName[] = "converted_ipcress.sp5";
-constexpr char logType[] = "log_type";
-
-namespace Depends {
-constexpr char logRhoLogSie[] = "dependsLogRhoLogSie";
-constexpr char logRhoLogT[] = "dependsLogRhoLogT";
-} // namespace Depends
-
-namespace SubTable {
-constexpr char electronOnly[] = "electronOnly";
-constexpr char ionCold[] = "ionCold";
-} // namespace SubTable
-
 namespace Offsets {
 constexpr char messageName[] = "interpretation";
 constexpr char message[] =
