@@ -43,13 +43,10 @@
 #include "make_spiner_databox.hpp"
 
 // ARL: My to-do list
-// \TODO Thread log interpolation points and log interpolation mode options through command line
+// \TODO Thread equal log spacing of rho and T points through command line
 // \TODO Thread verbosity option through command-line options to print more info
-// \TODO Add gray opacties
 // \TODO Add ionization state? Leave until singularity-eos and singularity-opac are merged
 // \TODO clang-format
-// \TODO Add tests
-// \TODO Compare interpolation to draco's routines
 // \TODO Delete char fields from new[]
 
 // Function prototypes for Gandolf C function equivalents, prepend "C" to prevent name mangling
@@ -223,7 +220,6 @@ int main(int argc, char *argv[]) {
 
     // TODO Thread these variables through the input
     bool log_T_rho_hnu = true; // form a new grid from max and min evenly spaced in log10
-    bool log_interpolation = true; // interpolate logarithmically
 
     for (size_t i=0;i<mg_opac_keywords.size();++i) {
       auto key = mg_opac_keywords[i];
@@ -239,8 +235,7 @@ int main(int argc, char *argv[]) {
           opacity_data.data(), &nmg, &post_nmg, &ier);
 
         auto [spiner_opacity_databox, new_group_bounds] = build_multigroup_opacity_spiner_databox(
-          temperature_points, density_points, group_bounds, opacity_data, log_T_rho_hnu,
-          log_interpolation);
+          temperature_points, density_points, group_bounds, opacity_data, log_T_rho_hnu);
 
         // only save the group bounds once for this material
         if (i==0) {
@@ -264,8 +259,7 @@ int main(int argc, char *argv[]) {
           opacity_data.data(), &ngray, &post_ngray, &ier);
 
         auto spiner_opacity_databox = build_gray_opacity_spiner_databox(
-          temperature_points, density_points, opacity_data, log_T_rho_hnu,
-          log_interpolation);
+          temperature_points, density_points, opacity_data, log_T_rho_hnu);
 
         std::cout<<"Saving gray databox for "<<mat_ID<<" and "<<key<<std::endl;
         saveMaterial(file_loc, matGroup, mat_ID, sMatID, sp5_field_name, spiner_opacity_databox);
