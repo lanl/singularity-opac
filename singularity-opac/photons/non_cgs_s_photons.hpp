@@ -109,6 +109,13 @@ class MeanNonCGSUnitsS {
     return multigroup_s_opac_.HasGroupBounds();
   }
 
+  std::vector<Real> GetGroupBounds() const {
+    std::vector<Real> bounds = multigroup_s_opac_.GetGroupBounds();
+    for (auto &b : bounds)
+      b *= time_unit_;
+    return bounds;
+  }
+
   PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
   GetRuntimePhysicalConstants() const {
     return RuntimePhysicalConstants(PC(), time_unit_, mass_unit_, length_unit_,
