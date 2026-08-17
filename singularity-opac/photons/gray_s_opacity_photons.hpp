@@ -30,6 +30,8 @@ namespace photons {
 template <typename pc = PhysicalConstantsCGS>
 class GraySOpacity {
  public:
+  using PC = pc;
+
   GraySOpacity() = default;
   GraySOpacity(const Real sigma, const Real avg_particle_mass)
       : sigma_(sigma), apm_(avg_particle_mass) {}
@@ -60,6 +62,11 @@ class GraySOpacity {
   Real TotalScatteringCoefficient(const Real rho, const Real temp,
                                   const Real nu, Real *lambda = nullptr) const {
     return (rho / apm_) * sigma_;
+  }
+
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return RuntimePhysicalConstants(PC());
   }
 
  private:
