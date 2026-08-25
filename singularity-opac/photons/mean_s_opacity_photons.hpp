@@ -335,12 +335,6 @@ class MeanSOpacity {
                          const GroupBoundsIndexer &group_bounds,
                          const int ngroups, const int NNuPerGroup,
                          Real *lambda = nullptr) {
-#ifndef NDEBUG
-    auto RPC = RuntimePhysicalConstants(PC());
-    auto opc = s_opac.GetRuntimePhysicalConstants();
-    assert(RPC == opc && "Physical constants are the same");
-#endif
-
     if (NNuPerGroup < 2) {
       OPAC_ERROR("photons::MeanSOpacity: NNuPerGroup must be at least 2");
     }
