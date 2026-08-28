@@ -1,5 +1,4 @@
 add_executable(test_converted_data_file
-
     test_converted_data_file.cpp
 )
 
