@@ -89,10 +89,7 @@ target_compile_options(singularity-opac::flags INTERFACE
 target_link_options(singularity-opac::flags INTERFACE
                     $<$<COMPILE_LANG_AND_ID:CXX,XL>:-std=c++1y;-qxflag=disable__cplusplusOverride>)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-  target_compile_options(singularity-opac::flags INTERFACE
-                         -use_fast_math)
-elseif(CMAKE_BUILD_TYPE STREQUAL "Debug" AND SINGULARITY_BETTER_DEBUG_FLAGS)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND SINGULARITY_BETTER_DEBUG_FLAGS)
   target_compile_options(
     singularity-opac::flags
     INTERFACE

@@ -49,9 +49,6 @@ INTERFACE
                     "-Xcudafe;--diag_suppress=esa_on_defaulted_function_ignored"
                 > #hide_more_warn
             > # cxx_lang
-            $<${build_release}:
-                "-use_fast_math"
-            > # build_release
             $<${build_debug}:
                 $<${better_debug}:
                     $<${cxx_lang}:
