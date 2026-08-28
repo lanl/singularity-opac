@@ -24,7 +24,6 @@ add_executable(ipcress2spiner
   main.cpp
 )
 
-
 target_include_directories(ipcress2spiner
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
@@ -46,6 +45,13 @@ target_compile_definitions(ipcress2spiner PRIVATE
   IPCRESS2SPINER_VERSION=\"${PROJECT_VERSION}\"
 )
 install(TARGETS ipcress2spiner DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+# Tests
+enable_testing()
+add_subdirectory(test)
+
 else()
 message("GANDOLF was not found, not building ipcress2spiner")
+
+
 endif()

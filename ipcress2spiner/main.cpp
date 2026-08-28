@@ -43,13 +43,10 @@
 #include "make_spiner_databox.hpp"
 
 // ARL: My to-do list
-// \TODO Thread log interpolation points and log interpolation mode options through command line
+// \TODO Thread equal log spacing of rho and T points through command line
 // \TODO Thread verbosity option through command-line options to print more info
-// \TODO Add gray opacties
-// \TODO Add ionization state?
+// \TODO Add ionization state? Leave until singularity-eos and singularity-opac are merged
 // \TODO clang-format
-// \TODO Add tests
-// \TODO Compare interpolation to draco's routines
 // \TODO Delete char fields from new[]
 
 // Function prototypes for Gandolf C function equivalents, prepend "C" to prevent name mangling
@@ -201,49 +198,72 @@ int main(int argc, char *argv[]) {
     std::vector<double> temperature_points(nt, 0.0);
     std::vector<double> group_bounds(nhnu, 0.0);
     std::vector<double> density_points(nrho, 0.0);
+    // these post values are potentially reset by calls to gandolf?
     int post_nt = nt;
     int post_nrho = nrho;
     int post_nhnu = nhnu;
     int post_nmg = nmg;
+    int post_ngray = ngray;
 
     std::string ramg_keyword = "ramg";
     std::string rsmg_keyword = "rsmg";
+    std::string rtmg_keyword = "rtmg";
     std::string pmg_keyword = "pmg";
+    std::string ragray_keyword = "ragray";
+    std::string rgray_keyword = "rgray";
+    std::string pgray_keyword = "pgray";
 
-    std::array<std::string, 3> mg_opac_keywords{ramg_keyword, rsmg_keyword, pmg_keyword};
-    std::array<std::string, 3> mg_fields{ SP5::Fields::ramg, SP5::Fields::rsmg, SP5::Fields::pmg};
+    std::array<std::string, 7> mg_opac_keywords{ramg_keyword, rsmg_keyword, rtmg_keyword, pmg_keyword,
+                                                ragray_keyword, rgray_keyword, pgray_keyword};
+    std::array<std::string, 7> mg_fields{ SP5::Fields::ramg, SP5::Fields::rsmg, SP5::Fields::rtmg, SP5::Fields::pmg,
+                                          SP5::Fields::ragray, SP5::Fields::rgray, SP5::Fields::pgray};
 
     // TODO Thread these variables through the input
     bool log_T_rho_hnu = true; // form a new grid from max and min evenly spaced in log10
-    bool log_interpolation = true; // interpolate logarithmically
 
     for (size_t i=0;i<mg_opac_keywords.size();++i) {
       auto key = mg_opac_keywords[i];
       auto sp5_field_name = mg_fields[i];
       std::cout<<"Interpolating and building databox for "<<mat_ID<<" and "<<key<<std::endl;
-      std::vector<double> opacity_data(nmg, 0.0);
-      c_ggetmg(filename_char, &mat_ID, key.data(),
-        temperature_points.data(), &nt, &post_nt,
-        density_points.data(), &nrho, &post_nrho,
-        group_bounds.data(), &nhnu, &post_nhnu,
-        opacity_data.data(), &nmg, &post_nmg, &ier);
+      // multigroup opacities
+      if(key == "ramg" || key == "rsmg" || key=="rtmg" || key == "pmg") {
+        std::vector<double> opacity_data(nmg, 0.0);
+        c_ggetmg(filename_char, &mat_ID, key.data(),
+          temperature_points.data(), &nt, &post_nt,
+          density_points.data(), &nrho, &post_nrho,
+          group_bounds.data(), &nhnu, &post_nhnu,
+          opacity_data.data(), &nmg, &post_nmg, &ier);
 
-      auto [spiner_opacity_databox, new_group_bounds] = build_opacity_spiner_databox(
-        temperature_points, density_points, group_bounds, opacity_data, log_T_rho_hnu,
-        log_interpolation);
+        auto [spiner_opacity_databox, new_group_bounds] = build_multigroup_opacity_spiner_databox(
+          temperature_points, density_points, group_bounds, opacity_data, log_T_rho_hnu);
 
-      // only save the group bounds once for this material
-      if (i==0) {
-        const hsize_t dimensions[] = {static_cast<hsize_t>(new_group_bounds.size())};
-        std::string dataset_name("group bounds");
-        hid_t dataspace_id = H5Screate_simple(1, dimensions, nullptr);
-        hid_t dataset_id = H5Dcreate2(matGroup, dataset_name.c_str(), H5T_IEEE_F64LE, dataspace_id,
-          H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-        const herr_t status = H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-            new_group_bounds.data());
+        // only save the group bounds once for this material
+        if (i==0) {
+          const hsize_t dimensions[] = {static_cast<hsize_t>(new_group_bounds.size())};
+          std::string dataset_name("group bounds");
+          hid_t dataspace_id = H5Screate_simple(1, dimensions, nullptr);
+          hid_t dataset_id = H5Dcreate2(matGroup, dataset_name.c_str(), H5T_IEEE_F64LE, dataspace_id,
+            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+          const herr_t status = H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+              new_group_bounds.data());
+        }
+        std::cout<<"Saving multigroup databox for "<<mat_ID<<" and "<<key<<std::endl;
+        saveMaterial(file_loc, matGroup, mat_ID, sMatID, sp5_field_name, spiner_opacity_databox);
       }
-      std::cout<<"Saving databox for "<<mat_ID<<" and "<<key<<std::endl;
-      saveMaterial(file_loc, matGroup, mat_ID, sMatID, sp5_field_name, new_group_bounds, spiner_opacity_databox);
+      // gray opacites
+      else {
+        std::vector<double> opacity_data(ngray, 0.0);
+       c_ggetgray(filename_char, &mat_ID, key.data(),
+          temperature_points.data(), &nt, &post_nt,
+          density_points.data(), &nrho, &post_nrho,
+          opacity_data.data(), &ngray, &post_ngray, &ier);
+
+        auto spiner_opacity_databox = build_gray_opacity_spiner_databox(
+          temperature_points, density_points, opacity_data, log_T_rho_hnu);
+
+        std::cout<<"Saving gray databox for "<<mat_ID<<" and "<<key<<std::endl;
+        saveMaterial(file_loc, matGroup, mat_ID, sMatID, sp5_field_name, spiner_opacity_databox);
+      }
     }
     status += H5Gclose(matGroup);
   }
