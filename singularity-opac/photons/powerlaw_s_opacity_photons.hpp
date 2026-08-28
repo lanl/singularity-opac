@@ -29,6 +29,8 @@ namespace photons {
 template <typename pc = PhysicalConstantsCGS>
 class PowerLawSOpacity {
  public:
+  using PC = pc;
+
   PowerLawSOpacity() = default;
   PowerLawSOpacity(const Real kappa0, const Real rho_exp, const Real temp_exp,
                    const Real nu_exp = 0., const Real nu_ref = 1.,
@@ -90,6 +92,11 @@ class PowerLawSOpacity {
   Real TotalScatteringCoefficient(const Real rho, const Real temp,
                                   const Real nu, Real *lambda = nullptr) const {
     return (rho / apm_) * OpacityScale_(rho, temp, nu);
+  }
+
+  PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
+  GetRuntimePhysicalConstants() const {
+    return RuntimePhysicalConstants(PC());
   }
 
  private:

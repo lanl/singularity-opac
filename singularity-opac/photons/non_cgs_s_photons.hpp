@@ -102,8 +102,18 @@ class MeanNonCGSUnitsS {
   inline void Finalize() noexcept { multigroup_s_opac_.Finalize(); }
 
   PORTABLE_INLINE_FUNCTION
+  int ngroups() const noexcept { return multigroup_s_opac_.ngroups(); }
+
+  PORTABLE_INLINE_FUNCTION
   bool HasGroupBounds() const noexcept {
     return multigroup_s_opac_.HasGroupBounds();
+  }
+
+  std::vector<Real> GetGroupBounds() const {
+    std::vector<Real> bounds = multigroup_s_opac_.GetGroupBounds();
+    for (auto &b : bounds)
+      b *= time_unit_;
+    return bounds;
   }
 
   PORTABLE_INLINE_FUNCTION RuntimePhysicalConstants
@@ -111,6 +121,12 @@ class MeanNonCGSUnitsS {
     return RuntimePhysicalConstants(PC(), time_unit_, mass_unit_, length_unit_,
                                     temp_unit_);
   }
+
+#ifdef SPINER_USE_HDF
+  void Save(const std::string &filename) const {
+    return multigroup_s_opac_.Save(filename);
+  }
+#endif
 
   PORTABLE_INLINE_FUNCTION
   Real PlanckGroupScatteringCoefficient(const Real rho,
