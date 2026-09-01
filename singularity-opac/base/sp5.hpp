@@ -50,6 +50,10 @@ constexpr char RosselandGroupSOpacity[] = "Rosseland group scattering opacity";
 constexpr char GroupBounds[] = "group bounds";
 } // namespace MultigroupSOpac
 
+namespace Material {
+constexpr char name[] = "name";
+} // namespace Material
+
 } // namespace SP5
 
 #endif // SINGULARITY_OPAC_BASE_SP5_

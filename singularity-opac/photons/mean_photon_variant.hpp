@@ -177,9 +177,11 @@ class MeanVariant {
   }
 
 #ifdef SPINER_USE_HDF
-  void Save(const std::string &filename) const {
-    return PortsOfCall::visit([=](auto &opac) { return opac.Save(filename); },
-                              opac_);
+  void Save(const std::string &filename, const std::string &material_name,
+            const bool append = false) const {
+    return PortsOfCall::visit(
+        [=](auto &opac) { return opac.Save(filename, material_name, append); },
+        opac_);
   }
 #endif
 };

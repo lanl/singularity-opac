@@ -69,33 +69,17 @@ class MeanOpacity {
   }
 
 #ifdef SPINER_USE_HDF
-  MeanOpacity(const std::string &filename) {
-    // HDF-backed multigroup tables are expected to provide an ngroups + 1
-    // "group bounds" dataset. If the last group is [nu_max, infinity), then
-    // the final stored bound must be IEEE +infinity.
-    DataBox kappaPlanck;
-    DataBox kappaRosseland;
-    DataBox groupBounds;
-    herr_t status = H5_SUCCESS;
-    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-    status +=
-        kappaPlanck.loadHDF(file, SP5::MultigroupOpac::PlanckGroupOpacity);
-    status += kappaRosseland.loadHDF(
-        file, SP5::MultigroupOpac::RosselandGroupOpacity);
-    status += groupBounds.loadHDF(file, SP5::MultigroupOpac::GroupBounds);
-    status += H5Fclose(file);
-
-    if (status != H5_SUCCESS) {
-      OPAC_ERROR("photons::MeanOpacity: HDF5 error\n");
-    }
-
-    LoadOpacityTables_(kappaPlanck, kappaRosseland, groupBounds);
-    groupBounds.finalize();
-    kappaPlanck.finalize();
-    kappaRosseland.finalize();
+  MeanOpacity(const std::string &filename, const std::string &material_name) {
+    LoadHDF_(filename, material_name);
   }
 
-  void Save(const std::string &filename) const {
+  void Save(const std::string &filename,
+            const std::string &material_name) const {
+    Save(filename, material_name, false);
+  }
+
+  void Save(const std::string &filename, const std::string &material_name,
+            const bool append) const {
     DataBox kappaPlanck;
     DataBox kappaRosseland;
     DataBox groupBounds;
@@ -103,13 +87,47 @@ class MeanOpacity {
     ExportGroupBounds(groupBounds, groupBounds_, ngroups_);
 
     herr_t status = H5_SUCCESS;
-    hid_t file =
-        H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t file = append ? H5Fopen(filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT)
+                        : H5Fcreate(filename.c_str(), H5F_ACC_TRUNC,
+                                    H5P_DEFAULT, H5P_DEFAULT);
+    hid_t material = -1;
+    if (append && H5Lexists(file, material_name.c_str(), H5P_DEFAULT) > 0) {
+      material = H5Gopen(file, material_name.c_str(), H5P_DEFAULT);
+    } else {
+      material = H5Gcreate(file, material_name.c_str(), H5P_DEFAULT,
+                           H5P_DEFAULT, H5P_DEFAULT);
+    }
     status +=
-        kappaPlanck.saveHDF(file, SP5::MultigroupOpac::PlanckGroupOpacity);
+        H5LTset_attribute_string(file, material_name.c_str(),
+                                 SP5::Material::name, material_name.c_str());
+    status +=
+        kappaPlanck.saveHDF(material, SP5::MultigroupOpac::PlanckGroupOpacity);
     status += kappaRosseland.saveHDF(
-        file, SP5::MultigroupOpac::RosselandGroupOpacity);
-    status += groupBounds.saveHDF(file, SP5::MultigroupOpac::GroupBounds);
+        material, SP5::MultigroupOpac::RosselandGroupOpacity);
+    // Absorption and scattering share group bounds when appended.
+    if (H5Lexists(material, SP5::MultigroupOpac::GroupBounds, H5P_DEFAULT) >
+        0) {
+      DataBox existingBounds;
+      const herr_t bounds_status =
+          existingBounds.loadHDF(material, SP5::MultigroupOpac::GroupBounds);
+      if (bounds_status != H5_SUCCESS ||
+          existingBounds.size() != groupBounds.size()) {
+        existingBounds.finalize();
+        OPAC_ERROR("photons::MeanOpacity: existing material group bounds "
+                   "are incompatible with appended opacity tables");
+      }
+      for (int i = 0; i < groupBounds.size(); ++i) {
+        if (existingBounds(i) != groupBounds(i)) {
+          existingBounds.finalize();
+          OPAC_ERROR("photons::MeanOpacity: existing material group bounds "
+                     "are incompatible with appended opacity tables");
+        }
+      }
+      existingBounds.finalize();
+    } else {
+      status += groupBounds.saveHDF(material, SP5::MultigroupOpac::GroupBounds);
+    }
+    status += H5Gclose(material);
     status += H5Fclose(file);
 
     kappaPlanck.finalize();
@@ -278,6 +296,37 @@ class MeanOpacity {
   }
 
  private:
+#ifdef SPINER_USE_HDF
+  void LoadHDF_(const std::string &filename, const std::string &material_name) {
+    // Material is a root-level group selected by name.
+    DataBox kappaPlanck;
+    DataBox kappaRosseland;
+    DataBox groupBounds;
+    herr_t status = H5_SUCCESS;
+    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    hid_t material = H5Gopen(file, material_name.c_str(), H5P_DEFAULT);
+    if (material < 0) {
+      OPAC_ERROR("photons::MeanOpacity: material group not found in HDF5 file");
+    }
+    status +=
+        kappaPlanck.loadHDF(material, SP5::MultigroupOpac::PlanckGroupOpacity);
+    status += kappaRosseland.loadHDF(
+        material, SP5::MultigroupOpac::RosselandGroupOpacity);
+    status += groupBounds.loadHDF(material, SP5::MultigroupOpac::GroupBounds);
+    status += H5Gclose(material);
+    status += H5Fclose(file);
+
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("photons::MeanOpacity: HDF5 error\n");
+    }
+
+    LoadOpacityTables_(kappaPlanck, kappaRosseland, groupBounds);
+    groupBounds.finalize();
+    kappaPlanck.finalize();
+    kappaRosseland.finalize();
+  }
+#endif
+
   PORTABLE_INLINE_FUNCTION
   Real GroupAbsorptionCoefficient_(const DataBox &lkappa, const Real rho,
                                    const Real temp, const int group) const {
