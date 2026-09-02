@@ -64,30 +64,17 @@ class MeanSOpacity {
   }
 
 #ifdef SPINER_USE_HDF
-  MeanSOpacity(const std::string &filename) {
-    DataBox sigmaPlanck;
-    DataBox sigmaRosseland;
-    DataBox groupBounds;
-    herr_t status = H5_SUCCESS;
-    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-    status +=
-        sigmaPlanck.loadHDF(file, SP5::MultigroupSOpac::PlanckGroupSOpacity);
-    status += sigmaRosseland.loadHDF(
-        file, SP5::MultigroupSOpac::RosselandGroupSOpacity);
-    status += groupBounds.loadHDF(file, SP5::MultigroupSOpac::GroupBounds);
-    status += H5Fclose(file);
-
-    if (status != H5_SUCCESS) {
-      OPAC_ERROR("photons::MeanSOpacity: HDF5 error\n");
-    }
-
-    LoadScatteringTables_(sigmaPlanck, sigmaRosseland, groupBounds);
-    groupBounds.finalize();
-    sigmaPlanck.finalize();
-    sigmaRosseland.finalize();
+  MeanSOpacity(const std::string &filename, const std::string &material_name) {
+    LoadHDF_(filename, material_name);
   }
 
-  void Save(const std::string &filename) const {
+  void Save(const std::string &filename,
+            const std::string &material_name) const {
+    Save(filename, material_name, false);
+  }
+
+  void Save(const std::string &filename, const std::string &material_name,
+            const bool append) const {
     DataBox sigmaPlanck;
     DataBox sigmaRosseland;
     DataBox groupBounds;
@@ -95,13 +82,49 @@ class MeanSOpacity {
     ExportGroupBounds(groupBounds, groupBounds_, ngroups_);
 
     herr_t status = H5_SUCCESS;
-    hid_t file =
-        H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t file = append ? H5Fopen(filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT)
+                        : H5Fcreate(filename.c_str(), H5F_ACC_TRUNC,
+                                    H5P_DEFAULT, H5P_DEFAULT);
+    hid_t material = -1;
+    if (append && H5Lexists(file, material_name.c_str(), H5P_DEFAULT) > 0) {
+      material = H5Gopen(file, material_name.c_str(), H5P_DEFAULT);
+    } else {
+      material = H5Gcreate(file, material_name.c_str(), H5P_DEFAULT,
+                           H5P_DEFAULT, H5P_DEFAULT);
+    }
     status +=
-        sigmaPlanck.saveHDF(file, SP5::MultigroupSOpac::PlanckGroupSOpacity);
+        H5LTset_attribute_string(file, material_name.c_str(),
+                                 SP5::SingularityOpacMaterial::name,
+                                 material_name.c_str());
+    status += sigmaPlanck.saveHDF(material,
+                                  SP5::MultigroupSOpac::PlanckGroupSOpacity);
     status += sigmaRosseland.saveHDF(
-        file, SP5::MultigroupSOpac::RosselandGroupSOpacity);
-    status += groupBounds.saveHDF(file, SP5::MultigroupSOpac::GroupBounds);
+        material, SP5::MultigroupSOpac::RosselandGroupSOpacity);
+    // Absorption and scattering share group bounds when appended.
+    if (H5Lexists(material, SP5::MultigroupSOpac::GroupBounds, H5P_DEFAULT) >
+        0) {
+      DataBox existingBounds;
+      const herr_t bounds_status =
+          existingBounds.loadHDF(material, SP5::MultigroupSOpac::GroupBounds);
+      if (bounds_status != H5_SUCCESS ||
+          existingBounds.size() != groupBounds.size()) {
+        existingBounds.finalize();
+        OPAC_ERROR("photons::MeanSOpacity: existing material group bounds "
+                   "are incompatible with appended scattering tables");
+      }
+      for (int i = 0; i < groupBounds.size(); ++i) {
+        if (existingBounds(i) != groupBounds(i)) {
+          existingBounds.finalize();
+          OPAC_ERROR("photons::MeanSOpacity: existing material group bounds "
+                     "are incompatible with appended scattering tables");
+        }
+      }
+      existingBounds.finalize();
+    } else {
+      status +=
+          groupBounds.saveHDF(material, SP5::MultigroupSOpac::GroupBounds);
+    }
+    status += H5Gclose(material);
     status += H5Fclose(file);
 
     sigmaPlanck.finalize();
@@ -256,6 +279,37 @@ class MeanSOpacity {
   }
 
  private:
+#ifdef SPINER_USE_HDF
+  void LoadHDF_(const std::string &filename, const std::string &material_name) {
+    DataBox sigmaPlanck;
+    DataBox sigmaRosseland;
+    DataBox groupBounds;
+    herr_t status = H5_SUCCESS;
+    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    hid_t material = H5Gopen(file, material_name.c_str(), H5P_DEFAULT);
+    if (material < 0) {
+      OPAC_ERROR(
+          "photons::MeanSOpacity: material group not found in HDF5 file");
+    }
+    status += sigmaPlanck.loadHDF(material,
+                                  SP5::MultigroupSOpac::PlanckGroupSOpacity);
+    status += sigmaRosseland.loadHDF(
+        material, SP5::MultigroupSOpac::RosselandGroupSOpacity);
+    status += groupBounds.loadHDF(material, SP5::MultigroupSOpac::GroupBounds);
+    status += H5Gclose(material);
+    status += H5Fclose(file);
+
+    if (status != H5_SUCCESS) {
+      OPAC_ERROR("photons::MeanSOpacity: HDF5 error\n");
+    }
+
+    LoadScatteringTables_(sigmaPlanck, sigmaRosseland, groupBounds);
+    groupBounds.finalize();
+    sigmaPlanck.finalize();
+    sigmaRosseland.finalize();
+  }
+#endif
+
   PORTABLE_INLINE_FUNCTION
   Real GroupScatteringCoefficient_(const DataBox &lsigma, const Real rho,
                                    const Real temp, const int group) const {

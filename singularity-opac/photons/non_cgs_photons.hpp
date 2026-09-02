@@ -280,8 +280,9 @@ class MeanNonCGSUnits {
   }
 
 #ifdef SPINER_USE_HDF
-  void Save(const std::string &filename) const {
-    return multigroup_opac_.Save(filename);
+  void Save(const std::string &filename, const std::string &material_name,
+            const bool append = false) const {
+    return multigroup_opac_.Save(filename, material_name, append);
   }
 #endif
 
@@ -335,8 +336,10 @@ class MeanNonCGSUnits {
   PORTABLE_INLINE_FUNCTION
   Real Emissivity(const Real rho, const Real temp,
                   const int gmode = Rosseland) const {
-    const Real J = multigroup_opac_.Emissivity(rho * rho_unit_, temp * temp_unit_, gmode);
-    const Real inv_emiss_unit_(length_unit_ * time_unit_ * time_unit_ / mass_unit_);
+    const Real J =
+        multigroup_opac_.Emissivity(rho * rho_unit_, temp * temp_unit_, gmode);
+    const Real inv_emiss_unit_(length_unit_ * time_unit_ * time_unit_ /
+                               mass_unit_);
     // Jnu integrated over frequency, but divide by frequency to get out of cgs
     return J * inv_emiss_unit_ * time_unit_;
   }

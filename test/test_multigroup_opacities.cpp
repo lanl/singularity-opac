@@ -226,8 +226,9 @@ TEST_CASE("Photon multigroup tables can round-trip through SP5 HDF",
   photons::MeanOpacityBase saved(kappa_planck, kappa_rosseland,
                                        group_bounds);
   const char *filename = "multigroup-photon-table.sp5";
-  saved.Save(filename);
-  photons::MeanOpacityBase loaded(filename);
+  const char *material_name = "test-material";
+  saved.Save(filename, material_name);
+  photons::MeanOpacityBase loaded(filename, material_name);
 
   REQUIRE(loaded.HasGroupBounds());
   REQUIRE(loaded.ngroups() == ngroups);
@@ -1122,8 +1123,9 @@ TEST_CASE("Photon multigroup scattering tables can round-trip through SP5 HDF",
   photons::MeanSOpacityBase saved(sigma_planck, sigma_rosseland,
                                         group_bounds);
   const char *filename = "multigroup-photon-scattering-table.sp5";
-  saved.Save(filename);
-  photons::MeanSOpacityBase loaded(filename);
+  const char *material_name = "test-material";
+  saved.Save(filename, material_name);
+  photons::MeanSOpacityBase loaded(filename, material_name);
 
   REQUIRE(loaded.HasGroupBounds());
   REQUIRE(loaded.ngroups() == ngroups);
