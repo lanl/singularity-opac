@@ -99,7 +99,8 @@ class MeanOpacity {
     }
     status +=
         H5LTset_attribute_string(file, material_name.c_str(),
-                                 SP5::Material::name, material_name.c_str());
+                                 SP5::SingularityOpacMaterial::name,
+                                 material_name.c_str());
     status +=
         kappaPlanck.saveHDF(material, SP5::MultigroupOpac::PlanckGroupOpacity);
     status += kappaRosseland.saveHDF(

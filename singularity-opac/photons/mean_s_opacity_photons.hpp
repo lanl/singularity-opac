@@ -94,7 +94,8 @@ class MeanSOpacity {
     }
     status +=
         H5LTset_attribute_string(file, material_name.c_str(),
-                                 SP5::Material::name, material_name.c_str());
+                                 SP5::SingularityOpacMaterial::name,
+                                 material_name.c_str());
     status += sigmaPlanck.saveHDF(material,
                                   SP5::MultigroupSOpac::PlanckGroupSOpacity);
     status += sigmaRosseland.saveHDF(
