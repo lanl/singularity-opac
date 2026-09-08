@@ -1,5 +1,5 @@
 // ======================================================================
-// © 2021-2026. Triad National Security, LLC. All rights reserved.  This
+// © 2026. Triad National Security, LLC. All rights reserved.  This
 // program was produced under U.S. Government contract
 // 89233218CNA000001 for Los Alamos National Laboratory (LANL), which
 // is operated by Triad National Security, LLC for the U.S.
@@ -49,6 +49,37 @@ constexpr char PlanckGroupSOpacity[] = "Planck group scattering opacity";
 constexpr char RosselandGroupSOpacity[] = "Rosseland group scattering opacity";
 constexpr char GroupBounds[] = "group bounds";
 } // namespace MultigroupSOpac
+
+// constants and fields below used in ipcress2spiner utility
+namespace Offsets {
+constexpr char messageName[] = "interpretation";
+constexpr char message[] =
+    "All quantities are functions of log_10(X)\n"
+    "for X = density rho, temperature T, or group boundaries hnu\n"
+    "where conversion is X = 10^{Xlog}\n";
+constexpr char rho[] = "rhoOffset";
+constexpr char T[] = "TOffset";
+constexpr char group_bounds[] = "groupBoundsOffset";
+} // namespace Offsets
+
+namespace Material {
+constexpr char comments[] = "comments";
+constexpr char matid[] = "matid";
+constexpr char name[] = "name";
+} // namespace Material
+
+namespace Fields {
+constexpr char ramg[] = "rosseland absorption multigroup opacity";
+constexpr char rsmg[] =  "rosseland scattering multigroup opacity";
+constexpr char rtmg[] =  "rosseland total multigroup opacity";
+constexpr char pmg[] = "planck total multigroup opacity";
+constexpr char ragray[] = "rosseland absorption gray opacity";
+constexpr char rgray[] = "rosseland total gray opacity";
+constexpr char pgray[] =  "planck total gray opacity";
+constexpr char T[] = "temperature";
+constexpr char rho[] = "density";
+constexpr char group_bounds[] = "group boundaries";
+} // namespace Fields
 
 } // namespace SP5
 
