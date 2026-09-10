@@ -90,6 +90,14 @@ class MeanOpacity {
     LoadHDF_(filename, material_name);
   }
 
+  void Save(const std::string &filename, const std::string &material_name,
+            const bool append = false) const {
+    if (material_name.empty()) {
+      OPAC_ERROR("photons::MeanOpacity: material name must not be empty");
+    }
+    Save_(filename, "/" + material_name, nullptr, material_name, append);
+  }
+
   void Save(const std::string &filename, const int matid,
             const bool append = false) const {
     Save(filename, matid, std::string(), append);
@@ -98,6 +106,19 @@ class MeanOpacity {
   void Save(const std::string &filename, const int matid,
             const std::string &material_name,
             const bool append = false) const {
+    Save_(filename, "/" + std::to_string(matid), &matid, material_name,
+          append);
+  }
+
+  void Save(const std::string &filename, const int matid,
+            const char *material_name, const bool append = false) const {
+    Save(filename, matid, std::string(material_name), append);
+  }
+
+ private:
+  void Save_(const std::string &filename, const std::string &material_path,
+             const int *matid, const std::string &material_name,
+             const bool append) const {
     DataBox kappaPlanck;
     DataBox kappaRosseland;
     DataBox groupBounds;
@@ -108,7 +129,6 @@ class MeanOpacity {
     hid_t file = append ? H5Fopen(filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT)
                         : H5Fcreate(filename.c_str(), H5F_ACC_TRUNC,
                                     H5P_DEFAULT, H5P_DEFAULT);
-    const std::string material_path = "/" + std::to_string(matid);
     hid_t material = -1;
     if (append && H5Lexists(file, material_path.c_str(), H5P_DEFAULT) > 0) {
       material = H5Gopen(file, material_path.c_str(), H5P_DEFAULT);
@@ -116,8 +136,10 @@ class MeanOpacity {
       material = H5Gcreate(file, material_path.c_str(), H5P_DEFAULT,
                            H5P_DEFAULT, H5P_DEFAULT);
     }
-    status += H5LTset_attribute_int(file, material_path.c_str(),
-                                    SP5::Material::matid, &matid, 1);
+    if (matid != nullptr) {
+      status += H5LTset_attribute_int(file, material_path.c_str(),
+                                      SP5::Material::matid, matid, 1);
+    }
     if (!material_name.empty()) {
       status += H5LTset_attribute_string(file, material_path.c_str(),
                                           SP5::Material::name,
@@ -165,6 +187,8 @@ class MeanOpacity {
       OPAC_ERROR("photons::MeanOpacity: HDF5 error\n");
     }
   }
+
+ public:
 #endif
 
   PORTABLE_INLINE_FUNCTION

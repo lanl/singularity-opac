@@ -95,6 +95,13 @@ dataset. Likewise, a lower tail group `[0, nu_1)` is represented by setting
 the first bound to `0.`. A very large finite number is still interpreted as a
 finite bound.
 
+An SP5 file may contain multiple materials. Neither `matid` nor `name` is
+individually required, but each material must have at least one of them as a
+usable selector. A material group may therefore be keyed by its integer
+`matid`, keyed by its string name, or keyed by `matid` with an additional
+`name` attribute. `MeanOpacity` and `MeanSOpacity` provide constructors and
+`Save` overloads for both selectors.
+
 For frequency-dependent scattering opacities, the following functions are provided
 | Function              | Expression | Description            | Units   |
 | --------------------- | ---------- | ---------------------  | ------- |

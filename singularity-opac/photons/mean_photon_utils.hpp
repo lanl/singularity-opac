@@ -39,9 +39,9 @@ namespace impl {
 using MeanUtilsDataBox = Spiner::DataBox<Real>;
 
 #ifdef SPINER_USE_HDF
-// SP5 material groups are keyed by integer matid.  A name is optional
-// metadata, so name-based construction must search the root groups rather than
-// assume that the name is the group's path.
+// SP5 material groups may be keyed by integer matid or by name. A name-based
+// lookup first checks the name-keyed path, then checks name metadata on other
+// root groups (including matid-keyed groups).
 inline hid_t OpenMaterialGroupByMatid(const hid_t file, const int matid) {
   const std::string path = "/" + std::to_string(matid);
   return H5Gopen(file, path.c_str(), H5P_DEFAULT);
@@ -76,8 +76,6 @@ inline herr_t FindMaterialByName(hid_t file, const char *link_name,
 
 inline hid_t OpenMaterialGroupByName(const hid_t file,
                                      const std::string &name) {
-  // This fallback supports files written before matid/name metadata was
-  // standardized, while the scan handles canonical SP5 files.
   const std::string direct_path = "/" + name;
   hid_t material = H5Gopen(file, direct_path.c_str(), H5P_DEFAULT);
   if (material >= 0) return material;

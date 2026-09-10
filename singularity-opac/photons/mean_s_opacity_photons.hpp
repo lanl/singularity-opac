@@ -20,6 +20,7 @@
 #include <cmath>
 #include <cstdio>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include <ports-of-call/portability.hpp>
@@ -57,8 +58,12 @@ class MeanSOpacity {
                       group_bounds, ngroups, NNuPerGroup, lambda);
   }
 
-  template <typename GroupBoundsIndexer>
-  MeanSOpacity(const DataBox &sigmaRosseland,
+  template <typename OpacityDataBox, typename GroupBoundsIndexer,
+            typename std::enable_if<
+                std::is_same<typename std::decay<OpacityDataBox>::type,
+                             DataBox>::value,
+                int>::type = 0>
+  MeanSOpacity(OpacityDataBox &&sigmaRosseland,
                const GroupBoundsIndexer &group_bounds) {
     LoadScatteringTables_(sigmaRosseland, group_bounds);
   }
@@ -72,6 +77,14 @@ class MeanSOpacity {
     LoadHDF_(filename, material_name);
   }
 
+  void Save(const std::string &filename, const std::string &material_name,
+            const bool append = false) const {
+    if (material_name.empty()) {
+      OPAC_ERROR("photons::MeanSOpacity: material name must not be empty");
+    }
+    Save_(filename, "/" + material_name, nullptr, material_name, append);
+  }
+
   void Save(const std::string &filename, const int matid,
             const bool append = false) const {
     Save(filename, matid, std::string(), append);
@@ -80,6 +93,19 @@ class MeanSOpacity {
   void Save(const std::string &filename, const int matid,
             const std::string &material_name,
             const bool append = false) const {
+    Save_(filename, "/" + std::to_string(matid), &matid, material_name,
+          append);
+  }
+
+  void Save(const std::string &filename, const int matid,
+            const char *material_name, const bool append = false) const {
+    Save(filename, matid, std::string(material_name), append);
+  }
+
+ private:
+  void Save_(const std::string &filename, const std::string &material_path,
+             const int *matid, const std::string &material_name,
+             const bool append) const {
     DataBox sigmaRosseland;
     DataBox groupBounds;
     ExportScatteringTables_(sigmaRosseland);
@@ -89,7 +115,6 @@ class MeanSOpacity {
     hid_t file = append ? H5Fopen(filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT)
                         : H5Fcreate(filename.c_str(), H5F_ACC_TRUNC,
                                     H5P_DEFAULT, H5P_DEFAULT);
-    const std::string material_path = "/" + std::to_string(matid);
     hid_t material = -1;
     if (append && H5Lexists(file, material_path.c_str(), H5P_DEFAULT) > 0) {
       material = H5Gopen(file, material_path.c_str(), H5P_DEFAULT);
@@ -97,8 +122,10 @@ class MeanSOpacity {
       material = H5Gcreate(file, material_path.c_str(), H5P_DEFAULT,
                            H5P_DEFAULT, H5P_DEFAULT);
     }
-    status += H5LTset_attribute_int(file, material_path.c_str(),
-                                    SP5::Material::matid, &matid, 1);
+    if (matid != nullptr) {
+      status += H5LTset_attribute_int(file, material_path.c_str(),
+                                      SP5::Material::matid, matid, 1);
+    }
     if (!material_name.empty()) {
       status += H5LTset_attribute_string(file, material_path.c_str(),
                                           SP5::Material::name,
@@ -140,6 +167,8 @@ class MeanSOpacity {
       OPAC_ERROR("photons::MeanSOpacity: HDF5 error\n");
     }
   }
+
+ public:
 #endif
 
   PORTABLE_INLINE_FUNCTION

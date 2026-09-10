@@ -226,14 +226,18 @@ TEST_CASE("Photon multigroup tables can round-trip through SP5 HDF",
   photons::MeanOpacityBase saved(kappa_planck, kappa_rosseland,
                                        group_bounds);
   const char *filename = "multigroup-photon-table.sp5";
+  const char *name_only_filename = "multigroup-photon-table-name-only.sp5";
   const char *material_name = "test-material";
   saved.Save(filename, 42, material_name);
-  photons::MeanOpacityBase loaded(filename, material_name);
+  saved.Save(name_only_filename, material_name);
+  photons::MeanOpacityBase loaded(name_only_filename, material_name);
+  photons::MeanOpacityBase loaded_by_name(filename, material_name);
   photons::MeanOpacityBase loaded_by_id(filename, 42);
 
   REQUIRE(loaded.HasGroupBounds());
   REQUIRE(loaded.HasPlanckOpacity());
   REQUIRE(loaded.HasRosselandOpacity());
+  REQUIRE(loaded_by_name.ngroups() == ngroups);
   REQUIRE(loaded_by_id.ngroups() == ngroups);
   REQUIRE(loaded.ngroups() == ngroups);
   REQUIRE(loaded.GroupOfNu(0.) == 0);
@@ -272,6 +276,7 @@ TEST_CASE("Photon multigroup tables can round-trip through SP5 HDF",
   }
 
   loaded.Finalize();
+  loaded_by_name.Finalize();
   saved.Finalize();
   kappa_planck.finalize();
   kappa_rosseland.finalize();
@@ -1114,13 +1119,18 @@ TEST_CASE("Photon multigroup scattering tables can round-trip through SP5 HDF",
 
   photons::MeanSOpacityBase saved(sigma_rosseland, group_bounds);
   const char *filename = "multigroup-photon-scattering-table.sp5";
+  const char *name_only_filename =
+      "multigroup-photon-scattering-table-name-only.sp5";
   const char *material_name = "test-material";
   saved.Save(filename, 42, material_name);
-  photons::MeanSOpacityBase loaded(filename, material_name);
+  saved.Save(name_only_filename, material_name);
+  photons::MeanSOpacityBase loaded(name_only_filename, material_name);
+  photons::MeanSOpacityBase loaded_by_name(filename, material_name);
   photons::MeanSOpacityBase loaded_by_id(filename, 42);
 
   REQUIRE(loaded.HasGroupBounds());
   REQUIRE(loaded.ngroups() == ngroups);
+  REQUIRE(loaded_by_name.ngroups() == ngroups);
   REQUIRE(loaded_by_id.ngroups() == ngroups);
   REQUIRE(loaded.GroupOfNu(0.) == 0);
   REQUIRE(loaded.GroupOfNu(nu_min) == 1);
@@ -1144,6 +1154,7 @@ TEST_CASE("Photon multigroup scattering tables can round-trip through SP5 HDF",
   }
 
   loaded.Finalize();
+  loaded_by_name.Finalize();
   saved.Finalize();
   sigma_rosseland.finalize();
 }

@@ -290,6 +290,11 @@ class MeanNonCGSUnits {
   }
 
 #ifdef SPINER_USE_HDF
+  void Save(const std::string &filename, const std::string &material_name,
+            const bool append = false) const {
+    return multigroup_opac_.Save(filename, material_name, append);
+  }
+
   void Save(const std::string &filename, const int matid,
             const bool append = false) const {
     return multigroup_opac_.Save(filename, matid, append);
@@ -298,6 +303,11 @@ class MeanNonCGSUnits {
   void Save(const std::string &filename, const int matid,
             const std::string &material_name,
             const bool append = false) const {
+    return multigroup_opac_.Save(filename, matid, material_name, append);
+  }
+
+  void Save(const std::string &filename, const int matid,
+            const char *material_name, const bool append = false) const {
     return multigroup_opac_.Save(filename, matid, material_name, append);
   }
 #endif
