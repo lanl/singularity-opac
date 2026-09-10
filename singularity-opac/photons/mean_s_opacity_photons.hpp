@@ -58,53 +58,81 @@ class MeanSOpacity {
   }
 
   template <typename GroupBoundsIndexer>
-  MeanSOpacity(const DataBox &sigmaPlanck, const DataBox &sigmaRosseland,
+  MeanSOpacity(const DataBox &sigmaRosseland,
                const GroupBoundsIndexer &group_bounds) {
-    LoadScatteringTables_(sigmaPlanck, sigmaRosseland, group_bounds);
+    LoadScatteringTables_(sigmaRosseland, group_bounds);
   }
 
 #ifdef SPINER_USE_HDF
-  MeanSOpacity(const std::string &filename) {
-    DataBox sigmaPlanck;
-    DataBox sigmaRosseland;
-    DataBox groupBounds;
-    herr_t status = H5_SUCCESS;
-    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-    status +=
-        sigmaPlanck.loadHDF(file, SP5::MultigroupSOpac::PlanckGroupSOpacity);
-    status += sigmaRosseland.loadHDF(
-        file, SP5::MultigroupSOpac::RosselandGroupSOpacity);
-    status += groupBounds.loadHDF(file, SP5::MultigroupSOpac::GroupBounds);
-    status += H5Fclose(file);
-
-    if (status != H5_SUCCESS) {
-      OPAC_ERROR("photons::MeanSOpacity: HDF5 error\n");
-    }
-
-    LoadScatteringTables_(sigmaPlanck, sigmaRosseland, groupBounds);
-    groupBounds.finalize();
-    sigmaPlanck.finalize();
-    sigmaRosseland.finalize();
+  MeanSOpacity(const std::string &filename, const int matid) {
+    LoadHDF_(filename, matid);
   }
 
-  void Save(const std::string &filename) const {
-    DataBox sigmaPlanck;
+  MeanSOpacity(const std::string &filename, const std::string &material_name) {
+    LoadHDF_(filename, material_name);
+  }
+
+  void Save(const std::string &filename, const int matid,
+            const bool append = false) const {
+    Save(filename, matid, std::string(), append);
+  }
+
+  void Save(const std::string &filename, const int matid,
+            const std::string &material_name,
+            const bool append = false) const {
     DataBox sigmaRosseland;
     DataBox groupBounds;
-    ExportScatteringTables_(sigmaPlanck, sigmaRosseland);
+    ExportScatteringTables_(sigmaRosseland);
     ExportGroupBounds(groupBounds, groupBounds_, ngroups_);
 
     herr_t status = H5_SUCCESS;
-    hid_t file =
-        H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    status +=
-        sigmaPlanck.saveHDF(file, SP5::MultigroupSOpac::PlanckGroupSOpacity);
+    hid_t file = append ? H5Fopen(filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT)
+                        : H5Fcreate(filename.c_str(), H5F_ACC_TRUNC,
+                                    H5P_DEFAULT, H5P_DEFAULT);
+    const std::string material_path = "/" + std::to_string(matid);
+    hid_t material = -1;
+    if (append && H5Lexists(file, material_path.c_str(), H5P_DEFAULT) > 0) {
+      material = H5Gopen(file, material_path.c_str(), H5P_DEFAULT);
+    } else {
+      material = H5Gcreate(file, material_path.c_str(), H5P_DEFAULT,
+                           H5P_DEFAULT, H5P_DEFAULT);
+    }
+    status += H5LTset_attribute_int(file, material_path.c_str(),
+                                    SP5::Material::matid, &matid, 1);
+    if (!material_name.empty()) {
+      status += H5LTset_attribute_string(file, material_path.c_str(),
+                                          SP5::Material::name,
+                                          material_name.c_str());
+    }
     status += sigmaRosseland.saveHDF(
-        file, SP5::MultigroupSOpac::RosselandGroupSOpacity);
-    status += groupBounds.saveHDF(file, SP5::MultigroupSOpac::GroupBounds);
+        material, SP5::MultigroupSOpac::RosselandGroupSOpacity);
+    // Absorption and scattering share group bounds when appended.
+    if (H5Lexists(material, SP5::Multigroup::GroupBounds, H5P_DEFAULT) >
+        0) {
+      DataBox existingBounds;
+      const herr_t bounds_status =
+          existingBounds.loadHDF(material, SP5::Multigroup::GroupBounds);
+      if (bounds_status != H5_SUCCESS ||
+          existingBounds.size() != groupBounds.size()) {
+        existingBounds.finalize();
+        OPAC_ERROR("photons::MeanSOpacity: existing material group bounds "
+                   "are incompatible with appended scattering tables");
+      }
+      for (int i = 0; i < groupBounds.size(); ++i) {
+        if (existingBounds(i) != groupBounds(i)) {
+          existingBounds.finalize();
+          OPAC_ERROR("photons::MeanSOpacity: existing material group bounds "
+                     "are incompatible with appended scattering tables");
+        }
+      }
+      existingBounds.finalize();
+    } else {
+      status +=
+          groupBounds.saveHDF(material, SP5::Multigroup::GroupBounds);
+    }
+    status += H5Gclose(material);
     status += H5Fclose(file);
 
-    sigmaPlanck.finalize();
     sigmaRosseland.finalize();
     groupBounds.finalize();
 
@@ -121,7 +149,6 @@ class MeanSOpacity {
 
   MeanSOpacity GetOnDevice() {
     MeanSOpacity other;
-    other.lsigmaPlanck_ = Spiner::getOnDeviceDataBox(lsigmaPlanck_);
     other.lsigmaRosseland_ = Spiner::getOnDeviceDataBox(lsigmaRosseland_);
     other.groupBounds_ = Spiner::getOnDeviceDataBox(groupBounds_);
     other.ngroups_ = ngroups_;
@@ -129,7 +156,6 @@ class MeanSOpacity {
   }
 
   void Finalize() {
-    lsigmaPlanck_.finalize();
     lsigmaRosseland_.finalize();
     groupBounds_.finalize();
   }
@@ -160,17 +186,6 @@ class MeanSOpacity {
   // not a distinguished "mean slot": for ngroups>1, group 0 is simply the
   // lowest-frequency group and callers must use the group-index API.
   PORTABLE_INLINE_FUNCTION
-  Real PlanckMeanScatteringCoefficient(const Real rho, const Real temp) const {
-    PORTABLE_REQUIRE(
-        ngroups_ == 1,
-        "PlanckMeanScatteringCoefficient only valid for ngroups==1. "
-        "Use PlanckGroupScatteringCoefficient(rho, temp, group) for "
-        "multigroup.");
-    return PlanckGroupScatteringCoefficient(rho, temp, 0);
-  }
-
-  // See PlanckMeanScatteringCoefficient: the gray mean is the single group 0.
-  PORTABLE_INLINE_FUNCTION
   Real RosselandMeanScatteringCoefficient(const Real rho,
                                           const Real temp) const {
     PORTABLE_REQUIRE(
@@ -182,34 +197,19 @@ class MeanSOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real PlanckGroupScatteringCoefficient(const Real rho, const Real temp,
-                                        const int group) const {
-    return GroupScatteringCoefficient_(lsigmaPlanck_, rho, temp, group);
-  }
-
-  PORTABLE_INLINE_FUNCTION
   Real RosselandGroupScatteringCoefficient(const Real rho, const Real temp,
                                            const int group) const {
     return GroupScatteringCoefficient_(lsigmaRosseland_, rho, temp, group);
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real ScatteringCoefficient(const Real rho, const Real temp, const int group,
-                             const int gmode = Rosseland) const {
-    return (gmode == Planck)
-               ? PlanckGroupScatteringCoefficient(rho, temp, group)
-               : RosselandGroupScatteringCoefficient(rho, temp, group);
+  Real ScatteringCoefficient(const Real rho, const Real temp,
+                             const int group) const {
+    return RosselandGroupScatteringCoefficient(rho, temp, group);
   }
 
   // Logarithmic temperature derivative of the group scattering coefficient,
   // d(log alpha_g)/d(log T) at fixed rho, where alpha_g = rho * sigma_g
-  PORTABLE_INLINE_FUNCTION
-  Real PlanckGroupDLogScatteringCoefficientDLogT(const Real rho,
-                                                 const Real temp,
-                                                 const int group) const {
-    return GroupDLogSCoeffDLogT_(lsigmaPlanck_, rho, temp, group);
-  }
-
   PORTABLE_INLINE_FUNCTION
   Real RosselandGroupDLogScatteringCoefficientDLogT(const Real rho,
                                                     const Real temp,
@@ -219,11 +219,8 @@ class MeanSOpacity {
 
   PORTABLE_INLINE_FUNCTION
   Real DLogScatteringCoefficientDLogT(const Real rho, const Real temp,
-                                      const int group,
-                                      const int gmode = Rosseland) const {
-    return (gmode == Planck)
-               ? PlanckGroupDLogScatteringCoefficientDLogT(rho, temp, group)
-               : RosselandGroupDLogScatteringCoefficientDLogT(rho, temp, group);
+                                      const int group) const {
+    return RosselandGroupDLogScatteringCoefficientDLogT(rho, temp, group);
   }
 
   PORTABLE_INLINE_FUNCTION
@@ -236,26 +233,61 @@ class MeanSOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real PlanckGroupScatteringCoefficientFromNu(const Real rho, const Real temp,
-                                              const Real nu) const {
-    return ScatteringCoefficientFromNu(rho, temp, nu, Planck);
-  }
-
-  PORTABLE_INLINE_FUNCTION
   Real RosselandGroupScatteringCoefficientFromNu(const Real rho,
                                                  const Real temp,
                                                  const Real nu) const {
-    return ScatteringCoefficientFromNu(rho, temp, nu, Rosseland);
+    return ScatteringCoefficientFromNu(rho, temp, nu);
   }
 
   PORTABLE_INLINE_FUNCTION
   Real ScatteringCoefficientFromNu(const Real rho, const Real temp,
-                                   const Real nu,
-                                   const int gmode = Rosseland) const {
-    return ScatteringCoefficient(rho, temp, GroupOfNu(nu), gmode);
+                                   const Real nu) const {
+    return ScatteringCoefficient(rho, temp, GroupOfNu(nu));
   }
 
  private:
+#ifdef SPINER_USE_HDF
+  void LoadHDF_(const std::string &filename, const int matid) {
+    LoadHDF_(filename, OpenMaterialGroupByMatid, matid);
+  }
+
+  void LoadHDF_(const std::string &filename,
+                const std::string &material_name) {
+    LoadHDF_(filename, OpenMaterialGroupByName, material_name);
+  }
+
+  template <typename MaterialOpener, typename Selector>
+  void LoadHDF_(const std::string &filename, MaterialOpener opener,
+                const Selector &selector) {
+    DataBox sigmaRosseland;
+    DataBox groupBounds;
+    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    if (file < 0) {
+      OPAC_ERROR("photons::MeanSOpacity: unable to open HDF5 file");
+    }
+    hid_t material = opener(file, selector);
+    if (material < 0) {
+      OPAC_ERROR(
+          "photons::MeanSOpacity: material group not found in HDF5 file");
+    }
+    herr_t status = sigmaRosseland.loadHDF(
+        material, SP5::MultigroupSOpac::RosselandGroupSOpacity);
+    const herr_t bounds_status =
+        LoadGroupBounds(material, SP5::Multigroup::GroupBounds,
+                        groupBounds);
+    H5Gclose(material);
+    H5Fclose(file);
+
+    if (bounds_status != H5_SUCCESS || status != H5_SUCCESS) {
+      OPAC_ERROR("photons::MeanSOpacity: HDF5 error\n");
+    }
+
+    LoadScatteringTables_(sigmaRosseland, groupBounds);
+    groupBounds.finalize();
+    sigmaRosseland.finalize();
+  }
+#endif
+
   PORTABLE_INLINE_FUNCTION
   Real GroupScatteringCoefficient_(const DataBox &lsigma, const Real rho,
                                    const Real temp, const int group) const {
@@ -283,47 +315,31 @@ class MeanSOpacity {
     return (L_hi - L_lo) / dlT;
   }
 
-  void ValidateScatteringTables_(const DataBox &sigmaPlanck,
-                                 const DataBox &sigmaRosseland) const {
-    if (sigmaPlanck.rank() != 3 || sigmaRosseland.rank() != 3) {
+  void ValidateScatteringTable_(const DataBox &sigmaRosseland) const {
+    if (sigmaRosseland.rank() != 3) {
       OPAC_ERROR("photons::MeanSOpacity: scattering tables must be rank 3");
     }
-    for (int dim = 1; dim <= 3; ++dim) {
-      if (sigmaPlanck.dim(dim) != sigmaRosseland.dim(dim)) {
-        OPAC_ERROR("photons::MeanSOpacity: table dimensions do not match");
-      }
-    }
-    if (sigmaPlanck.dim(1) <= 0) {
+    if (sigmaRosseland.dim(1) <= 0) {
       OPAC_ERROR("photons::MeanSOpacity: ngroups must be positive");
-    }
-    if (sigmaPlanck.range(1) != sigmaRosseland.range(1) ||
-        sigmaPlanck.range(2) != sigmaRosseland.range(2)) {
-      OPAC_ERROR("photons::MeanSOpacity: table ranges do not match");
     }
   }
 
   template <typename GroupBoundsIndexer>
-  void LoadScatteringTables_(const DataBox &sigmaPlanck,
-                             const DataBox &sigmaRosseland,
+  void LoadScatteringTables_(const DataBox &sigmaRosseland,
                              const GroupBoundsIndexer &group_bounds) {
-    ValidateScatteringTables_(sigmaPlanck, sigmaRosseland);
-    ngroups_ = sigmaPlanck.dim(1);
+    ValidateScatteringTable_(sigmaRosseland);
+    ngroups_ = sigmaRosseland.dim(1);
     ValidateGroupBounds(group_bounds, ngroups_);
     SetGroupBounds(groupBounds_, group_bounds, ngroups_);
-    lsigmaPlanck_.copyMetadata(sigmaPlanck);
     lsigmaRosseland_.copyMetadata(sigmaRosseland);
-    for (int i = 0; i < sigmaPlanck.size(); ++i) {
-      lsigmaPlanck_(i) = ToLog(sigmaPlanck(i));
+    for (int i = 0; i < sigmaRosseland.size(); ++i) {
       lsigmaRosseland_(i) = ToLog(sigmaRosseland(i));
     }
   }
 
-  void ExportScatteringTables_(DataBox &sigmaPlanck,
-                               DataBox &sigmaRosseland) const {
-    sigmaPlanck.copyMetadata(lsigmaPlanck_);
+  void ExportScatteringTables_(DataBox &sigmaRosseland) const {
     sigmaRosseland.copyMetadata(lsigmaRosseland_);
-    for (int i = 0; i < lsigmaPlanck_.size(); ++i) {
-      sigmaPlanck(i) = FromLog(lsigmaPlanck_(i));
+    for (int i = 0; i < lsigmaRosseland_.size(); ++i) {
       sigmaRosseland(i) = FromLog(lsigmaRosseland_(i));
     }
   }
@@ -342,21 +358,18 @@ class MeanSOpacity {
 
     ngroups_ = ngroups;
     SetGroupBounds(groupBounds_, group_bounds, ngroups_);
-    lsigmaPlanck_.resize(NRho, NT, ngroups_);
-    lsigmaPlanck_.setRange(1, lTMin, lTMax, NT);
-    lsigmaPlanck_.setRange(2, lRhoMin, lRhoMax, NRho);
-    lsigmaRosseland_.copyMetadata(lsigmaPlanck_);
+    lsigmaRosseland_.resize(NRho, NT, ngroups_);
+    lsigmaRosseland_.setRange(1, lTMin, lTMax, NT);
+    lsigmaRosseland_.setRange(2, lRhoMin, lRhoMax, NRho);
 
     PlanckDistribution<PC> dist;
-    std::vector<Real> planckDenom(ngroups_, 0.);
     std::vector<Real> rosselandDenom(ngroups_, 0.);
 
     for (int iT = 0; iT < NT; ++iT) {
-      const Real lT = lsigmaPlanck_.range(1).x(iT);
+      const Real lT = lsigmaRosseland_.range(1).x(iT);
       const Real T = FromLog(lT);
 
       for (int group = 0; group < ngroups_; ++group) {
-        Real Baccum = 0.;
         Real dBdTaccum = 0.;
         const Real nuMin = GroupBoundAt(group_bounds, group);
         const Real nuMax = GroupBoundAt(group_bounds, group + 1);
@@ -365,20 +378,17 @@ class MeanSOpacity {
               Real B = 0.;
               Real dBdT = 0.;
               ThermalWeightsAtNu<PC>(dist, T, nu, B, dBdT);
-              Baccum += B * dnu;
               dBdTaccum += dBdT * dnu;
             });
 
-        planckDenom[group] = Baccum;
         rosselandDenom[group] = dBdTaccum;
       }
 
       for (int iRho = 0; iRho < NRho; ++iRho) {
-        const Real lRho = lsigmaPlanck_.range(2).x(iRho);
+        const Real lRho = lsigmaRosseland_.range(2).x(iRho);
         const Real rho = FromLog(lRho);
 
         for (int group = 0; group < ngroups_; ++group) {
-          Real sigmaPlanckNum = 0.;
           Real sigmaRosselandNum = 0.;
           const Real nuMin = GroupBoundAt(group_bounds, group);
           const Real nuMax = GroupBoundAt(group_bounds, group + 1);
@@ -389,7 +399,6 @@ class MeanSOpacity {
                 Real B = 0.;
                 Real dBdT = 0.;
                 ThermalWeightsAtNu<PC>(dist, T, nu, B, dBdT);
-                sigmaPlanckNum += sigma / rho * B * dnu;
 
                 if (sigma > singularity_opac::robust::SMALL()) {
                   sigmaRosselandNum +=
@@ -397,8 +406,6 @@ class MeanSOpacity {
                 }
               });
 
-          const Real sigmaPlanck = singularity_opac::robust::ratio(
-              sigmaPlanckNum, planckDenom[group]);
           const Real sigmaRosseland =
               (rosselandDenom[group] > singularity_opac::robust::SMALL() &&
                sigmaRosselandNum > singularity_opac::robust::SMALL())
@@ -406,10 +413,8 @@ class MeanSOpacity {
                                                     sigmaRosselandNum)
                   : 0.;
 
-          lsigmaPlanck_(iRho, iT, group) = ToLog(sigmaPlanck);
           lsigmaRosseland_(iRho, iT, group) = ToLog(sigmaRosseland);
-          if (std::isnan(lsigmaPlanck_(iRho, iT, group)) ||
-              std::isnan(lsigmaRosseland_(iRho, iT, group))) {
+          if (std::isnan(lsigmaRosseland_(iRho, iT, group))) {
             OPAC_ERROR("photons::MeanSOpacity: NAN in opacity evaluations");
           }
         }
@@ -417,7 +422,6 @@ class MeanSOpacity {
     }
   }
 
-  DataBox lsigmaPlanck_;
   DataBox lsigmaRosseland_;
   DataBox groupBounds_;
   int ngroups_ = 0;

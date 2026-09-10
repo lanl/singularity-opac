@@ -226,10 +226,15 @@ TEST_CASE("Photon multigroup tables can round-trip through SP5 HDF",
   photons::MeanOpacityBase saved(kappa_planck, kappa_rosseland,
                                        group_bounds);
   const char *filename = "multigroup-photon-table.sp5";
-  saved.Save(filename);
-  photons::MeanOpacityBase loaded(filename);
+  const char *material_name = "test-material";
+  saved.Save(filename, 42, material_name);
+  photons::MeanOpacityBase loaded(filename, material_name);
+  photons::MeanOpacityBase loaded_by_id(filename, 42);
 
   REQUIRE(loaded.HasGroupBounds());
+  REQUIRE(loaded.HasPlanckOpacity());
+  REQUIRE(loaded.HasRosselandOpacity());
+  REQUIRE(loaded_by_id.ngroups() == ngroups);
   REQUIRE(loaded.ngroups() == ngroups);
   REQUIRE(loaded.GroupOfNu(0.) == 0);
   REQUIRE(loaded.GroupOfNu(0.5 * nu_min) == 0);
@@ -969,16 +974,11 @@ TEST_CASE("Photon multigroup gray scattering opacities are exact",
 
   int n_wrong = 0;
   for (int group = 0; group < ngroups; ++group) {
-    const Real sigma_planck =
-        multigroup_host.PlanckGroupScatteringCoefficient(rho, temp, group);
     const Real sigma_rosseland =
         multigroup_host.RosselandGroupScatteringCoefficient(rho, temp, group);
     const Real sigma_default =
         multigroup_host.ScatteringCoefficient(rho, temp, group);
     const Real sigma_expected = (rho / apm) * sigma;
-    if (FractionalDifference(sigma_planck, sigma_expected) > EPS_TEST) {
-      n_wrong += 1;
-    }
     if (FractionalDifference(sigma_rosseland, sigma_expected) > EPS_TEST) {
       n_wrong += 1;
     }
@@ -1018,14 +1018,10 @@ TEST_CASE("Photon multigroup scattering with extreme bounds 0 to infinity "
   REQUIRE(multigroup_host.HasGroupBounds());
 
   const Real sigma_expected = (rho / apm) * sigma;
-  const Real sigma_planck =
-      multigroup_host.PlanckGroupScatteringCoefficient(rho, temp, 0);
   const Real sigma_rosseland =
       multigroup_host.RosselandGroupScatteringCoefficient(rho, temp, 0);
 
-  REQUIRE(std::isfinite(sigma_planck));
   REQUIRE(std::isfinite(sigma_rosseland));
-  REQUIRE(FractionalDifference(sigma_planck, sigma_expected) < EPS_TEST);
   REQUIRE(FractionalDifference(sigma_rosseland, sigma_expected) < EPS_TEST);
 
   multigroup_host.Finalize();
@@ -1101,32 +1097,31 @@ TEST_CASE("Photon multigroup scattering tables can round-trip through SP5 HDF",
   const std::array<Real, ngroups + 1> group_bounds = {
       0., nu_min, nu_max, std::numeric_limits<Real>::infinity()};
 
-  DataBox sigma_planck(NRho, NT, ngroups);
-  sigma_planck.setRange(1, lTMin, lTMax, NT);
-  sigma_planck.setRange(2, lRhoMin, lRhoMax, NRho);
-  DataBox sigma_rosseland;
-  sigma_rosseland.copyMetadata(sigma_planck);
+  DataBox sigma_rosseland(NRho, NT, ngroups);
+  sigma_rosseland.setRange(1, lTMin, lTMax, NT);
+  sigma_rosseland.setRange(2, lRhoMin, lRhoMax, NRho);
 
   for (int iRho = 0; iRho < NRho; ++iRho) {
-    const Real rho = std::pow(10., sigma_planck.range(2).x(iRho));
+    const Real rho = std::pow(10., sigma_rosseland.range(2).x(iRho));
     for (int iT = 0; iT < NT; ++iT) {
-      const Real temp = std::pow(10., sigma_planck.range(1).x(iT));
+      const Real temp = std::pow(10., sigma_rosseland.range(1).x(iT));
       for (int group = 0; group < ngroups; ++group) {
         const Real group_factor = group + 1.;
-        sigma_planck(iRho, iT, group) = sigma0 * rho * group_factor;
         sigma_rosseland(iRho, iT, group) = sigma0 * rho / group_factor;
       }
     }
   }
 
-  photons::MeanSOpacityBase saved(sigma_planck, sigma_rosseland,
-                                        group_bounds);
+  photons::MeanSOpacityBase saved(sigma_rosseland, group_bounds);
   const char *filename = "multigroup-photon-scattering-table.sp5";
-  saved.Save(filename);
-  photons::MeanSOpacityBase loaded(filename);
+  const char *material_name = "test-material";
+  saved.Save(filename, 42, material_name);
+  photons::MeanSOpacityBase loaded(filename, material_name);
+  photons::MeanSOpacityBase loaded_by_id(filename, 42);
 
   REQUIRE(loaded.HasGroupBounds());
   REQUIRE(loaded.ngroups() == ngroups);
+  REQUIRE(loaded_by_id.ngroups() == ngroups);
   REQUIRE(loaded.GroupOfNu(0.) == 0);
   REQUIRE(loaded.GroupOfNu(nu_min) == 1);
   REQUIRE(loaded.GroupOfNu(nu_max) == ngroups - 1);
@@ -1138,14 +1133,8 @@ TEST_CASE("Photon multigroup scattering tables can round-trip through SP5 HDF",
       const Real temp_test =
           std::pow(10., lTMin + (lTMax - lTMin) / (NT - 1) * iT);
       for (int group = 0; group < ngroups; ++group) {
-        const Real sigma_planck_expected =
-            rho_test * sigma_planck(iRho, iT, group) / rho_test;
         const Real sigma_rosseland_expected =
             rho_test * sigma_rosseland(iRho, iT, group) / rho_test;
-        REQUIRE(FractionalDifference(loaded.PlanckGroupScatteringCoefficient(
-                                         rho_test, temp_test, group),
-                                     sigma_planck_expected * rho_test) <
-                EPS_TEST);
         REQUIRE(FractionalDifference(loaded.RosselandGroupScatteringCoefficient(
                                          rho_test, temp_test, group),
                                      sigma_rosseland_expected * rho_test) <
@@ -1156,7 +1145,6 @@ TEST_CASE("Photon multigroup scattering tables can round-trip through SP5 HDF",
 
   loaded.Finalize();
   saved.Finalize();
-  sigma_planck.finalize();
   sigma_rosseland.finalize();
 }
 #endif

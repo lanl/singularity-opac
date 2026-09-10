@@ -8,7 +8,7 @@ Performance Portable Opacity and Emissivity library for simulation codes
 
 ## API
 
-singularity-opac provides a uniform API for all opacity models, in two forms: frequency-dependent, and frequency-averaged (Plank or Rosseland means), and separately for absorption and scattering opacities.
+singularity-opac provides a uniform API for all opacity models, in two forms: frequency-dependent, and frequency-averaged (Planck or Rosseland means), and separately for absorption and scattering opacities.
 
 For frequency-dependent absorption opacities, the following functions are provided
 (here, $\sigma$ is the frequency- and angle-dependent cross section in units of ${\rm cm}^2$):
@@ -52,7 +52,7 @@ they provide multigroup radiation transport capabilities.
 
 | Function              | Expression | Description            | Units   |
 | --------------------- | ---------- | ---------------------  | ------- |
-| PlankMeanAbsorptionCoefficient | $n \sigma$ | Planck mean absorption coefficient (gray, ngroups=1) | ${\rm cm}^{-1}$ |
+| PlanckMeanAbsorptionCoefficient | $n \sigma$ | Planck mean absorption coefficient (gray, ngroups=1) | ${\rm cm}^{-1}$ |
 | RosselandMeanAbsorptionCoefficient | $n \sigma$ | Rosseland mean absorption coefficient (gray, ngroups=1) | ${\rm cm}^{-1}$ |
 | PlanckGroupAbsorptionCoefficient | $n \sigma_g$ | Planck-weighted absorption coefficient in a frequency group | ${\rm cm}^{-1}$ |
 | RosselandGroupAbsorptionCoefficient | $n \sigma_g$ | Rosseland-weighted absorption coefficient in a frequency group | ${\rm cm}^{-1}$ |
@@ -72,7 +72,7 @@ with the following function signatures:
     RosselandGroupAbsorptionCoefficient(density, temperature, group index)
     AbsorptionCoefficient(density, temperature, gmode [Planck, Rosseland])
     AbsorptionCoefficient(density, temperature, group index, gmode [Planck, Rosseland])
-    Emissivity(density, temperature)
+    Emissivity(density, temperature, gmode [Planck, Rosseland])
     GroupOfNu(frequency)
     PlanckGroupAbsorptionCoefficientFromNu(density, temperature, frequency)
     RosselandGroupAbsorptionCoefficientFromNu(density, temperature, frequency)
@@ -111,12 +111,10 @@ with the following function signatures:
 For mean scattering opacities, the following functions are provided:
 | Function              | Expression | Description            | Units   |
 | --------------------- | ---------- | ---------------------  | ------- |
-| PlanckMeanScatteringCoefficient | $n \sigma$ | Planck mean scattering coefficient | ${\rm cm}^{-1}$ |
 | RosselandMeanScatteringCoefficient | $n \sigma$ | Rosseland mean scattering coefficient | ${\rm cm}^{-1}$ |
 
 with the following function signatures:
 
-    PlanckMeanScatteringCoefficient(density, temperature)
     RosselandMeanScatteringCoefficient(density, temperature)
 
 Note that `ThermalDistributionOfTNu` is the per-steradian Planck function `B_\nu`, so

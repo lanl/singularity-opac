@@ -123,30 +123,37 @@ class MeanNonCGSUnitsS {
   }
 
 #ifdef SPINER_USE_HDF
-  void Save(const std::string &filename) const {
-    return multigroup_s_opac_.Save(filename);
+  void Save(const std::string &filename, const int matid,
+            const bool append = false) const {
+    return multigroup_s_opac_.Save(filename, matid, append);
+  }
+
+  void Save(const std::string &filename, const int matid,
+            const std::string &material_name,
+            const bool append = false) const {
+    return multigroup_s_opac_.Save(filename, matid, material_name, append);
   }
 #endif
 
   PORTABLE_INLINE_FUNCTION
-  Real PlanckGroupScatteringCoefficient(const Real rho,
-                                        const Real temp,
-                                        const int group) const {
-    return ScatteringCoefficient(rho, temp, group, Planck);
-  }
-
-  PORTABLE_INLINE_FUNCTION
-  Real RosselandGroupScatteringCoefficient(const Real rho,
-                                           const Real temp,
+  Real RosselandGroupScatteringCoefficient(const Real rho, const Real temp,
                                            const int group) const {
-    return ScatteringCoefficient(rho, temp, group, Rosseland);
+    return ScatteringCoefficient(rho, temp, group);
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real ScatteringCoefficient(const Real rho, const Real temp, const int group,
-                             const int gmode = Rosseland) const {
+  Real RosselandMeanScatteringCoefficient(const Real rho,
+                                          const Real temp) const {
+    return multigroup_s_opac_.RosselandMeanScatteringCoefficient(
+               rho_unit_ * rho, temp_unit_ * temp) *
+           length_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real ScatteringCoefficient(const Real rho, const Real temp,
+                             const int group) const {
     const Real alpha = multigroup_s_opac_.ScatteringCoefficient(
-        rho_unit_ * rho, temp_unit_ * temp, group, gmode);
+        rho_unit_ * rho, temp_unit_ * temp, group);
     return alpha * length_unit_;
   }
 
@@ -156,24 +163,17 @@ class MeanNonCGSUnitsS {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real PlanckGroupScatteringCoefficientFromNu(const Real rho, const Real temp,
-                                              const Real nu) const {
-    return ScatteringCoefficientFromNu(rho, temp, nu, Planck);
-  }
-
-  PORTABLE_INLINE_FUNCTION
   Real RosselandGroupScatteringCoefficientFromNu(const Real rho,
                                                  const Real temp,
                                                  const Real nu) const {
-    return ScatteringCoefficientFromNu(rho, temp, nu, Rosseland);
+    return ScatteringCoefficientFromNu(rho, temp, nu);
   }
 
   PORTABLE_INLINE_FUNCTION
   Real ScatteringCoefficientFromNu(const Real rho, const Real temp,
-                                   const Real nu,
-                                   const int gmode = Rosseland) const {
+                                   const Real nu) const {
     const Real alpha = multigroup_s_opac_.ScatteringCoefficientFromNu(
-              rho_unit_ * rho, temp_unit_ * temp, nu * freq_unit_, gmode);
+        rho_unit_ * rho, temp_unit_ * temp, nu * freq_unit_);
     return alpha * length_unit_;
   }
 

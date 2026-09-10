@@ -21,15 +21,84 @@
 
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
+#include <singularity-opac/base/sp5.hpp>
 #include <singularity-opac/photons/mean_photon_types.hpp>
 #include <singularity-opac/photons/thermal_distributions_photons.hpp>
 #include <spiner/databox.hpp>
+
+#ifdef SPINER_USE_HDF
+#include <hdf5.h>
+#include <hdf5_hl.h>
+#include <string>
+#endif
 
 namespace singularity {
 namespace photons {
 namespace impl {
 
 using MeanUtilsDataBox = Spiner::DataBox<Real>;
+
+#ifdef SPINER_USE_HDF
+// SP5 material groups are keyed by integer matid.  A name is optional
+// metadata, so name-based construction must search the root groups rather than
+// assume that the name is the group's path.
+inline hid_t OpenMaterialGroupByMatid(const hid_t file, const int matid) {
+  const std::string path = "/" + std::to_string(matid);
+  return H5Gopen(file, path.c_str(), H5P_DEFAULT);
+}
+
+struct MaterialNameSearch {
+  std::string requested;
+  std::string path;
+};
+
+inline herr_t FindMaterialByName(hid_t file, const char *link_name,
+                                 const H5L_info_t *, void *opaque) {
+  auto *search = static_cast<MaterialNameSearch *>(opaque);
+  hid_t candidate = H5Gopen(file, link_name, H5P_DEFAULT);
+  if (candidate < 0 ||
+      H5Aexists_by_name(file, link_name, SP5::Material::name,
+                        H5P_DEFAULT) <= 0) {
+    if (candidate >= 0) H5Gclose(candidate);
+    return 0;
+  }
+  H5Gclose(candidate);
+
+  char material_name[4096] = {};
+  if (H5LTget_attribute_string(file, link_name, SP5::Material::name,
+                               material_name) >= 0 &&
+      search->requested == material_name) {
+    search->path = "/" + std::string(link_name);
+    return 1;
+  }
+  return 0;
+}
+
+inline hid_t OpenMaterialGroupByName(const hid_t file,
+                                     const std::string &name) {
+  // This fallback supports files written before matid/name metadata was
+  // standardized, while the scan handles canonical SP5 files.
+  const std::string direct_path = "/" + name;
+  hid_t material = H5Gopen(file, direct_path.c_str(), H5P_DEFAULT);
+  if (material >= 0) return material;
+
+  MaterialNameSearch search{name, ""};
+  hid_t root = H5Gopen(file, "/", H5P_DEFAULT);
+  if (root < 0) return -1;
+  hsize_t index = 0;
+  H5Literate(root, H5_INDEX_NAME, H5_ITER_NATIVE, &index, FindMaterialByName,
+             &search);
+  H5Gclose(root);
+  return search.path.empty()
+             ? -1
+             : H5Gopen(file, search.path.c_str(), H5P_DEFAULT);
+}
+
+inline herr_t LoadGroupBounds(const hid_t material, const char *field,
+                              MeanUtilsDataBox &bounds) {
+  return bounds.loadHDF(material, field);
+}
+#endif
 
 // Log/anti-log transforms used to store and interpolate opacities. A small
 // floor keeps toLog well-defined at zero.

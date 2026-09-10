@@ -71,19 +71,11 @@ class MeanSVariant {
         s_opac_);
   }
 
-  PORTABLE_INLINE_FUNCTION Real
-  PlanckMeanTotalScatteringCoefficient(const Real rho, const Real temp) const {
-    return PortsOfCall::visit(
-        [=](const auto &s_opac) {
-          return s_opac.PlanckMeanTotalScatteringCoefficient(rho, temp);
-        },
-        s_opac_);
-  }
-  PORTABLE_INLINE_FUNCTION Real RosselandMeanTotalScatteringCoefficient(
+  PORTABLE_INLINE_FUNCTION Real RosselandMeanScatteringCoefficient(
       const Real rho, const Real temp) const {
     return PortsOfCall::visit(
         [=](const auto &s_opac) {
-          return s_opac.RosselandMeanTotalScatteringCoefficient(rho, temp);
+          return s_opac.RosselandMeanScatteringCoefficient(rho, temp);
         },
         s_opac_);
   }
@@ -101,23 +93,17 @@ class MeanSVariant {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real PlanckGroupScatteringCoefficient(const Real rho, const Real temp,
-                                        const int group) const {
-    return ScatteringCoefficient(rho, temp, group, Planck);
-  }
-
-  PORTABLE_INLINE_FUNCTION
   Real RosselandGroupScatteringCoefficient(const Real rho, const Real temp,
                                            const int group) const {
-    return ScatteringCoefficient(rho, temp, group, Rosseland);
+    return ScatteringCoefficient(rho, temp, group);
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real ScatteringCoefficient(const Real rho, const Real temp, const int group,
-                             const int gmode = Rosseland) const {
+  Real ScatteringCoefficient(const Real rho, const Real temp,
+                             const int group) const {
     return PortsOfCall::visit(
         [=](const auto &s_opac) {
-          return s_opac.ScatteringCoefficient(rho, temp, group, gmode);
+          return s_opac.ScatteringCoefficient(rho, temp, group);
         },
         s_opac_);
   }
@@ -129,25 +115,18 @@ class MeanSVariant {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real PlanckGroupScatteringCoefficientFromNu(const Real rho, const Real temp,
-                                              const Real nu) const {
-    return ScatteringCoefficientFromNu(rho, temp, nu, Planck);
-  }
-
-  PORTABLE_INLINE_FUNCTION
   Real RosselandGroupScatteringCoefficientFromNu(const Real rho,
                                                  const Real temp,
                                                  const Real nu) const {
-    return ScatteringCoefficientFromNu(rho, temp, nu, Rosseland);
+    return ScatteringCoefficientFromNu(rho, temp, nu);
   }
 
   PORTABLE_INLINE_FUNCTION
   Real ScatteringCoefficientFromNu(const Real rho, const Real temp,
-                                   const Real nu,
-                                   const int gmode = Rosseland) const {
+                                   const Real nu) const {
     return PortsOfCall::visit(
         [=](const auto &s_opac) {
-          return s_opac.ScatteringCoefficientFromNu(rho, temp, nu, gmode);
+          return s_opac.ScatteringCoefficientFromNu(rho, temp, nu);
         },
         s_opac_);
   }

@@ -57,7 +57,7 @@ int main() {
   {
     std::cout<<"--- Testing gray databox interpolation--- "<<std::endl;
     Spiner::DataBox<double> gray_databox;
-    gray_databox.loadHDF(dataset, SP5::Fields::rgray);
+    gray_databox.loadHDF(dataset, SP5::IPCRESS::RosselandTotalGrayOpacity);
 
     // make sure gray databox has the expected values
     if (gray_databox.rank() != 2) {
@@ -110,7 +110,7 @@ int main() {
   {
     std::cout<<"--- Testing multigroup databox interpolation ---"<<std::endl;
     Spiner::DataBox<double> mg_databox;
-    mg_databox.loadHDF(dataset, SP5::Fields::rsmg);
+    mg_databox.loadHDF(dataset, SP5::MultigroupSOpac::RosselandGroupSOpacity);
 
     // make sure mg databox has the expected values
     if (mg_databox.rank() != 3) {
@@ -118,9 +118,9 @@ int main() {
       return 1;
     }
 
-    auto i_size = mg_databox.dim(3);
+    auto i_size = mg_databox.dim(1);
     auto j_size = mg_databox.dim(2);
-    auto k_size = mg_databox.dim(1);
+    auto k_size = mg_databox.dim(3);
     if (i_size != 12 || j_size != 6 ||  k_size != 6) {
       std::cout<<"size arguements do not match, N_1 = 3, N_2 = 3, N_3 = 3 but got: N_1 = "<<i_size;
       std::cout<<", N_2 = "<<j_size<<", and N_3 = "<<k_size<<std::endl;
@@ -154,7 +154,8 @@ int main() {
     std::cout<<"hnu     gold    interpolated_value   relative_diff"<<std::endl;
     for (size_t i=0; i<hnu_points.size();++i) {
       double interp_hnu = log10(hnu_points[i]);
-      double interped_value = mg_databox.interpToReal(interp_hnu, interp_rho, interp_T);
+      double interped_value =
+          mg_databox.interpToReal(interp_rho, interp_T, i);
       double relative_diff = std::fabs(interped_value-gold_values[i])/gold_values[i];
       std::cout<<std::pow(10,interp_hnu)<<"  "<<gold_values[i]<<"  "<<interped_value<<"  "<< relative_diff<<std::endl;
       if( relative_diff > tolerance) {

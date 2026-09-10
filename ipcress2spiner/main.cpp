@@ -32,6 +32,7 @@
 
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/sp5.hpp>
+#include <singularity-opac/constants/constants.hpp>
 #include <utils/spiner/spiner/sp5.hpp>
 #include <utils/spiner/spiner/databox.hpp>
 #include <utils/spiner/spiner/interpolation.hpp>
@@ -155,6 +156,8 @@ int main(int argc, char *argv[]) {
     if (status != H5_SUCCESS) {
       std::cerr << "WARNING: problem with HDf5 post H5GCreate call" << std::endl;
     }
+    status += H5LTset_attribute_int(file_loc, sMatID.c_str(),
+                                    SP5::Material::matid, &mat_ID, 1);
 
     // return values from c_gchrids, initialized to invalid values
     int nt = -100;
@@ -215,8 +218,14 @@ int main(int argc, char *argv[]) {
 
     std::array<std::string, 7> mg_opac_keywords{ramg_keyword, rsmg_keyword, rtmg_keyword, pmg_keyword,
                                                 ragray_keyword, rgray_keyword, pgray_keyword};
-    std::array<std::string, 7> mg_fields{ SP5::Fields::ramg, SP5::Fields::rsmg, SP5::Fields::rtmg, SP5::Fields::pmg,
-                                          SP5::Fields::ragray, SP5::Fields::rgray, SP5::Fields::pgray};
+    std::array<std::string, 7> mg_fields{
+        SP5::MultigroupOpac::RosselandGroupOpacity,
+        SP5::MultigroupSOpac::RosselandGroupSOpacity,
+        SP5::IPCRESS::RosselandTotalMultigroupOpacity,
+        SP5::IPCRESS::PlanckTotalMultigroupOpacity,
+        SP5::MeanOpac::RosselandMeanOpacity,
+        SP5::IPCRESS::RosselandTotalGrayOpacity,
+        SP5::IPCRESS::PlanckTotalGrayOpacity};
 
     // TODO Thread these variables through the input
     bool log_T_rho_hnu = true; // form a new grid from max and min evenly spaced in log10
@@ -237,15 +246,23 @@ int main(int argc, char *argv[]) {
         auto [spiner_opacity_databox, new_group_bounds] = build_multigroup_opacity_spiner_databox(
           temperature_points, density_points, group_bounds, opacity_data, log_T_rho_hnu);
 
+        std::transform(new_group_bounds.begin(), new_group_bounds.end(),
+                       new_group_bounds.begin(), [](const double hnu) {
+                         return hnu * 1.e3 *
+                                singularity::PhysicalConstantsCGS::eV /
+                                singularity::PhysicalConstantsCGS::h;
+                       });
+
         // only save the group bounds once for this material
         if (i==0) {
-          const hsize_t dimensions[] = {static_cast<hsize_t>(new_group_bounds.size())};
-          std::string dataset_name("group bounds");
-          hid_t dataspace_id = H5Screate_simple(1, dimensions, nullptr);
-          hid_t dataset_id = H5Dcreate2(matGroup, dataset_name.c_str(), H5T_IEEE_F64LE, dataspace_id,
-            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-          const herr_t status = H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-              new_group_bounds.data());
+          Spiner::DataBox<double> group_bounds_databox(new_group_bounds.size());
+          group_bounds_databox.setIndexType(0, Spiner::IndexType::Indexed);
+          for (size_t igroup = 0; igroup < new_group_bounds.size(); ++igroup) {
+            group_bounds_databox(igroup) = new_group_bounds[igroup];
+          }
+          status += group_bounds_databox.saveHDF(
+              matGroup, SP5::Multigroup::GroupBounds);
+          group_bounds_databox.finalize();
         }
         std::cout<<"Saving multigroup databox for "<<mat_ID<<" and "<<key<<std::endl;
         saveMaterial(file_loc, matGroup, mat_ID, sMatID, sp5_field_name, spiner_opacity_databox);
