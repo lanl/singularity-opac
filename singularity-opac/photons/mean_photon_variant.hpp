@@ -25,7 +25,7 @@
 #include <singularity-opac/photons/mean_photon_types.hpp>
 #include <singularity-opac/photons/photon_variant.hpp>
 
-namespace singularity_opac {
+namespace singularity::opac {
 namespace photons {
 namespace impl {
 
@@ -224,6 +224,6 @@ class MeanVariant {
 
 } // namespace impl
 } // namespace photons
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_PHOTONS_MEAN_PHOTON_VARIANT_

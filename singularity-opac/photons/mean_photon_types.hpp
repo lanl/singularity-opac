@@ -18,7 +18,7 @@
 
 #include <ports-of-call/portability.hpp>
 
-namespace singularity_opac {
+namespace singularity::opac {
 namespace photons {
 
 // mean-opacity mode
@@ -32,6 +32,6 @@ enum OpacityAveraging { Rosseland = 0, Planck = 1 };
 constexpr Real wien_tail_x = 80.;
 
 } // namespace photons
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_PHOTONS_MEAN_PHOTON_TYPES_

@@ -23,7 +23,7 @@
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/neutrinos/thermal_distributions_neutrinos.hpp>
 
-namespace singularity_opac {
+namespace singularity::opac {
 namespace neutrinos {
 
 template <typename ThermalDistribution, typename pc = PhysicalConstantsCGS>
@@ -185,6 +185,6 @@ class GrayOpacity {
 };
 
 } // namespace neutrinos
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_NEUTRINOS_GRAY_OPACITY_NEUTRINOS_

@@ -23,7 +23,7 @@
 #include <singularity-opac/photons/powerlaw_s_opacity_photons.hpp>
 #include <singularity-opac/photons/thomson_s_opacity_photons.hpp>
 
-namespace singularity_opac {
+namespace singularity::opac {
 namespace photons {
 
 using ScaleFreeS = GraySOpacity<PhysicalConstantsUnity>;
@@ -36,6 +36,6 @@ using SOpacity =
                     NonCGSUnitsS<ThomsonS>, NonCGSUnitsS<PowerLawS>>;
 
 } // namespace photons
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_PHOTONS_S_OPAC_PHOTONS_

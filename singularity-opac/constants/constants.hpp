@@ -20,7 +20,7 @@
 
 #include <ports-of-call/portability.hpp>
 
-namespace singularity_opac {
+namespace singularity::opac {
 
 #define EPS (10.0 * std::numeric_limits<Real>::min())
 
@@ -281,6 +281,6 @@ using PhysicalConstantsCGS =
 
 #undef EPS
 
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_CONSTANTS_CONSTANTS_

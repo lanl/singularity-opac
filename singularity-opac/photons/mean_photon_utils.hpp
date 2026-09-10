@@ -32,7 +32,7 @@
 #include <string>
 #endif
 
-namespace singularity_opac {
+namespace singularity::opac {
 namespace photons {
 namespace impl {
 
@@ -57,7 +57,7 @@ inline herr_t FindMaterialByName(hid_t file, const char *link_name,
   auto *search = static_cast<MaterialNameSearch *>(opaque);
   hid_t candidate = H5Gopen(file, link_name, H5P_DEFAULT);
   if (candidate < 0 ||
-      H5Aexists_by_name(file, link_name, singularity_opac::SP5::Material::name,
+      H5Aexists_by_name(file, link_name, singularity::opac::SP5::Material::name,
                         H5P_DEFAULT) <= 0) {
     if (candidate >= 0) H5Gclose(candidate);
     return 0;
@@ -65,7 +65,7 @@ inline herr_t FindMaterialByName(hid_t file, const char *link_name,
   H5Gclose(candidate);
 
   char material_name[4096] = {};
-  if (H5LTget_attribute_string(file, link_name, singularity_opac::SP5::Material::name,
+  if (H5LTget_attribute_string(file, link_name, singularity::opac::SP5::Material::name,
                                material_name) >= 0 &&
       search->requested == material_name) {
     search->path = "/" + std::string(link_name);
@@ -270,6 +270,6 @@ void ThermalWeightsAtNu(const PlanckDistribution<PC> &dist, const Real temp,
 
 } // namespace impl
 } // namespace photons
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_PHOTONS_MEAN_PHOTON_UTILS_

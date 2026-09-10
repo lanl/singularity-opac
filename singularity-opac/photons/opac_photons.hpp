@@ -24,7 +24,7 @@
 #include <singularity-opac/photons/powerlaw_opacity_photons.hpp>
 #include <singularity-opac/photons/thermal_distributions_photons.hpp>
 
-namespace singularity_opac {
+namespace singularity::opac {
 namespace photons {
 
 using ScaleFree = GrayOpacity<PhysicalConstantsUnity>;
@@ -38,6 +38,6 @@ using Opacity = impl::Variant<ScaleFree, Gray, PowerLawScaleFree, PowerLaw,
                               NonCGSUnits<PowerLaw>, NonCGSUnits<EPBremss>>;
 
 } // namespace photons
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_PHOTONS_OPAC_PHOTONS_

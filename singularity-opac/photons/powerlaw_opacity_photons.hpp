@@ -24,7 +24,7 @@
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/photons/thermal_distributions_photons.hpp>
 
-namespace singularity_opac {
+namespace singularity::opac {
 namespace photons {
 
 template <typename pc = PhysicalConstantsCGS>
@@ -260,6 +260,6 @@ class PowerLawOpacity {
 };
 
 } // namespace photons
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_PHOTONS_POWERLAW_OPACITY_PHOTONS_

@@ -34,7 +34,7 @@
 #include <singularity-opac/photons/thermal_distributions_photons.hpp>
 #include <spiner/databox.hpp>
 
-namespace singularity_opac {
+namespace singularity::opac {
 namespace photons {
 namespace impl {
 
@@ -124,21 +124,21 @@ class MeanSOpacity {
     }
     if (matid != nullptr) {
       status += H5LTset_attribute_int(file, material_path.c_str(),
-                                      singularity_opac::SP5::Material::matid, matid, 1);
+                                      singularity::opac::SP5::Material::matid, matid, 1);
     }
     if (!material_name.empty()) {
       status += H5LTset_attribute_string(file, material_path.c_str(),
-                                          singularity_opac::SP5::Material::name,
+                                          singularity::opac::SP5::Material::name,
                                           material_name.c_str());
     }
     status += sigmaRosseland.saveHDF(
-        material, singularity_opac::SP5::MultigroupSOpac::RosselandGroupSOpacity);
+        material, singularity::opac::SP5::MultigroupSOpac::RosselandGroupSOpacity);
     // Absorption and scattering share group bounds when appended.
-    if (H5Lexists(material, singularity_opac::SP5::Multigroup::GroupBounds, H5P_DEFAULT) >
+    if (H5Lexists(material, singularity::opac::SP5::Multigroup::GroupBounds, H5P_DEFAULT) >
         0) {
       DataBox existingBounds;
       const herr_t bounds_status =
-          existingBounds.loadHDF(material, singularity_opac::SP5::Multigroup::GroupBounds);
+          existingBounds.loadHDF(material, singularity::opac::SP5::Multigroup::GroupBounds);
       if (bounds_status != H5_SUCCESS ||
           existingBounds.size() != groupBounds.size()) {
         existingBounds.finalize();
@@ -155,7 +155,7 @@ class MeanSOpacity {
       existingBounds.finalize();
     } else {
       status +=
-          groupBounds.saveHDF(material, singularity_opac::SP5::Multigroup::GroupBounds);
+          groupBounds.saveHDF(material, singularity::opac::SP5::Multigroup::GroupBounds);
     }
     status += H5Gclose(material);
     status += H5Fclose(file);
@@ -300,9 +300,9 @@ class MeanSOpacity {
           "photons::MeanSOpacity: material group not found in HDF5 file");
     }
     herr_t status = sigmaRosseland.loadHDF(
-        material, singularity_opac::SP5::MultigroupSOpac::RosselandGroupSOpacity);
+        material, singularity::opac::SP5::MultigroupSOpac::RosselandGroupSOpacity);
     const herr_t bounds_status =
-        LoadGroupBounds(material, singularity_opac::SP5::Multigroup::GroupBounds,
+        LoadGroupBounds(material, singularity::opac::SP5::Multigroup::GroupBounds,
                         groupBounds);
     H5Gclose(material);
     H5Fclose(file);
@@ -429,16 +429,16 @@ class MeanSOpacity {
                 Real dBdT = 0.;
                 ThermalWeightsAtNu<PC>(dist, T, nu, B, dBdT);
 
-                if (sigma > singularity_opac::robust::SMALL()) {
+                if (sigma > singularity::opac::robust::SMALL()) {
                   sigmaRosselandNum +=
-                      singularity_opac::robust::ratio(rho, sigma) * dBdT * dnu;
+                      singularity::opac::robust::ratio(rho, sigma) * dBdT * dnu;
                 }
               });
 
           const Real sigmaRosseland =
-              (rosselandDenom[group] > singularity_opac::robust::SMALL() &&
-               sigmaRosselandNum > singularity_opac::robust::SMALL())
-                  ? singularity_opac::robust::ratio(rosselandDenom[group],
+              (rosselandDenom[group] > singularity::opac::robust::SMALL() &&
+               sigmaRosselandNum > singularity::opac::robust::SMALL())
+                  ? singularity::opac::robust::ratio(rosselandDenom[group],
                                                     sigmaRosselandNum)
                   : 0.;
 
@@ -461,6 +461,6 @@ class MeanSOpacity {
 using MeanSOpacityBase = impl::MeanSOpacity<PhysicalConstantsCGS>;
 
 } // namespace photons
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_PHOTONS_MEAN_S_OPACITY_PHOTONS_

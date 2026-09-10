@@ -27,7 +27,7 @@
 
 #include <singularity-opac/neutrinos/mean_opacity_neutrinos.hpp>
 
-namespace singularity_opac {
+namespace singularity::opac {
 namespace neutrinos {
 
 // TODO(JMM): Include chemical potential
@@ -44,6 +44,6 @@ using Opacity = impl::Variant<ScaleFree, BRTOpac, Gray, Tophat, SpinerOpac,
                               NonCGSUnits<Tophat>, NonCGSUnits<SpinerOpac>>;
 
 } // namespace neutrinos
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_NEUTRINOS_OPAC_NEUTRINOS_

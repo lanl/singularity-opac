@@ -24,7 +24,7 @@
 #include <singularity-opac/constants/constants.hpp>
 #include <singularity-opac/neutrinos/thermal_distributions_neutrinos.hpp>
 
-namespace singularity_opac {
+namespace singularity::opac {
 namespace neutrinos {
 
 // Neutrino electron absorption from Burrows, Reddy, & Thompson 2004
@@ -224,6 +224,6 @@ class BRTOpacity {
 };
 
 } // namespace neutrinos
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_NEUTRINOS_BRT_NEUTRINOS_

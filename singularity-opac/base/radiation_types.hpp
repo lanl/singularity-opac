@@ -18,7 +18,7 @@
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 
-namespace singularity_opac {
+namespace singularity::opac {
 
 constexpr int NEUTRINO_NTYPES = 3;
 enum class RadiationType {
@@ -50,6 +50,6 @@ RadiationType Idx2RadType(int i) {
   }
 }
 
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_BASE_RADIATION_TYPES_

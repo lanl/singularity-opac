@@ -17,7 +17,7 @@
 #include <limits>
 #include <ports-of-call/portability.hpp>
 
-namespace singularity_opac {
+namespace singularity::opac {
 namespace robust {
 
 template <typename T = Real>
@@ -51,6 +51,6 @@ PORTABLE_FORCEINLINE_FUNCTION auto ratio(const A &a, const B &b) {
 }
 
 } // namespace robust
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_BASE_ROBUST_UTILS_HPP_

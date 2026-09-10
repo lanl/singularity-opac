@@ -23,7 +23,7 @@
 #include <singularity-opac/base/radiation_types.hpp>
 #include <singularity-opac/neutrinos/neutrino_variant.hpp>
 
-namespace singularity_opac {
+namespace singularity::opac {
 namespace neutrinos {
 namespace impl {
 
@@ -108,6 +108,6 @@ class MeanVariant {
 
 } // namespace impl
 } // namespace neutrinos
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_NEUTRINOS_MEAN_NEUTRINO_VARIANT_

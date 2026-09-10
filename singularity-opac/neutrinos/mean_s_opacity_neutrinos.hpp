@@ -29,7 +29,7 @@
 #include <singularity-opac/neutrinos/non_cgs_s_neutrinos.hpp>
 #include <singularity-opac/neutrinos/thermal_distributions_neutrinos.hpp>
 
-namespace singularity_opac {
+namespace singularity::opac {
 namespace neutrinos {
 namespace impl {
 
@@ -67,9 +67,9 @@ class MeanSOpacity {
   MeanSOpacity(const std::string &filename) : filename_(filename.c_str()) {
     herr_t status = H5_SUCCESS;
     hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-    status += lkappaPlanck_.loadHDF(file, singularity_opac::SP5::MeanSOpac::PlanckMeanSOpacity);
+    status += lkappaPlanck_.loadHDF(file, singularity::opac::SP5::MeanSOpac::PlanckMeanSOpacity);
     status +=
-        lkappaRosseland_.loadHDF(file, singularity_opac::SP5::MeanSOpac::RosselandMeanSOpacity);
+        lkappaRosseland_.loadHDF(file, singularity::opac::SP5::MeanSOpac::RosselandMeanSOpacity);
     status += H5Fclose(file);
 
     if (status != H5_SUCCESS) {
@@ -81,9 +81,9 @@ class MeanSOpacity {
     herr_t status = H5_SUCCESS;
     hid_t file =
         H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    status += lkappaPlanck_.saveHDF(file, singularity_opac::SP5::MeanSOpac::PlanckMeanSOpacity);
+    status += lkappaPlanck_.saveHDF(file, singularity::opac::SP5::MeanSOpac::PlanckMeanSOpacity);
     status +=
-        lkappaRosseland_.saveHDF(file, singularity_opac::SP5::MeanSOpac::RosselandMeanSOpacity);
+        lkappaRosseland_.saveHDF(file, singularity::opac::SP5::MeanSOpac::RosselandMeanSOpacity);
     status += H5Fclose(file);
 
     if (status != H5_SUCCESS) {
@@ -177,19 +177,19 @@ class MeanSOpacity {
               kappaPlanckNum += alpha / rho * B * nu * dlnu;
               kappaPlanckDenom += B * nu * dlnu;
 
-              if (alpha > singularity_opac::robust::SMALL()) {
+              if (alpha > singularity::opac::robust::SMALL()) {
                 kappaRosselandNum +=
-                    singularity_opac::robust::ratio(rho, alpha) * dBdT * nu *
+                    singularity::opac::robust::ratio(rho, alpha) * dBdT * nu *
                     dlnu;
                 kappaRosselandDenom += dBdT * nu * dlnu;
               }
 
-              Real kappaPlanck = singularity_opac::robust::ratio(
+              Real kappaPlanck = singularity::opac::robust::ratio(
                   kappaPlanckNum, kappaPlanckDenom);
               Real kappaRosseland =
-                  (kappaPlanck > singularity_opac::robust::SMALL() &&
-                   kappaRosselandNum > singularity_opac::robust::SMALL())
-                      ? singularity_opac::robust::ratio(kappaRosselandDenom,
+                  (kappaPlanck > singularity::opac::robust::SMALL() &&
+                   kappaRosselandNum > singularity::opac::robust::SMALL())
+                      ? singularity::opac::robust::ratio(kappaRosselandDenom,
                                                         kappaRosselandNum)
                       : 0.;
               lkappaPlanck_(iRho, iT, iYe, idx) = toLog_(kappaPlanck);
@@ -226,6 +226,6 @@ using MeanSOpacity =
     impl::MeanSVariant<MeanSOpacityBase, MeanNonCGSUnitsS<MeanSOpacityBase>>;
 
 } // namespace neutrinos
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_NEUTRINOS_MEAN_OPACITY_S_NEUTRINOS__

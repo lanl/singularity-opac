@@ -22,7 +22,7 @@
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 
-namespace singularity_opac {
+namespace singularity::opac {
 namespace neutrinos {
 
 template <typename Opac>
@@ -318,6 +318,6 @@ class MeanNonCGSUnits {
 };
 
 } // namespace neutrinos
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_NEUTRINOS_NON_CGS_NEUTRINOS_

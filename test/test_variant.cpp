@@ -29,9 +29,9 @@
 #include <singularity-opac/neutrinos/opac_neutrinos.hpp>
 #include <singularity-opac/photons/opac_photons.hpp>
 
-using namespace singularity_opac;
-using NOpac = singularity_opac::neutrinos::Opacity;
-using POpac = singularity_opac::photons::Opacity;
+using namespace singularity::opac;
+using NOpac = singularity::opac::neutrinos::Opacity;
+using POpac = singularity::opac::photons::Opacity;
 
 TEST_CASE("Constructor and assignment for neutrinos", "[Neutrinos][Variant]") {
   WHEN("We initialize an opacity") {

@@ -23,7 +23,7 @@
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/photons/thermal_distributions_photons.hpp>
 
-namespace singularity_opac {
+namespace singularity::opac {
 namespace photons {
 
 // Expression for specific emissivity from Rybicki & Lightman 1979
@@ -195,6 +195,6 @@ class EPBremsstrahlungOpacity {
 };
 
 } // namespace photons
-} // namespace singularity_opac
+} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_PHOTONS_EPBREMSSTRAHLUNG_OPACITY_PHOTONS_
