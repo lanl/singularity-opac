@@ -23,7 +23,7 @@
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 
-namespace singularity {
+namespace singularity_opac {
 namespace photons {
 
 template <typename pc = PhysicalConstantsCGS>
@@ -127,6 +127,6 @@ class PowerLawSOpacity {
 };
 
 } // namespace photons
-} // namespace singularity
+} // namespace singularity_opac
 
 #endif // SINGULARITY_OPAC_PHOTONS_POWERLAW_S_OPACITY_PHOTONS_

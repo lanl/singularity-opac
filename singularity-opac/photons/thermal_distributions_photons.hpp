@@ -22,7 +22,7 @@
 #include <singularity-opac/base/robust_utils.hpp>
 #include <singularity-opac/constants/constants.hpp>
 
-namespace singularity {
+namespace singularity_opac {
 namespace photons {
 
 template <typename pc = PhysicalConstantsCGS>
@@ -96,6 +96,6 @@ struct PlanckDistribution {
 };
 
 } // namespace photons
-} // namespace singularity
+} // namespace singularity_opac
 
 #endif //  SINGULARITY_OPAC_PHOTONS_THERMAL_DISTRIBUTIONS_PHOTONS_

@@ -26,7 +26,7 @@
 // Routines for Chebyshev interpolation and integration.  For more
 // details, see Heath, 1997 or Boydm 1941.
 
-namespace singularity {
+namespace singularity_opac {
 namespace chebyshev {
 
 template <typename Matrix, typename VecIn, typename VecOut>
@@ -96,6 +96,6 @@ PORTABLE_INLINE_FUNCTION Real InterpFromCoeffs(Real x, const Real xmin,
 }
 
 } // namespace chebyshev
-} // namespace singularity
+} // namespace singularity_opac
 
 #endif // SINGULARITY_OPAC_CHEBYSHEV_CHEBYSHEV_

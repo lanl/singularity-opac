@@ -34,7 +34,7 @@
 #include <singularity-opac/photons/thermal_distributions_photons.hpp>
 #include <spiner/databox.hpp>
 
-namespace singularity {
+namespace singularity_opac {
 namespace photons {
 namespace impl {
 
@@ -124,21 +124,21 @@ class MeanSOpacity {
     }
     if (matid != nullptr) {
       status += H5LTset_attribute_int(file, material_path.c_str(),
-                                      SP5::Material::matid, matid, 1);
+                                      singularity_opac::SP5::Material::matid, matid, 1);
     }
     if (!material_name.empty()) {
       status += H5LTset_attribute_string(file, material_path.c_str(),
-                                          SP5::Material::name,
+                                          singularity_opac::SP5::Material::name,
                                           material_name.c_str());
     }
     status += sigmaRosseland.saveHDF(
-        material, SP5::MultigroupSOpac::RosselandGroupSOpacity);
+        material, singularity_opac::SP5::MultigroupSOpac::RosselandGroupSOpacity);
     // Absorption and scattering share group bounds when appended.
-    if (H5Lexists(material, SP5::Multigroup::GroupBounds, H5P_DEFAULT) >
+    if (H5Lexists(material, singularity_opac::SP5::Multigroup::GroupBounds, H5P_DEFAULT) >
         0) {
       DataBox existingBounds;
       const herr_t bounds_status =
-          existingBounds.loadHDF(material, SP5::Multigroup::GroupBounds);
+          existingBounds.loadHDF(material, singularity_opac::SP5::Multigroup::GroupBounds);
       if (bounds_status != H5_SUCCESS ||
           existingBounds.size() != groupBounds.size()) {
         existingBounds.finalize();
@@ -155,7 +155,7 @@ class MeanSOpacity {
       existingBounds.finalize();
     } else {
       status +=
-          groupBounds.saveHDF(material, SP5::Multigroup::GroupBounds);
+          groupBounds.saveHDF(material, singularity_opac::SP5::Multigroup::GroupBounds);
     }
     status += H5Gclose(material);
     status += H5Fclose(file);
@@ -300,9 +300,9 @@ class MeanSOpacity {
           "photons::MeanSOpacity: material group not found in HDF5 file");
     }
     herr_t status = sigmaRosseland.loadHDF(
-        material, SP5::MultigroupSOpac::RosselandGroupSOpacity);
+        material, singularity_opac::SP5::MultigroupSOpac::RosselandGroupSOpacity);
     const herr_t bounds_status =
-        LoadGroupBounds(material, SP5::Multigroup::GroupBounds,
+        LoadGroupBounds(material, singularity_opac::SP5::Multigroup::GroupBounds,
                         groupBounds);
     H5Gclose(material);
     H5Fclose(file);
@@ -461,6 +461,6 @@ class MeanSOpacity {
 using MeanSOpacityBase = impl::MeanSOpacity<PhysicalConstantsCGS>;
 
 } // namespace photons
-} // namespace singularity
+} // namespace singularity_opac
 
 #endif // SINGULARITY_OPAC_PHOTONS_MEAN_S_OPACITY_PHOTONS_

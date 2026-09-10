@@ -48,7 +48,7 @@
 // we can play, but for now, I'm switching everything in this library
 // to log10.
 
-namespace singularity {
+namespace singularity_opac {
 namespace neutrinos {
 
 namespace impl {
@@ -160,10 +160,10 @@ class SpinerOpacity {
     herr_t status = H5_SUCCESS;
     hid_t file =
         H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    status += lalphanu_.saveHDF(file, SP5::Opac::AbsorptionCoefficient);
-    status += ljnu_.saveHDF(file, SP5::Opac::EmissivityPerNu);
-    status += lJ_.saveHDF(file, SP5::Opac::TotalEmissivity);
-    status += lJYe_.saveHDF(file, SP5::Opac::NumberEmissivity);
+    status += lalphanu_.saveHDF(file, singularity_opac::SP5::Opac::AbsorptionCoefficient);
+    status += ljnu_.saveHDF(file, singularity_opac::SP5::Opac::EmissivityPerNu);
+    status += lJ_.saveHDF(file, singularity_opac::SP5::Opac::TotalEmissivity);
+    status += lJYe_.saveHDF(file, singularity_opac::SP5::Opac::NumberEmissivity);
     status += H5Fclose(file);
 
     if (status != H5_SUCCESS) {
@@ -380,10 +380,10 @@ class SpinerOpacity {
   void LoadFromSP5_(const std::string &filename) {
     herr_t status = H5_SUCCESS;
     hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-    status += lalphanu_.loadHDF(file, SP5::Opac::AbsorptionCoefficient);
-    status += ljnu_.loadHDF(file, SP5::Opac::EmissivityPerNu);
-    status += lJ_.loadHDF(file, SP5::Opac::TotalEmissivity);
-    status += lJYe_.loadHDF(file, SP5::Opac::NumberEmissivity);
+    status += lalphanu_.loadHDF(file, singularity_opac::SP5::Opac::AbsorptionCoefficient);
+    status += ljnu_.loadHDF(file, singularity_opac::SP5::Opac::EmissivityPerNu);
+    status += lJ_.loadHDF(file, singularity_opac::SP5::Opac::TotalEmissivity);
+    status += lJYe_.loadHDF(file, singularity_opac::SP5::Opac::NumberEmissivity);
     status += H5Fclose(file);
 
     if (status != H5_SUCCESS) {
@@ -562,6 +562,6 @@ class SpinerOpacity {
 };
 
 } // namespace neutrinos
-} // namespace singularity
+} // namespace singularity_opac
 
 #endif //  SINGULARITY_OPAC_NEUTRINOS_SPINER_OPAC_NEUTRINOS_HPP_

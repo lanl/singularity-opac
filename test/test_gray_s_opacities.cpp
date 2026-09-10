@@ -31,7 +31,7 @@
 #include <singularity-opac/neutrinos/s_opac_neutrinos.hpp>
 #include <singularity-opac/photons/s_opac_photons.hpp>
 
-using namespace singularity;
+using namespace singularity_opac;
 
 using pc = PhysicalConstantsCGS;
 

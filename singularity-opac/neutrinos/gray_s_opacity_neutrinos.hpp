@@ -22,7 +22,7 @@
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 
-namespace singularity {
+namespace singularity_opac {
 namespace neutrinos {
 
 template <typename pc = PhysicalConstantsCGS>
@@ -69,6 +69,6 @@ class GraySOpacity {
 };
 
 } // namespace neutrinos
-} // namespace singularity
+} // namespace singularity_opac
 
 #endif // SINGULARITY_OPAC_NEUTRINOS_GRAY_S_OPACITY_NEUTRINOS_

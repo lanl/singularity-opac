@@ -27,7 +27,7 @@
 #include <singularity-opac/photons/opac_photons.hpp>
 #include <singularity-opac/photons/s_opac_photons.hpp>
 
-using namespace singularity;
+using namespace singularity_opac;
 
 using DataBox = Spiner::DataBox<Real>;
 

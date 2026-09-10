@@ -24,7 +24,7 @@
 #include <singularity-opac/base/robust_utils.hpp>
 #include <singularity-opac/constants/constants.hpp>
 
-namespace singularity {
+namespace singularity_opac {
 namespace neutrinos {
 
 #define EPS (10.0 * std::numeric_limits<Real>::min())
@@ -108,6 +108,6 @@ struct FermiDiracDistributionNoMu {
 #undef EPS
 
 } // namespace neutrinos
-} // namespace singularity
+} // namespace singularity_opac
 
 #endif // SINGULARITY_OPAC_NEUTRINOS_THERMAL_DISTRIBUTIONS_NEUTRINOS_

@@ -22,7 +22,7 @@
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
 
-namespace singularity {
+namespace singularity_opac {
 namespace neutrinos {
 namespace impl {
 
@@ -138,6 +138,6 @@ class S_Variant {
 
 } // namespace impl
 } // namespace neutrinos
-} // namespace singularity
+} // namespace singularity_opac
 
 #endif // SINGUALRITY_OPAC_NEUTRINOS_NEUTRINO_S_VARIANT_

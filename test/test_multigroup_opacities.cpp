@@ -28,7 +28,7 @@
 #include <singularity-opac/photons/mean_s_opacity_photons.hpp>
 #include <singularity-opac/photons/opac_photons.hpp>
 
-using namespace singularity;
+using namespace singularity_opac;
 
 template <typename T>
 PORTABLE_INLINE_FUNCTION T FractionalDifference(const T &a, const T &b) {

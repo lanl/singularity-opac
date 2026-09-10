@@ -29,7 +29,7 @@
 #include <singularity-opac/neutrinos/non_cgs_s_neutrinos.hpp>
 #include <singularity-opac/neutrinos/thermal_distributions_neutrinos.hpp>
 
-namespace singularity {
+namespace singularity_opac {
 namespace neutrinos {
 namespace impl {
 
@@ -67,9 +67,9 @@ class MeanSOpacity {
   MeanSOpacity(const std::string &filename) : filename_(filename.c_str()) {
     herr_t status = H5_SUCCESS;
     hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-    status += lkappaPlanck_.loadHDF(file, SP5::MeanSOpac::PlanckMeanSOpacity);
+    status += lkappaPlanck_.loadHDF(file, singularity_opac::SP5::MeanSOpac::PlanckMeanSOpacity);
     status +=
-        lkappaRosseland_.loadHDF(file, SP5::MeanSOpac::RosselandMeanSOpacity);
+        lkappaRosseland_.loadHDF(file, singularity_opac::SP5::MeanSOpac::RosselandMeanSOpacity);
     status += H5Fclose(file);
 
     if (status != H5_SUCCESS) {
@@ -81,9 +81,9 @@ class MeanSOpacity {
     herr_t status = H5_SUCCESS;
     hid_t file =
         H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    status += lkappaPlanck_.saveHDF(file, SP5::MeanSOpac::PlanckMeanSOpacity);
+    status += lkappaPlanck_.saveHDF(file, singularity_opac::SP5::MeanSOpac::PlanckMeanSOpacity);
     status +=
-        lkappaRosseland_.saveHDF(file, SP5::MeanSOpac::RosselandMeanSOpacity);
+        lkappaRosseland_.saveHDF(file, singularity_opac::SP5::MeanSOpac::RosselandMeanSOpacity);
     status += H5Fclose(file);
 
     if (status != H5_SUCCESS) {
@@ -226,6 +226,6 @@ using MeanSOpacity =
     impl::MeanSVariant<MeanSOpacityBase, MeanNonCGSUnitsS<MeanSOpacityBase>>;
 
 } // namespace neutrinos
-} // namespace singularity
+} // namespace singularity_opac
 
 #endif // SINGULARITY_OPAC_NEUTRINOS_MEAN_OPACITY_S_NEUTRINOS__

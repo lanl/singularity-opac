@@ -36,7 +36,7 @@
 #include <singularity-opac/photons/thermal_distributions_photons.hpp>
 #include <spiner/databox.hpp>
 
-namespace singularity {
+namespace singularity_opac {
 namespace photons {
 namespace impl {
 
@@ -138,27 +138,27 @@ class MeanOpacity {
     }
     if (matid != nullptr) {
       status += H5LTset_attribute_int(file, material_path.c_str(),
-                                      SP5::Material::matid, matid, 1);
+                                      singularity_opac::SP5::Material::matid, matid, 1);
     }
     if (!material_name.empty()) {
       status += H5LTset_attribute_string(file, material_path.c_str(),
-                                          SP5::Material::name,
+                                          singularity_opac::SP5::Material::name,
                                           material_name.c_str());
     }
     if (hasPlanck_) {
       status += kappaPlanck.saveHDF(
-          material, SP5::MultigroupOpac::PlanckGroupOpacity);
+          material, singularity_opac::SP5::MultigroupOpac::PlanckGroupOpacity);
     }
     if (hasRosseland_) {
       status += kappaRosseland.saveHDF(
-          material, SP5::MultigroupOpac::RosselandGroupOpacity);
+          material, singularity_opac::SP5::MultigroupOpac::RosselandGroupOpacity);
     }
     // Absorption and scattering share group bounds when appended.
-    if (H5Lexists(material, SP5::Multigroup::GroupBounds, H5P_DEFAULT) >
+    if (H5Lexists(material, singularity_opac::SP5::Multigroup::GroupBounds, H5P_DEFAULT) >
         0) {
       DataBox existingBounds;
       const herr_t bounds_status =
-          existingBounds.loadHDF(material, SP5::Multigroup::GroupBounds);
+          existingBounds.loadHDF(material, singularity_opac::SP5::Multigroup::GroupBounds);
       if (bounds_status != H5_SUCCESS ||
           existingBounds.size() != groupBounds.size()) {
         existingBounds.finalize();
@@ -174,7 +174,7 @@ class MeanOpacity {
       }
       existingBounds.finalize();
     } else {
-      status += groupBounds.saveHDF(material, SP5::Multigroup::GroupBounds);
+      status += groupBounds.saveHDF(material, singularity_opac::SP5::Multigroup::GroupBounds);
     }
     status += H5Gclose(material);
     status += H5Fclose(file);
@@ -395,19 +395,19 @@ class MeanOpacity {
     }
 
     bool has_planck = LoadOpacityDataBoxIfPresent_(
-        material, SP5::MultigroupOpac::PlanckGroupOpacity, kappaPlanck);
+        material, singularity_opac::SP5::MultigroupOpac::PlanckGroupOpacity, kappaPlanck);
     bool has_rosseland = LoadOpacityDataBoxIfPresent_(
-        material, SP5::MultigroupOpac::RosselandGroupOpacity, kappaRosseland);
+        material, singularity_opac::SP5::MultigroupOpac::RosselandGroupOpacity, kappaRosseland);
     bool has_gray_rosseland = false;
     if (!has_rosseland) {
       // A gray Rosseland absorption table is a valid one-group table.  It is
       // promoted to rank 3 so the runtime has one uniform representation.
       has_rosseland = LoadOpacityDataBoxIfPresent_(
-          material, SP5::MeanOpac::RosselandMeanOpacity, kappaRosseland);
+          material, singularity_opac::SP5::MeanOpac::RosselandMeanOpacity, kappaRosseland);
       has_gray_rosseland = has_rosseland;
     }
     const herr_t bounds_status =
-        LoadGroupBounds(material, SP5::Multigroup::GroupBounds,
+        LoadGroupBounds(material, singularity_opac::SP5::Multigroup::GroupBounds,
                         groupBounds);
     H5Gclose(material);
     H5Fclose(file);
@@ -670,6 +670,6 @@ using MeanOpacity =
     impl::MeanVariant<MeanOpacityBase, MeanNonCGSUnits<MeanOpacityBase>>;
 
 } // namespace photons
-} // namespace singularity
+} // namespace singularity_opac
 
 #endif // SINGULARITY_OPAC_PHOTONS_MEAN_OPACITY_PHOTONS_

@@ -57,7 +57,7 @@ int main() {
   {
     std::cout<<"--- Testing gray databox interpolation--- "<<std::endl;
     Spiner::DataBox<double> gray_databox;
-    gray_databox.loadHDF(dataset, SP5::IPCRESS::RosselandTotalGrayOpacity);
+    gray_databox.loadHDF(dataset, singularity_opac::SP5::IPCRESS::RosselandTotalGrayOpacity);
 
     // make sure gray databox has the expected values
     if (gray_databox.rank() != 2) {
@@ -110,7 +110,7 @@ int main() {
   {
     std::cout<<"--- Testing multigroup databox interpolation ---"<<std::endl;
     Spiner::DataBox<double> mg_databox;
-    mg_databox.loadHDF(dataset, SP5::MultigroupSOpac::RosselandGroupSOpacity);
+    mg_databox.loadHDF(dataset, singularity_opac::SP5::MultigroupSOpac::RosselandGroupSOpacity);
 
     // make sure mg databox has the expected values
     if (mg_databox.rank() != 3) {

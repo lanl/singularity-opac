@@ -16,6 +16,8 @@
 #define SINGULARITY_OPAC_BASE_SP5_
 // This file was made in part with generative AI.
 
+namespace singularity_opac {
+
 namespace SP5 {
 
 namespace Opac {
@@ -80,5 +82,7 @@ constexpr char PlanckTotalGrayOpacity[] = "planck total gray opacity";
 } // namespace IPCRESS
 
 } // namespace SP5
+
+} // namespace singularity_opac
 
 #endif // SINGULARITY_OPAC_BASE_SP5_

@@ -22,7 +22,7 @@
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
 
-namespace singularity {
+namespace singularity_opac {
 namespace photons {
 namespace impl {
 
@@ -136,6 +136,6 @@ class S_Variant {
 
 } // namespace impl
 } // namespace photons
-} // namespace singularity
+} // namespace singularity_opac
 
 #endif // SINGUALRITY_OPAC_PHOTONS_PHOTON_S_VARIANT_
