@@ -71,8 +71,8 @@ class MeanSVariant {
         s_opac_);
   }
 
-  PORTABLE_INLINE_FUNCTION Real RosselandMeanScatteringCoefficient(
-      const Real rho, const Real temp) const {
+  PORTABLE_INLINE_FUNCTION Real
+  RosselandMeanScatteringCoefficient(const Real rho, const Real temp) const {
     return PortsOfCall::visit(
         [=](const auto &s_opac) {
           return s_opac.RosselandMeanScatteringCoefficient(rho, temp);

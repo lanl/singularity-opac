@@ -18,25 +18,26 @@
 #define _IPCRESS2SPINER_GENERATE_FILES_HPP_
 
 #include <string>
-#include <vector>
-#include <utils/spiner/spiner/sp5.hpp>
 #include <utils/spiner/spiner/databox.hpp>
 #include <utils/spiner/spiner/interpolation.hpp>
+#include <utils/spiner/spiner/sp5.hpp>
+#include <vector>
 
 herr_t saveMaterial(hid_t loc, hid_t matGroup, const int matid,
                     const std::string &sMatid,
                     const std::string &sp5_field_name,
                     Spiner::DataBox<double> &opacity) {
 
-
-  double zero_offset =0.0;
+  double zero_offset = 0.0;
   herr_t status = 0;
   // Dependent variables metadata
-  status += H5LTset_attribute_string(loc, sMatid.c_str(), SP5::Offsets::opac_messageName,
+  status += H5LTset_attribute_string(loc, sMatid.c_str(),
+                                     SP5::Offsets::opac_messageName,
                                      SP5::Offsets::opac_message);
-  status += H5LTset_attribute_double(loc, sMatid.c_str(), SP5::Offsets::opac_rho,
+  status += H5LTset_attribute_double(loc, sMatid.c_str(),
+                                     SP5::Offsets::opac_rho, &zero_offset, 1);
+  status += H5LTset_attribute_double(loc, sMatid.c_str(), SP5::Offsets::opac_T,
                                      &zero_offset, 1);
-  status += H5LTset_attribute_double(loc, sMatid.c_str(), SP5::Offsets::opac_T, &zero_offset, 1);
 
   status += opacity.saveHDF(matGroup, sp5_field_name);
 

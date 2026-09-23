@@ -29,6 +29,7 @@
 #ifdef SPINER_USE_HDF
 #include <hdf5.h>
 #include <hdf5_hl.h>
+#include <optional>
 #include <string>
 #endif
 
@@ -39,57 +40,94 @@ namespace impl {
 using MeanUtilsDataBox = Spiner::DataBox<Real>;
 
 #ifdef SPINER_USE_HDF
-// SP5 material groups may be keyed by integer matid or by name. A name-based
-// lookup first checks the name-keyed path, then checks name metadata on other
-// root groups (including matid-keyed groups).
-inline hid_t OpenMaterialGroupByMatid(const hid_t file, const int matid) {
-  const std::string path = "/" + std::to_string(matid);
-  return H5Gopen(file, path.c_str(), H5P_DEFAULT);
-}
+// Sentinels returned by the material-group openers below.
+constexpr hid_t MaterialNotFound = -1;
+constexpr hid_t MaterialAmbiguous = -2;
 
-struct MaterialNameSearch {
-  std::string requested;
+// A material group's link name is its name: Save() keys the group by the name
+// it is given, so a name resolves with a single path lookup. An opacid is not a
+// key -- it is recorded as an attribute, including on name-keyed groups -- so
+// resolving one means reading that attribute from each root group. The scan
+// counts every match, and an opacid carried by more than one group is reported
+// as ambiguous rather than resolved by iteration order.
+struct MaterialOpacidSearch {
+  int requested = 0;
   std::string path;
+  int matches = 0;
 };
 
-inline herr_t FindMaterialByName(hid_t file, const char *link_name,
-                                 const H5L_info_t *, void *opaque) {
-  auto *search = static_cast<MaterialNameSearch *>(opaque);
-  hid_t candidate = H5Gopen(file, link_name, H5P_DEFAULT);
-  if (candidate < 0 ||
-      H5Aexists_by_name(file, link_name, SP5::Material::opac_name,
-                        H5P_DEFAULT) <= 0) {
-    if (candidate >= 0) H5Gclose(candidate);
+inline bool LinkIsGroup(const hid_t loc, const char *link_name) {
+  hid_t candidate = H5Gopen(loc, link_name, H5P_DEFAULT);
+  if (candidate < 0) return false;
+  H5Gclose(candidate);
+  return true;
+}
+
+inline herr_t FindMaterialByOpacid(hid_t file, const char *link_name,
+                                   const H5L_info_t *, void *opaque) {
+  auto *search = static_cast<MaterialOpacidSearch *>(opaque);
+  if (!LinkIsGroup(file, link_name) ||
+      H5Aexists_by_name(file, link_name, SP5::Material::opacid, H5P_DEFAULT) <=
+          0) {
     return 0;
   }
-  H5Gclose(candidate);
 
-  char material_name[4096] = {};
-  if (H5LTget_attribute_string(file, link_name, SP5::Material::opac_name,
-                               material_name) >= 0 &&
-      search->requested == material_name) {
-    search->path = "/" + std::string(link_name);
-    return 1;
+  int candidate = 0;
+  if (H5LTget_attribute_int(file, link_name, SP5::Material::opacid,
+                            &candidate) < 0 ||
+      candidate != search->requested) {
+    return 0;
   }
+  search->matches += 1;
+  if (search->path.empty()) search->path = "/" + std::string(link_name);
+  // Keep iterating so that duplicate opacids are detected rather than masked.
   return 0;
 }
 
 inline hid_t OpenMaterialGroupByName(const hid_t file,
                                      const std::string &name) {
-  const std::string direct_path = "/" + name;
-  hid_t material = H5Gopen(file, direct_path.c_str(), H5P_DEFAULT);
-  if (material >= 0) return material;
+  const std::string path = "/" + name;
+  if (H5Lexists(file, path.c_str(), H5P_DEFAULT) <= 0 ||
+      !LinkIsGroup(file, path.c_str())) {
+    return MaterialNotFound;
+  }
+  return H5Gopen(file, path.c_str(), H5P_DEFAULT);
+}
 
-  MaterialNameSearch search{name, ""};
+inline hid_t OpenMaterialGroupByOpacid(const hid_t file, const int opacid) {
+  const std::string direct_path = "/" + std::to_string(opacid);
+  if (H5Lexists(file, direct_path.c_str(), H5P_DEFAULT) > 0 &&
+      LinkIsGroup(file, direct_path.c_str())) {
+    return H5Gopen(file, direct_path.c_str(), H5P_DEFAULT);
+  }
+
+  MaterialOpacidSearch search;
+  search.requested = opacid;
   hid_t root = H5Gopen(file, "/", H5P_DEFAULT);
-  if (root < 0) return -1;
+  if (root < 0) return MaterialNotFound;
   hsize_t index = 0;
-  H5Literate(root, H5_INDEX_NAME, H5_ITER_NATIVE, &index, FindMaterialByName,
+  H5Literate(root, H5_INDEX_NAME, H5_ITER_NATIVE, &index, FindMaterialByOpacid,
              &search);
   H5Gclose(root);
-  return search.path.empty()
-             ? -1
-             : H5Gopen(file, search.path.c_str(), H5P_DEFAULT);
+  if (search.matches > 1) return MaterialAmbiguous;
+  return search.path.empty() ? MaterialNotFound
+                             : H5Gopen(file, search.path.c_str(), H5P_DEFAULT);
+}
+
+struct MaterialSelector {
+  std::optional<int> opacid;
+  std::string name;
+};
+
+inline hid_t OpenMaterialGroup(const hid_t file,
+                               const MaterialSelector &selector) {
+  if (!selector.name.empty()) {
+    return OpenMaterialGroupByName(file, selector.name);
+  }
+  if (selector.opacid.has_value()) {
+    return OpenMaterialGroupByOpacid(file, *selector.opacid);
+  }
+  return MaterialNotFound;
 }
 
 inline herr_t LoadGroupBounds(const hid_t material, const char *field,

@@ -15,13 +15,13 @@
 //======================================================================
 
 #include <algorithm>
+#include <array>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <array>
 
 #include <hdf5.h>
 #include <hdf5_hl.h>
@@ -30,86 +30,99 @@
 #error "HDF5 must be enabled"
 #endif
 
+#include <gandolf.h>
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/sp5.hpp>
 #include <singularity-opac/constants/constants.hpp>
-#include <utils/spiner/spiner/sp5.hpp>
 #include <utils/spiner/spiner/databox.hpp>
 #include <utils/spiner/spiner/interpolation.hpp>
-#include <gandolf.h>
+#include <utils/spiner/spiner/sp5.hpp>
 
 #include "generate_files.hpp"
 #include "interpolate_opacity.hpp"
-#include "parse_cli.hpp"
 #include "make_spiner_databox.hpp"
+#include "parse_cli.hpp"
 
 // ARL: My to-do list
 // \TODO Thread equal log spacing of rho and T points through command line
 // \TODO Thread verbosity option through command-line options to print more info
-// \TODO Add ionization state? Leave until singularity-eos and singularity-opac are merged
+// \TODO Add ionization state? Leave until singularity-eos and singularity-opac
+// are merged
 // \TODO clang-format
 // \TODO Delete char fields from new[]
 
-// Function prototypes for Gandolf C function equivalents, prepend "C" to prevent name mangling
-// gandolf.h does not expose the interface to these functions, which is why they are declared here
-extern "C" void c_gmatids( char*, int*,   int*,   int*,  int*);
-extern "C" void     c_gkeys( char*, int*,char*[],   int*,  int*,  int*);
-extern "C" void   c_gsizeof( char*, int*,  char*,   int*,  int*);
-extern "C" void  c_gchgrids( char*, int*,   int*,   int*,  int*,  int*,  int*, int*);
-extern "C" void  c_ggetgray( char*, int*,  char*,double*,  int*,  int*,
-                       double*, int*,   int*,double*,  int*,  int*,  int*);
-extern "C" void    c_ggetmg( char*, int*,  char*,double*,  int*,  int*,
-                       double*, int*,   int*,
-                       double*, int*,   int*,double*,  int*,  int*,  int*);
-extern void  c_ggetdata( char*, int*,  char*,double*,  int*,  int*,  int*);
-extern void  c_ggetchar( char*, int*,  char*,double*,  int*,  int*,  int*);
+// Function prototypes for Gandolf C function equivalents, prepend "C" to
+// prevent name mangling gandolf.h does not expose the interface to these
+// functions, which is why they are declared here
+extern "C" void c_gmatids(char *, int *, int *, int *, int *);
+extern "C" void c_gkeys(char *, int *, char *[], int *, int *, int *);
+extern "C" void c_gsizeof(char *, int *, char *, int *, int *);
+extern "C" void c_gchgrids(char *, int *, int *, int *, int *, int *, int *,
+                           int *);
+extern "C" void c_ggetgray(char *, int *, char *, double *, int *, int *,
+                           double *, int *, int *, double *, int *, int *,
+                           int *);
+extern "C" void c_ggetmg(char *, int *, char *, double *, int *, int *,
+                         double *, int *, int *, double *, int *, int *,
+                         double *, int *, int *, int *);
+extern void c_ggetdata(char *, int *, char *, double *, int *, int *, int *);
+extern void c_ggetchar(char *, int *, char *, double *, int *, int *, int *);
 
 // Function prototypes for Gandolf Fortran subroutines
-// gandolf.h does not expose the interface to these functions, which is why they are declared here
-extern void   f_gmatids( char*, int*,   int*,  int*,  int*);
-extern void     f_gkeys( char*, int*,  char*,  int*,  int*,   int*);
-extern void   f_gsizeof( char*, int*,  char*,  int*,  int*);
-extern void  f_gchgrids( char*, int*,   int*,  int*,  int*,   int*,   int*, int*);
-extern void  f_ggetgray( char*, int*,  char*,double*, int*,   int*,double*,
-                          int*, int*,double*,   int*, int*,   int*);
-extern void    f_ggetmg( char*, int*,  char*,double*, int*,   int*,double*,
-                          int*, int*,double*,   int*, int*,double*,   int*, int*, int*);
-extern void  f_ggetdata( char*, int*,  char*,double*, int*,   int*,   int*);
-extern void  f_ggetchar( char*, int*,  char*,double*, int*,   int*,   int*);
+// gandolf.h does not expose the interface to these functions, which is why they
+// are declared here
+extern void f_gmatids(char *, int *, int *, int *, int *);
+extern void f_gkeys(char *, int *, char *, int *, int *, int *);
+extern void f_gsizeof(char *, int *, char *, int *, int *);
+extern void f_gchgrids(char *, int *, int *, int *, int *, int *, int *, int *);
+extern void f_ggetgray(char *, int *, char *, double *, int *, int *, double *,
+                       int *, int *, double *, int *, int *, int *);
+extern void f_ggetmg(char *, int *, char *, double *, int *, int *, double *,
+                     int *, int *, double *, int *, int *, double *, int *,
+                     int *, int *);
+extern void f_ggetdata(char *, int *, char *, double *, int *, int *, int *);
+extern void f_ggetchar(char *, int *, char *, double *, int *, int *, int *);
 
-//constexpr int H5_SUCCESS = 0; // older HDF5's declare this, just declare it here
+// constexpr int H5_SUCCESS = 0; // older HDF5's declare this, just declare it
+// here
 
-void print_gchrids_output(const std::string &filename, const int mat_ID, const int nt, const int nrho, const int nhnu, const int ngray, const int nmg) {
-  std::cout<<"---- Gandolf information for material "<<mat_ID<<" in "<<filename<<" ----"<<std::endl;
-  std::cout<<"Temperature poitns: "<<nt<<" density points: "<<nrho<<" frequency points: "<<nhnu<<std::endl;
-  std::cout<<"number of gray points: "<<ngray<<" number of multigroup points: "<<nmg<<std::endl;
+void print_gchrids_output(const std::string &filename, const int mat_ID,
+                          const int nt, const int nrho, const int nhnu,
+                          const int ngray, const int nmg) {
+  std::cout << "---- Gandolf information for material " << mat_ID << " in "
+            << filename << " ----" << std::endl;
+  std::cout << "Temperature poitns: " << nt << " density points: " << nrho
+            << " frequency points: " << nhnu << std::endl;
+  std::cout << "number of gray points: " << ngray
+            << " number of multigroup points: " << nmg << std::endl;
 }
 
 void print_ggetmg_output(const int nmg, const int post_ramg_nmg,
-    const std::vector<double> &temperature_points,
-    const std::vector<double> &density_points,
-    const std::vector<double> &group_bounds,
-    const std::vector<double> &ramg) {
+                         const std::vector<double> &temperature_points,
+                         const std::vector<double> &density_points,
+                         const std::vector<double> &group_bounds,
+                         const std::vector<double> &ramg) {
 
-    std::cout<<"Temperature points: "<<temperature_points.size()<<std::endl;
-    for (auto it : temperature_points)
-      std::cout<<it<<" ";
-    std::cout<<std::endl;
+  std::cout << "Temperature points: " << temperature_points.size() << std::endl;
+  for (auto it : temperature_points)
+    std::cout << it << " ";
+  std::cout << std::endl;
 
-    std::cout<<"Density points: "<<density_points.size()<<std::endl;
-    for (auto it : density_points)
-      std::cout<<it<<" ";
-    std::cout<<std::endl;
+  std::cout << "Density points: " << density_points.size() << std::endl;
+  for (auto it : density_points)
+    std::cout << it << " ";
+  std::cout << std::endl;
 
-    std::cout<<"group bounds: "<<group_bounds.size()<<std::endl;
-    for (auto it : group_bounds)
-      std::cout<<it<<" ";
-    std::cout<<std::endl;
+  std::cout << "group bounds: " << group_bounds.size() << std::endl;
+  for (auto it : group_bounds)
+    std::cout << it << " ";
+  std::cout << std::endl;
 
-    std::cout<<" Raw data, pre size: "<<nmg<<" post size: "<<post_ramg_nmg<<std::endl;
-    for (size_t idata =0; idata<static_cast<size_t>(nmg); ++idata) {
-      std::cout<<idata<<" "<<ramg[idata]<<std::endl;
-    }
+  std::cout << " Raw data, pre size: " << nmg << " post size: " << post_ramg_nmg
+            << std::endl;
+  for (size_t idata = 0; idata < static_cast<size_t>(nmg); ++idata) {
+    std::cout << idata << " " << ramg[idata] << std::endl;
+  }
 }
 
 int main(int argc, char *argv[]) {
@@ -127,34 +140,39 @@ int main(int argc, char *argv[]) {
             << "-----------------------------------------\n"
             << std::endl;
 
-  char * filename_char = filename.data();
+  char *filename_char = filename.data();
   int ier = -100;
 
-  std::cout<<"Getting material IDs from file: "<<filename<<std::endl;
+  std::cout << "Getting material IDs from file: " << filename << std::endl;
   std::vector<int> mat_ids(256, -1);
   int kmats = static_cast<int>(mat_ids.size());
   int nmats = -1;
   c_gmatids(filename_char, mat_ids.data(), &kmats, &nmats, &ier);
 
-  std::cout<<"nmats: "<<nmats<<std::endl;
+  std::cout << "nmats: " << nmats << std::endl;
 
   // output HDF5 setup
   std::cout << "Saving to file " << savename << std::endl;
-  auto file_loc = H5Fcreate(savename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  H5LTset_attribute_string(file_loc, "/", "ipcress2spiner version", IPCRESS2SPINER_VERSION);
+  auto file_loc =
+      H5Fcreate(savename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  H5LTset_attribute_string(file_loc, "/", "ipcress2spiner version",
+                           IPCRESS2SPINER_VERSION);
 
-  for (int imat=0;imat<nmats;++imat) {
+  for (int imat = 0; imat < nmats; ++imat) {
     int mat_ID = mat_ids[imat];
-    std::cout<<"Processing material "<<mat_ID<<std::endl;
+    std::cout << "Processing material " << mat_ID << std::endl;
     // create this mat ID in the HDF5 file
     herr_t status = 0;
     auto sMatID = std::to_string(mat_ID);
 
-    hid_t matGroup = H5Gcreate(file_loc, sMatID.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t matGroup = H5Gcreate(file_loc, sMatID.c_str(), H5P_DEFAULT,
+                               H5P_DEFAULT, H5P_DEFAULT);
     // ARL: Is this softlink necessary?
-    //status += H5Lcreate_soft(sMatID.c_str(), file_loc, savename.c_str(), H5P_DEFAULT, H5P_DEFAULT);
+    // status += H5Lcreate_soft(sMatID.c_str(), file_loc, savename.c_str(),
+    // H5P_DEFAULT, H5P_DEFAULT);
     if (status != H5_SUCCESS) {
-      std::cerr << "WARNING: problem with HDf5 post H5GCreate call" << std::endl;
+      std::cerr << "WARNING: problem with HDf5 post H5GCreate call"
+                << std::endl;
     }
     status += H5LTset_attribute_int(file_loc, sMatID.c_str(),
                                     SP5::Material::opacid, &mat_ID, 1);
@@ -169,20 +187,22 @@ int main(int argc, char *argv[]) {
     constexpr size_t total_keys = 32;
     constexpr size_t max_key_length = 16;
     std::vector<char *> keys;
-    for (size_t ikey =0;ikey<total_keys;++ikey) {
+    for (size_t ikey = 0; ikey < total_keys; ++ikey) {
       keys.push_back(new char[max_key_length]);
     }
 
     int kkeys = static_cast<int>(keys.size());
     int nkeys = -1;
     c_gkeys(filename_char, &mat_ID, keys.data(), &kkeys, &nkeys, &ier);
-    if(nkeys > total_keys) {
-      std::cout<<"POTENTIAL ERROR: nkeys: "<<nkeys<<" is larger than current max keys"<<total_keys<<std::endl;
+    if (nkeys > total_keys) {
+      std::cout << "POTENTIAL ERROR: nkeys: " << nkeys
+                << " is larger than current max keys" << total_keys
+                << std::endl;
     }
     std::vector<std::string> nice_keys;
-    for (int j=0;j<nkeys;++j) {
+    for (int j = 0; j < nkeys; ++j) {
       int key_length = 0;
-      for (int k=0;k<max_key_length;++k) {
+      for (int k = 0; k < max_key_length; ++k) {
         if (keys[j][k] != '\0') key_length++;
       }
       nice_keys.push_back(std::string(keys[j], key_length));
@@ -190,9 +210,9 @@ int main(int argc, char *argv[]) {
 
     // print the nice string form of the keys
     for (auto ikey : nice_keys) {
-      std::cout<<ikey<<" ";
+      std::cout << ikey << " ";
     }
-    std::cout<<std::endl;
+    std::cout << std::endl;
 
     c_gchgrids(filename_char, &mat_ID, &nt, &nrho, &nhnu, &ngray, &nmg, &ier);
 
@@ -216,8 +236,9 @@ int main(int argc, char *argv[]) {
     std::string rgray_keyword = "rgray";
     std::string pgray_keyword = "pgray";
 
-    std::array<std::string, 7> mg_opac_keywords{ramg_keyword, rsmg_keyword, rtmg_keyword, pmg_keyword,
-                                                ragray_keyword, rgray_keyword, pgray_keyword};
+    std::array<std::string, 7> mg_opac_keywords{
+        ramg_keyword,   rsmg_keyword,  rtmg_keyword, pmg_keyword,
+        ragray_keyword, rgray_keyword, pgray_keyword};
     std::array<std::string, 7> mg_fields{
         SP5::MultigroupOpac::RosselandGroupOpacity,
         SP5::MultigroupSOpac::RosselandGroupSOpacity,
@@ -228,23 +249,26 @@ int main(int argc, char *argv[]) {
         SP5::IPCRESS::PlanckTotalGrayOpacity};
 
     // TODO Thread these variables through the input
-    bool log_T_rho_hnu = true; // form a new grid from max and min evenly spaced in log10
+    bool log_T_rho_hnu =
+        true; // form a new grid from max and min evenly spaced in log10
 
-    for (size_t i=0;i<mg_opac_keywords.size();++i) {
+    for (size_t i = 0; i < mg_opac_keywords.size(); ++i) {
       auto key = mg_opac_keywords[i];
       auto sp5_field_name = mg_fields[i];
-      std::cout<<"Interpolating and building databox for "<<mat_ID<<" and "<<key<<std::endl;
+      std::cout << "Interpolating and building databox for " << mat_ID
+                << " and " << key << std::endl;
       // multigroup opacities
-      if(key == "ramg" || key == "rsmg" || key=="rtmg" || key == "pmg") {
+      if (key == "ramg" || key == "rsmg" || key == "rtmg" || key == "pmg") {
         std::vector<double> opacity_data(nmg, 0.0);
-        c_ggetmg(filename_char, &mat_ID, key.data(),
-          temperature_points.data(), &nt, &post_nt,
-          density_points.data(), &nrho, &post_nrho,
-          group_bounds.data(), &nhnu, &post_nhnu,
-          opacity_data.data(), &nmg, &post_nmg, &ier);
+        c_ggetmg(filename_char, &mat_ID, key.data(), temperature_points.data(),
+                 &nt, &post_nt, density_points.data(), &nrho, &post_nrho,
+                 group_bounds.data(), &nhnu, &post_nhnu, opacity_data.data(),
+                 &nmg, &post_nmg, &ier);
 
-        auto [spiner_opacity_databox, new_group_bounds] = build_multigroup_opacity_spiner_databox(
-          temperature_points, density_points, group_bounds, opacity_data, log_T_rho_hnu);
+        auto [spiner_opacity_databox, new_group_bounds] =
+            build_multigroup_opacity_spiner_databox(
+                temperature_points, density_points, group_bounds, opacity_data,
+                log_T_rho_hnu);
 
         std::transform(new_group_bounds.begin(), new_group_bounds.end(),
                        new_group_bounds.begin(), [](const double hnu) {
@@ -254,32 +278,36 @@ int main(int argc, char *argv[]) {
                        });
 
         // only save the group bounds once for this material
-        if (i==0) {
+        if (i == 0) {
           Spiner::DataBox<double> group_bounds_databox(new_group_bounds.size());
           group_bounds_databox.setIndexType(0, Spiner::IndexType::Indexed);
           for (size_t igroup = 0; igroup < new_group_bounds.size(); ++igroup) {
             group_bounds_databox(igroup) = new_group_bounds[igroup];
           }
-          status += group_bounds_databox.saveHDF(
-              matGroup, SP5::Multigroup::GroupBounds);
+          status += group_bounds_databox.saveHDF(matGroup,
+                                                 SP5::Multigroup::GroupBounds);
           group_bounds_databox.finalize();
         }
-        std::cout<<"Saving multigroup databox for "<<mat_ID<<" and "<<key<<std::endl;
-        saveMaterial(file_loc, matGroup, mat_ID, sMatID, sp5_field_name, spiner_opacity_databox);
+        std::cout << "Saving multigroup databox for " << mat_ID << " and "
+                  << key << std::endl;
+        saveMaterial(file_loc, matGroup, mat_ID, sMatID, sp5_field_name,
+                     spiner_opacity_databox);
       }
       // gray opacites
       else {
         std::vector<double> opacity_data(ngray, 0.0);
-       c_ggetgray(filename_char, &mat_ID, key.data(),
-          temperature_points.data(), &nt, &post_nt,
-          density_points.data(), &nrho, &post_nrho,
-          opacity_data.data(), &ngray, &post_ngray, &ier);
+        c_ggetgray(filename_char, &mat_ID, key.data(),
+                   temperature_points.data(), &nt, &post_nt,
+                   density_points.data(), &nrho, &post_nrho,
+                   opacity_data.data(), &ngray, &post_ngray, &ier);
 
         auto spiner_opacity_databox = build_gray_opacity_spiner_databox(
-          temperature_points, density_points, opacity_data, log_T_rho_hnu);
+            temperature_points, density_points, opacity_data, log_T_rho_hnu);
 
-        std::cout<<"Saving gray databox for "<<mat_ID<<" and "<<key<<std::endl;
-        saveMaterial(file_loc, matGroup, mat_ID, sMatID, sp5_field_name, spiner_opacity_databox);
+        std::cout << "Saving gray databox for " << mat_ID << " and " << key
+                  << std::endl;
+        saveMaterial(file_loc, matGroup, mat_ID, sMatID, sp5_field_name,
+                     spiner_opacity_databox);
       }
     }
     status += H5Gclose(matGroup);

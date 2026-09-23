@@ -96,8 +96,9 @@ class MeanNonCGSUnitsS {
         freq_unit_(1. / time_unit_) {}
 
   auto GetOnDevice() {
-    return MeanNonCGSUnitsS<MeanSOpac>(multigroup_s_opac_.GetOnDevice(), time_unit_,
-                                       mass_unit_, length_unit_, temp_unit_);
+    return MeanNonCGSUnitsS<MeanSOpac>(multigroup_s_opac_.GetOnDevice(),
+                                       time_unit_, mass_unit_, length_unit_,
+                                       temp_unit_);
   }
   inline void Finalize() noexcept { multigroup_s_opac_.Finalize(); }
 
@@ -128,20 +129,19 @@ class MeanNonCGSUnitsS {
     return multigroup_s_opac_.Save(filename, material_name, append);
   }
 
-  void Save(const std::string &filename, const int matid,
+  void Save(const std::string &filename, const int opacid,
             const bool append = false) const {
-    return multigroup_s_opac_.Save(filename, matid, append);
+    return multigroup_s_opac_.Save(filename, opacid, append);
   }
 
-  void Save(const std::string &filename, const int matid,
-            const std::string &material_name,
-            const bool append = false) const {
-    return multigroup_s_opac_.Save(filename, matid, material_name, append);
+  void Save(const std::string &filename, const int opacid,
+            const std::string &material_name, const bool append = false) const {
+    return multigroup_s_opac_.Save(filename, opacid, material_name, append);
   }
 
-  void Save(const std::string &filename, const int matid,
+  void Save(const std::string &filename, const int opacid,
             const char *material_name, const bool append = false) const {
-    return multigroup_s_opac_.Save(filename, matid, material_name, append);
+    return multigroup_s_opac_.Save(filename, opacid, material_name, append);
   }
 #endif
 

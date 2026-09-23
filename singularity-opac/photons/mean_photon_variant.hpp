@@ -198,26 +198,24 @@ class MeanVariant {
         opac_);
   }
 
-  void Save(const std::string &filename, const int matid,
+  void Save(const std::string &filename, const int opacid,
             const bool append = false) const {
     return PortsOfCall::visit(
-        [=](auto &opac) { return opac.Save(filename, matid, append); },
-        opac_);
+        [=](auto &opac) { return opac.Save(filename, opacid, append); }, opac_);
   }
 
-  void Save(const std::string &filename, const int matid,
-            const std::string &material_name,
-            const bool append = false) const {
+  void Save(const std::string &filename, const int opacid,
+            const std::string &material_name, const bool append = false) const {
     return PortsOfCall::visit(
         [=](auto &opac) {
-          return opac.Save(filename, matid, material_name, append);
+          return opac.Save(filename, opacid, material_name, append);
         },
         opac_);
   }
 
-  void Save(const std::string &filename, const int matid,
+  void Save(const std::string &filename, const int opacid,
             const char *material_name, const bool append = false) const {
-    Save(filename, matid, std::string(material_name), append);
+    Save(filename, opacid, std::string(material_name), append);
   }
 #endif
 };

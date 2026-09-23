@@ -295,20 +295,19 @@ class MeanNonCGSUnits {
     return multigroup_opac_.Save(filename, material_name, append);
   }
 
-  void Save(const std::string &filename, const int matid,
+  void Save(const std::string &filename, const int opacid,
             const bool append = false) const {
-    return multigroup_opac_.Save(filename, matid, append);
+    return multigroup_opac_.Save(filename, opacid, append);
   }
 
-  void Save(const std::string &filename, const int matid,
-            const std::string &material_name,
-            const bool append = false) const {
-    return multigroup_opac_.Save(filename, matid, material_name, append);
+  void Save(const std::string &filename, const int opacid,
+            const std::string &material_name, const bool append = false) const {
+    return multigroup_opac_.Save(filename, opacid, material_name, append);
   }
 
-  void Save(const std::string &filename, const int matid,
+  void Save(const std::string &filename, const int opacid,
             const char *material_name, const bool append = false) const {
-    return multigroup_opac_.Save(filename, matid, material_name, append);
+    return multigroup_opac_.Save(filename, opacid, material_name, append);
   }
 #endif
 
@@ -319,10 +318,9 @@ class MeanNonCGSUnits {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real PlanckMeanAbsorptionCoefficient(const Real rho,
-                                       const Real temp) const {
-    return multigroup_opac_.PlanckMeanAbsorptionCoefficient(
-               rho_unit_ * rho, temp_unit_ * temp) *
+  Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
+    return multigroup_opac_.PlanckMeanAbsorptionCoefficient(rho_unit_ * rho,
+                                                            temp_unit_ * temp) *
            length_unit_;
   }
 
@@ -376,10 +374,12 @@ class MeanNonCGSUnits {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real Emissivity(const Real rho, const Real temp,
-                  const int gmode = Rosseland, Real *lambda = nullptr) const {
-    const Real J = multigroup_opac_.Emissivity(rho * rho_unit_, temp * temp_unit_, gmode, lambda);
-    const Real inv_emiss_unit_(length_unit_ * time_unit_ * time_unit_ / mass_unit_);
+  Real Emissivity(const Real rho, const Real temp, const int gmode = Rosseland,
+                  Real *lambda = nullptr) const {
+    const Real J = multigroup_opac_.Emissivity(
+        rho * rho_unit_, temp * temp_unit_, gmode, lambda);
+    const Real inv_emiss_unit_(length_unit_ * time_unit_ * time_unit_ /
+                               mass_unit_);
     // Jnu integrated over frequency, but divide by frequency to get out of cgs
     return J * inv_emiss_unit_ * time_unit_;
   }

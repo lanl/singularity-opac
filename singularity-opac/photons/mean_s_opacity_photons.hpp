@@ -19,6 +19,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdio>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -69,42 +70,54 @@ class MeanSOpacity {
   }
 
 #ifdef SPINER_USE_HDF
-  MeanSOpacity(const std::string &filename, const int matid) {
-    LoadHDF_(filename, matid);
+  MeanSOpacity(const std::string &filename, const int opacid) {
+    LoadHDF_(filename, opacid);
   }
 
   MeanSOpacity(const std::string &filename, const std::string &material_name) {
     LoadHDF_(filename, material_name);
   }
 
+  MeanSOpacity(const std::string &filename, const int opacid,
+               const std::string &material_name) {
+    LoadHDF_(filename, opacid, material_name);
+  }
+
+  MeanSOpacity(const std::string &filename, const int opacid,
+               const char *material_name)
+      : MeanSOpacity(filename, opacid, std::string(material_name)) {}
+
   void Save(const std::string &filename, const std::string &material_name,
             const bool append = false) const {
     if (material_name.empty()) {
       OPAC_ERROR("photons::MeanSOpacity: material name must not be empty");
     }
-    Save_(filename, "/" + material_name, nullptr, material_name, append);
+    Save_(filename, "/" + material_name, std::nullopt, material_name, append);
   }
 
-  void Save(const std::string &filename, const int matid,
+  void Save(const std::string &filename, const int opacid,
             const bool append = false) const {
-    Save(filename, matid, std::string(), append);
+    Save(filename, opacid, std::string(), append);
   }
 
-  void Save(const std::string &filename, const int matid,
-            const std::string &material_name,
-            const bool append = false) const {
-    Save_(filename, "/" + std::to_string(matid), &matid, material_name,
-          append);
+  // A name, when supplied, keys the material group; the opacid is recorded as
+  // metadata so that several groups may share one opacid.
+  void Save(const std::string &filename, const int opacid,
+            const std::string &material_name, const bool append = false) const {
+    const std::string material_path = material_name.empty()
+                                          ? "/" + std::to_string(opacid)
+                                          : "/" + material_name;
+    Save_(filename, material_path, opacid, material_name, append);
   }
 
-  void Save(const std::string &filename, const int matid,
+  void Save(const std::string &filename, const int opacid,
             const char *material_name, const bool append = false) const {
-    Save(filename, matid, std::string(material_name), append);
+    Save(filename, opacid, std::string(material_name), append);
   }
 
  private:
   void Save_(const std::string &filename, const std::string &material_path,
-             const int *matid, const std::string &material_name,
+             const std::optional<int> opacid, const std::string &material_name,
              const bool append) const {
     DataBox sigmaRosseland;
     DataBox groupBounds;
@@ -122,20 +135,19 @@ class MeanSOpacity {
       material = H5Gcreate(file, material_path.c_str(), H5P_DEFAULT,
                            H5P_DEFAULT, H5P_DEFAULT);
     }
-    if (matid != nullptr) {
+    if (opacid.has_value()) {
       status += H5LTset_attribute_int(file, material_path.c_str(),
-                                      SP5::Material::opacid, matid, 1);
+                                      SP5::Material::opacid, &(*opacid), 1);
     }
     if (!material_name.empty()) {
       status += H5LTset_attribute_string(file, material_path.c_str(),
-                                          SP5::Material::opac_name,
-                                          material_name.c_str());
+                                         SP5::Material::opac_name,
+                                         material_name.c_str());
     }
     status += sigmaRosseland.saveHDF(
         material, SP5::MultigroupSOpac::RosselandGroupSOpacity);
     // Absorption and scattering share group bounds when appended.
-    if (H5Lexists(material, SP5::Multigroup::GroupBounds, H5P_DEFAULT) >
-        0) {
+    if (H5Lexists(material, SP5::Multigroup::GroupBounds, H5P_DEFAULT) > 0) {
       DataBox existingBounds;
       const herr_t bounds_status =
           existingBounds.loadHDF(material, SP5::Multigroup::GroupBounds);
@@ -154,8 +166,7 @@ class MeanSOpacity {
       }
       existingBounds.finalize();
     } else {
-      status +=
-          groupBounds.saveHDF(material, SP5::Multigroup::GroupBounds);
+      status += groupBounds.saveHDF(material, SP5::Multigroup::GroupBounds);
     }
     status += H5Gclose(material);
     status += H5Fclose(file);
@@ -276,25 +287,38 @@ class MeanSOpacity {
 
  private:
 #ifdef SPINER_USE_HDF
-  void LoadHDF_(const std::string &filename, const int matid) {
-    LoadHDF_(filename, OpenMaterialGroupByMatid, matid);
+  void LoadHDF_(const std::string &filename, const int opacid) {
+    MaterialSelector selector;
+    selector.opacid = opacid;
+    LoadHDF_(filename, selector);
   }
 
-  void LoadHDF_(const std::string &filename,
+  void LoadHDF_(const std::string &filename, const std::string &material_name) {
+    MaterialSelector selector;
+    selector.name = material_name;
+    LoadHDF_(filename, selector);
+  }
+
+  void LoadHDF_(const std::string &filename, const int opacid,
                 const std::string &material_name) {
-    LoadHDF_(filename, OpenMaterialGroupByName, material_name);
+    MaterialSelector selector;
+    selector.opacid = opacid;
+    selector.name = material_name;
+    LoadHDF_(filename, selector);
   }
 
-  template <typename MaterialOpener, typename Selector>
-  void LoadHDF_(const std::string &filename, MaterialOpener opener,
-                const Selector &selector) {
+  void LoadHDF_(const std::string &filename, const MaterialSelector &selector) {
     DataBox sigmaRosseland;
     DataBox groupBounds;
     hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
     if (file < 0) {
       OPAC_ERROR("photons::MeanSOpacity: unable to open HDF5 file");
     }
-    hid_t material = opener(file, selector);
+    hid_t material = OpenMaterialGroup(file, selector);
+    if (material == MaterialAmbiguous) {
+      OPAC_ERROR("photons::MeanSOpacity: several material groups share the "
+                 "requested opacid; select by name instead");
+    }
     if (material < 0) {
       OPAC_ERROR(
           "photons::MeanSOpacity: material group not found in HDF5 file");
@@ -302,8 +326,7 @@ class MeanSOpacity {
     herr_t status = sigmaRosseland.loadHDF(
         material, SP5::MultigroupSOpac::RosselandGroupSOpacity);
     const herr_t bounds_status =
-        LoadGroupBounds(material, SP5::Multigroup::GroupBounds,
-                        groupBounds);
+        LoadGroupBounds(material, SP5::Multigroup::GroupBounds, groupBounds);
     H5Gclose(material);
     H5Fclose(file);
 
