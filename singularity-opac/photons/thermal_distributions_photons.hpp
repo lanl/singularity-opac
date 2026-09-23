@@ -22,7 +22,7 @@
 #include <singularity-opac/base/robust_utils.hpp>
 #include <singularity-opac/constants/constants.hpp>
 
-namespace singularity::opac {
+namespace singularity {
 namespace photons {
 
 template <typename pc = PhysicalConstantsCGS>
@@ -83,7 +83,7 @@ struct PlanckDistribution {
       Real *lambda = nullptr) const {
     Real Bnu = ThermalDistributionOfTNu(temp, nu, lambda);
     Real jnu = J.EmissivityPerNuOmega(rho, temp, nu, lambda);
-    return singularity::opac::robust::ratio(jnu, Bnu);
+    return singularity_opac::robust::ratio(jnu, Bnu);
   }
   template <typename Emissivity>
   PORTABLE_INLINE_FUNCTION Real AngleAveragedAbsorptionCoefficientFromKirchhoff(
@@ -91,11 +91,11 @@ struct PlanckDistribution {
       Real *lambda = nullptr) const {
     Real Bnu = ThermalDistributionOfTNu(temp, nu, lambda);
     Real jnu = J.EmissivityPerNu(rho, temp, nu, lambda) / (4. * M_PI);
-    return singularity::opac::robust::ratio(jnu, Bnu);
+    return singularity_opac::robust::ratio(jnu, Bnu);
   }
 };
 
 } // namespace photons
-} // namespace singularity::opac
+} // namespace singularity
 
 #endif //  SINGULARITY_OPAC_PHOTONS_THERMAL_DISTRIBUTIONS_PHOTONS_

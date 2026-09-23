@@ -25,7 +25,7 @@
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/photons/mean_photon_types.hpp>
 
-namespace singularity::opac {
+namespace singularity {
 namespace photons {
 
 template <typename Opac>
@@ -391,6 +391,6 @@ class MeanNonCGSUnits {
 };
 
 } // namespace photons
-} // namespace singularity::opac
+} // namespace singularity
 
 #endif // SINGULARITY_OPAC_PHOTONS_NON_CGS_PHOTONS_

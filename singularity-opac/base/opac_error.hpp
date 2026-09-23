@@ -15,7 +15,7 @@
 #ifndef SINGULARITY_OPAC_BASE_OPAC_ERROR_
 #define SINGULARITY_OPAC_BASE_OPAC_ERROR_
 
-namespace singularity::opac {
+namespace singularity {
 
 #ifdef SINGULARITY_ENABLE_EXCEPTIONS
 #include <stdexcept>
@@ -27,6 +27,6 @@ namespace singularity::opac {
   std::exit(1)
 #endif
 
-} // namespace singularity::opac
+} // namespace singularity
 
 #endif // SINGULARITY_OPAC_BASE_OPAC_ERROR_

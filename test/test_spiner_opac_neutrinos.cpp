@@ -33,7 +33,7 @@
 #include <singularity-opac/neutrinos/opac_neutrinos.hpp>
 #include <singularity-opac/neutrinos/spiner_opac_neutrinos.hpp>
 
-using namespace singularity::opac;
+using namespace singularity;
 
 using pc = PhysicalConstantsCGS;
 

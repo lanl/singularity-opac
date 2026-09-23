@@ -30,7 +30,7 @@
 #include <singularity-opac/constants/constants.hpp>
 #include <singularity-opac/neutrinos/opac_neutrinos.hpp>
 
-using namespace singularity::opac;
+using namespace singularity;
 
 #ifdef PORTABILITY_STRATEGY_KOKKOS
 using atomic_view = Kokkos::MemoryTraits<Kokkos::Atomic>;

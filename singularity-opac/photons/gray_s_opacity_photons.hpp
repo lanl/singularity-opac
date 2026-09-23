@@ -24,7 +24,7 @@
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/constants/constants.hpp>
 
-namespace singularity::opac {
+namespace singularity {
 namespace photons {
 
 template <typename pc = PhysicalConstantsCGS>
@@ -75,6 +75,6 @@ class GraySOpacity {
 };
 
 } // namespace photons
-} // namespace singularity::opac
+} // namespace singularity
 
 #endif // SINGULARITY_OPAC_PHOTONS_GRAY_S_OPACITY_PHOTONS_

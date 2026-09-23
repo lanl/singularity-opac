@@ -21,7 +21,7 @@
 #include <singularity-opac/neutrinos/neutrino_s_variant.hpp>
 #include <singularity-opac/neutrinos/non_cgs_s_neutrinos.hpp>
 
-namespace singularity::opac {
+namespace singularity {
 namespace neutrinos {
 
 using ScaleFreeS = GraySOpacity<PhysicalConstantsUnity>;
@@ -30,6 +30,6 @@ using GrayS = GraySOpacity<>;
 using SOpacity = impl::S_Variant<ScaleFreeS, GrayS, NonCGSUnitsS<GrayS>>;
 
 } // namespace neutrinos
-} // namespace singularity::opac
+} // namespace singularity
 
 #endif // SINGULARITY_OPAC_NEUTRINOS_S_OPAC_NEUTRINOS_

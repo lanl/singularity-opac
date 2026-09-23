@@ -23,7 +23,7 @@
 #include <ports-of-call/portability.hpp>
 #include <ports-of-call/portable_arrays.hpp>
 #include <singularity-opac/chebyshev/chebyshev.hpp>
-using namespace singularity::opac::chebyshev;
+using namespace singularity::chebyshev;
 
 using DataBox = Spiner::DataBox<Real>;
 

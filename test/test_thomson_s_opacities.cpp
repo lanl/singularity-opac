@@ -30,7 +30,7 @@
 #include <singularity-opac/constants/constants.hpp>
 #include <singularity-opac/photons/s_opac_photons.hpp>
 
-using namespace singularity::opac;
+using namespace singularity;
 
 using pc = PhysicalConstantsCGS;
 

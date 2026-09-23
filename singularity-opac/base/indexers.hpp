@@ -27,7 +27,7 @@
 // show that indexers can have multiple other capabilities, such as
 // interpolation via a Spiner DataBox.
 
-namespace singularity::opac {
+namespace singularity {
 namespace indexers {
 
 template <typename T>
@@ -159,6 +159,6 @@ class LogCheb {
 };
 
 } // namespace indexers
-} // namespace singularity::opac
+} // namespace singularity
 
 #endif // SINGULARITY_BASE_NEUTRINOS_INDEXERS_

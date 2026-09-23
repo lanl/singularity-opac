@@ -22,7 +22,7 @@
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 
-namespace singularity::opac {
+namespace singularity {
 namespace photons {
 
 template <typename pc = PhysicalConstantsCGS>
@@ -68,6 +68,6 @@ class ThomsonSOpacity {
 };
 
 } // namespace photons
-} // namespace singularity::opac
+} // namespace singularity
 
 #endif // SINGULARITY_OPAC_PHOTONS_THOMSON_S_OPACITY_PHOTONS_

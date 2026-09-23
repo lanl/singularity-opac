@@ -23,7 +23,7 @@
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/neutrinos/thermal_distributions_neutrinos.hpp>
 
-namespace singularity::opac {
+namespace singularity {
 namespace neutrinos {
 
 // Neutrino tophat emissivity from
@@ -213,6 +213,6 @@ class TophatEmissivity {
 };
 
 } // namespace neutrinos
-} // namespace singularity::opac
+} // namespace singularity
 
 #endif // SINGULARITY_OPAC_NEUTRINOS_TOPHAT_EMISSIVITY_NEUTRINOS_

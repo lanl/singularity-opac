@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
       std::cerr << "WARNING: problem with HDf5 post H5GCreate call" << std::endl;
     }
     status += H5LTset_attribute_int(file_loc, sMatID.c_str(),
-                                    singularity::opac::SP5::Material::matid, &mat_ID, 1);
+                                    SP5::Material::opacid, &mat_ID, 1);
 
     // return values from c_gchrids, initialized to invalid values
     int nt = -100;
@@ -219,13 +219,13 @@ int main(int argc, char *argv[]) {
     std::array<std::string, 7> mg_opac_keywords{ramg_keyword, rsmg_keyword, rtmg_keyword, pmg_keyword,
                                                 ragray_keyword, rgray_keyword, pgray_keyword};
     std::array<std::string, 7> mg_fields{
-        singularity::opac::SP5::MultigroupOpac::RosselandGroupOpacity,
-        singularity::opac::SP5::MultigroupSOpac::RosselandGroupSOpacity,
-        singularity::opac::SP5::IPCRESS::RosselandTotalMultigroupOpacity,
-        singularity::opac::SP5::IPCRESS::PlanckTotalMultigroupOpacity,
-        singularity::opac::SP5::MeanOpac::RosselandMeanOpacity,
-        singularity::opac::SP5::IPCRESS::RosselandTotalGrayOpacity,
-        singularity::opac::SP5::IPCRESS::PlanckTotalGrayOpacity};
+        SP5::MultigroupOpac::RosselandGroupOpacity,
+        SP5::MultigroupSOpac::RosselandGroupSOpacity,
+        SP5::IPCRESS::RosselandTotalMultigroupOpacity,
+        SP5::IPCRESS::PlanckTotalMultigroupOpacity,
+        SP5::MeanOpac::RosselandMeanOpacity,
+        SP5::IPCRESS::RosselandTotalGrayOpacity,
+        SP5::IPCRESS::PlanckTotalGrayOpacity};
 
     // TODO Thread these variables through the input
     bool log_T_rho_hnu = true; // form a new grid from max and min evenly spaced in log10
@@ -249,8 +249,8 @@ int main(int argc, char *argv[]) {
         std::transform(new_group_bounds.begin(), new_group_bounds.end(),
                        new_group_bounds.begin(), [](const double hnu) {
                          return hnu * 1.e3 *
-                                singularity::opac::PhysicalConstantsCGS::eV /
-                                singularity::opac::PhysicalConstantsCGS::h;
+                                singularity::PhysicalConstantsCGS::eV /
+                                singularity::PhysicalConstantsCGS::h;
                        });
 
         // only save the group bounds once for this material
@@ -261,7 +261,7 @@ int main(int argc, char *argv[]) {
             group_bounds_databox(igroup) = new_group_bounds[igroup];
           }
           status += group_bounds_databox.saveHDF(
-              matGroup, singularity::opac::SP5::Multigroup::GroupBounds);
+              matGroup, SP5::Multigroup::GroupBounds);
           group_bounds_databox.finalize();
         }
         std::cout<<"Saving multigroup databox for "<<mat_ID<<" and "<<key<<std::endl;

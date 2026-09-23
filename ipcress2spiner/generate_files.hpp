@@ -32,11 +32,11 @@ herr_t saveMaterial(hid_t loc, hid_t matGroup, const int matid,
   double zero_offset =0.0;
   herr_t status = 0;
   // Dependent variables metadata
-  status += H5LTset_attribute_string(loc, sMatid.c_str(), singularity::opac::SP5::Offsets::messageName,
-                                     singularity::opac::SP5::Offsets::message);
-  status += H5LTset_attribute_double(loc, sMatid.c_str(), singularity::opac::SP5::Offsets::rho,
+  status += H5LTset_attribute_string(loc, sMatid.c_str(), SP5::Offsets::opac_messageName,
+                                     SP5::Offsets::opac_message);
+  status += H5LTset_attribute_double(loc, sMatid.c_str(), SP5::Offsets::opac_rho,
                                      &zero_offset, 1);
-  status += H5LTset_attribute_double(loc, sMatid.c_str(), singularity::opac::SP5::Offsets::T, &zero_offset, 1);
+  status += H5LTset_attribute_double(loc, sMatid.c_str(), SP5::Offsets::opac_T, &zero_offset, 1);
 
   status += opacity.saveHDF(matGroup, sp5_field_name);
 

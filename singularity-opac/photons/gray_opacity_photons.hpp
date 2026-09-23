@@ -23,7 +23,7 @@
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/photons/thermal_distributions_photons.hpp>
 
-namespace singularity::opac {
+namespace singularity {
 namespace photons {
 
 template <typename pc = PhysicalConstantsCGS>
@@ -175,6 +175,6 @@ class GrayOpacity {
 };
 
 } // namespace photons
-} // namespace singularity::opac
+} // namespace singularity
 
 #endif // SINGULARITY_OPAC_PHOTONS_GRAY_OPACITY_PHOTONS_

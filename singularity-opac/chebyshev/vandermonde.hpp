@@ -17,7 +17,7 @@
 
 #include "ports-of-call/portability.hpp"
 
-namespace singularity::opac {
+namespace singularity {
 namespace chebyshev {
 
 // Inverse Vandermonde matrices computed via Mathematica
@@ -836,6 +836,6 @@ PORTABLE_INLINE_FUNCTION void get_vmbox(Real *r) {
 }
 
 } // namespace chebyshev
-} // namespace singularity::opac
+} // namespace singularity
 
 #endif // SINGULARITY_OPAC_CHEBYSHEV_VANDERMONDE_

@@ -16,8 +16,6 @@
 #define SINGULARITY_OPAC_BASE_SP5_
 // This file was made in part with generative AI.
 
-namespace singularity::opac {
-
 namespace SP5 {
 
 namespace Opac {
@@ -55,20 +53,19 @@ constexpr char RosselandGroupSOpacity[] = "Rosseland group scattering opacity";
 } // namespace MultigroupSOpac
 
 namespace Offsets {
-constexpr char messageName[] = "interpretation";
-constexpr char message[] =
+constexpr char opac_messageName[] = "opac_interpretation";
+constexpr char opac_message[] =
     "Opacity quantities are functions of log_10(X)\n"
     "for X = density rho or temperature T; group boundaries nu are physical\n"
     "frequency values in Hz and are indexed directly.\n";
-constexpr char rho[] = "rhoOffset";
-constexpr char T[] = "TOffset";
-constexpr char group_bounds[] = "groupBoundsOffset";
+constexpr char opac_rho[] = "opac_rhoOffset";
+constexpr char opac_T[] = "opac_TOffset";
 } // namespace Offsets
 
 namespace Material {
-constexpr char comments[] = "comments";
-constexpr char matid[] = "matid";
-constexpr char name[] = "name";
+constexpr char opac_comments[] = "opac_comments";
+constexpr char opacid[] = "opacid";
+constexpr char opac_name[] = "opac_name";
 } // namespace Material
 
 // IPCRESS-only quantities
@@ -82,7 +79,5 @@ constexpr char PlanckTotalGrayOpacity[] = "planck total gray opacity";
 } // namespace IPCRESS
 
 } // namespace SP5
-
-} // namespace singularity::opac
 
 #endif // SINGULARITY_OPAC_BASE_SP5_
