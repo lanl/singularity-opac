@@ -27,6 +27,7 @@
 #include <spiner/databox.hpp>
 
 #ifdef SPINER_USE_HDF
+#include <filesystem>
 #include <hdf5.h>
 #include <hdf5_hl.h>
 #include <optional>
@@ -44,12 +45,92 @@ using MeanUtilsDataBox = Spiner::DataBox<Real>;
 constexpr hid_t MaterialNotFound = -1;
 constexpr hid_t MaterialAmbiguous = -2;
 
-// A material group's link name is its name: Save() keys the group by the name
-// it is given, so a name resolves with a single path lookup. An opacid is not a
-// key -- it is recorded as an attribute, including on name-keyed groups -- so
-// resolving one means reading that attribute from each root group. The scan
-// counts every match, and an opacid carried by more than one group is reported
-// as ambiguous rather than resolved by iteration order.
+// Suppresses HDF5's automatic error printing for the current scope and restores
+// whatever handler was installed on the way out.
+class ScopedH5ErrorHandler {
+ public:
+  ScopedH5ErrorHandler() {
+    H5Eget_auto2(H5E_DEFAULT, &func_, &data_);
+    H5Eset_auto2(H5E_DEFAULT, nullptr, nullptr);
+  }
+  ~ScopedH5ErrorHandler() { H5Eset_auto2(H5E_DEFAULT, func_, data_); }
+  ScopedH5ErrorHandler(const ScopedH5ErrorHandler &) = delete;
+  ScopedH5ErrorHandler &operator=(const ScopedH5ErrorHandler &) = delete;
+
+ private:
+  H5E_auto2_t func_ = nullptr;
+  void *data_ = nullptr;
+};
+
+inline void FailH5(const std::string &what) {
+  const std::string message =
+      "photons multigroup: HDF5 error while " + what + "\n";
+  OPAC_ERROR(message.c_str());
+}
+
+inline void RequireH5Success(const herr_t status, const std::string &what) {
+  if (status != H5_SUCCESS) FailH5(what);
+}
+
+inline hid_t OpenFileRead(const std::string &filename) {
+  if (!std::filesystem::exists(filename)) {
+    const std::string message =
+        "photons multigroup: HDF5 file does not exist: " + filename + "\n";
+    OPAC_ERROR(message.c_str());
+  }
+  const hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+  if (file < 0) FailH5("opening " + filename + " for reading");
+  return file;
+}
+
+inline hid_t OpenFileWrite(const std::string &filename, const bool append) {
+  const hid_t file = append
+                         ? H5Fopen(filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT)
+                         : H5Fcreate(filename.c_str(), H5F_ACC_TRUNC,
+                                     H5P_DEFAULT, H5P_DEFAULT);
+  if (file < 0) {
+    FailH5(std::string(append ? "opening " : "creating ") + filename +
+           " for writing");
+  }
+  return file;
+}
+
+inline void CloseFile(const hid_t file) {
+  RequireH5Success(H5Fclose(file), "closing HDF5 file");
+}
+
+inline void CloseGroup(const hid_t group) {
+  RequireH5Success(H5Gclose(group), "closing HDF5 group");
+}
+
+inline hid_t CreateOrOpenGroup(const hid_t file, const std::string &path,
+                               const bool reuse_existing) {
+  const bool reuse =
+      reuse_existing && H5Lexists(file, path.c_str(), H5P_DEFAULT) > 0;
+  const hid_t group = reuse ? H5Gopen(file, path.c_str(), H5P_DEFAULT)
+                            : H5Gcreate(file, path.c_str(), H5P_DEFAULT,
+                                        H5P_DEFAULT, H5P_DEFAULT);
+  if (group < 0) {
+    FailH5(std::string(reuse ? "opening" : "creating") + " material group " +
+           path);
+  }
+  return group;
+}
+
+inline void SetAttribute(const hid_t file, const std::string &path,
+                         const char *name, const int value) {
+  RequireH5Success(H5LTset_attribute_int(file, path.c_str(), name, &value, 1),
+                   "writing attribute " + std::string(name) + " on " + path);
+}
+
+inline void SetAttribute(const hid_t file, const std::string &path,
+                         const char *name, const std::string &value) {
+  RequireH5Success(
+      H5LTset_attribute_string(file, path.c_str(), name, value.c_str()),
+      "writing attribute " + std::string(name) + " on " + path);
+}
+
+// State for the root-group scan that matches an opacid attribute.
 struct MaterialOpacidSearch {
   int requested = 0;
   std::string path;
@@ -86,6 +167,7 @@ inline herr_t FindMaterialByOpacid(hid_t file, const char *link_name,
 
 inline hid_t OpenMaterialGroupByName(const hid_t file,
                                      const std::string &name) {
+  ScopedH5ErrorHandler h5_errors;
   const std::string path = "/" + name;
   if (H5Lexists(file, path.c_str(), H5P_DEFAULT) <= 0 ||
       !LinkIsGroup(file, path.c_str())) {
@@ -95,6 +177,7 @@ inline hid_t OpenMaterialGroupByName(const hid_t file,
 }
 
 inline hid_t OpenMaterialGroupByOpacid(const hid_t file, const int opacid) {
+  ScopedH5ErrorHandler h5_errors;
   const std::string direct_path = "/" + std::to_string(opacid);
   if (H5Lexists(file, direct_path.c_str(), H5P_DEFAULT) > 0 &&
       LinkIsGroup(file, direct_path.c_str())) {
@@ -130,9 +213,16 @@ inline hid_t OpenMaterialGroup(const hid_t file,
   return MaterialNotFound;
 }
 
-inline herr_t LoadGroupBounds(const hid_t material, const char *field,
-                              MeanUtilsDataBox &bounds) {
-  return bounds.loadHDF(material, field);
+inline void SaveDataBox(const hid_t material, const char *field,
+                        const MeanUtilsDataBox &data) {
+  RequireH5Success(data.saveHDF(material, field),
+                   "writing " + std::string(field));
+}
+
+inline void LoadDataBox(const hid_t material, const char *field,
+                        MeanUtilsDataBox &data) {
+  RequireH5Success(data.loadHDF(material, field),
+                   "reading " + std::string(field));
 }
 #endif
 

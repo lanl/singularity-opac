@@ -53,9 +53,9 @@ TEST_CASE("Photon multigroup gray opacities are exact", "[MultigroupPhotons]") {
                                                       1.e14, 3.e15};
 
   photons::Gray opac_host(kappa);
-  photons::MeanOpacityBase multigroup_host(
-      opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, group_bounds,
-      ngroups, nnu_per_group);
+  photons::MeanOpacityBase multigroup_host(opac_host, lRhoMin, lRhoMax, NRho,
+                                           lTMin, lTMax, NT, group_bounds,
+                                           ngroups, nnu_per_group);
   auto multigroup = multigroup_host.GetOnDevice();
 
   REQUIRE(multigroup_host.ngroups() == ngroups);
@@ -130,7 +130,7 @@ TEST_CASE("Photon multigroup can be constructed from pretabulated Spiner data",
   }
 
   photons::MeanOpacityBase multigroup_host(kappa_planck, kappa_rosseland,
-                                                 group_bounds);
+                                           group_bounds);
 
   const Real rho_test = std::pow(10., 0.5 * (lRhoMin + lRhoMax));
   const Real temp_test = std::pow(10., 0.5 * (lTMin + lTMax));
@@ -160,7 +160,7 @@ TEST_CASE("Photon multigroup can be constructed from pretabulated Spiner data",
   const std::array<Real, ngroups> nu_probe = {
       0.5 * nu_min, std::sqrt(nu_min * nu_max), 2. * nu_max};
   photons::MeanOpacityBase with_tail_bounds(kappa_planck, kappa_rosseland,
-                                                  tail_group_bounds);
+                                            tail_group_bounds);
 
   REQUIRE(with_tail_bounds.HasGroupBounds());
   REQUIRE(with_tail_bounds.GroupOfNu(0.) == 0);
@@ -223,8 +223,7 @@ TEST_CASE("Photon multigroup tables can round-trip through SP5 HDF",
     }
   }
 
-  photons::MeanOpacityBase saved(kappa_planck, kappa_rosseland,
-                                       group_bounds);
+  photons::MeanOpacityBase saved(kappa_planck, kappa_rosseland, group_bounds);
   const char *filename = "multigroup-photon-table.sp5";
   const char *name_only_filename = "multigroup-photon-table-name-only.sp5";
   const char *material_name = "test-material";
@@ -277,9 +276,112 @@ TEST_CASE("Photon multigroup tables can round-trip through SP5 HDF",
 
   loaded.Finalize();
   loaded_by_name.Finalize();
+  loaded_by_id.Finalize();
   saved.Finalize();
   kappa_planck.finalize();
   kappa_rosseland.finalize();
+}
+
+TEST_CASE(
+    "Photon multigroup materials may share an opacid under distinct names",
+    "[MultigroupPhotons]") {
+  constexpr int NRho = 3;
+  constexpr int NT = 3;
+  constexpr int ngroups = 3;
+  const Real lRhoMin = -4.;
+  const Real lRhoMax = 2.;
+  const Real lTMin = 2.;
+  const Real lTMax = 8.;
+  constexpr Real nu_min = 2.e11;
+  constexpr Real nu_max = 4.e11;
+  const std::array<Real, ngroups + 1> group_bounds = {
+      0., nu_min, nu_max, std::numeric_limits<Real>::infinity()};
+  using DataBox = Spiner::DataBox<Real>;
+
+  // Two tables derived from one reference, distinguished only by name.
+  constexpr int shared_opacid = 42;
+  constexpr Real multiplier = 9.;
+  const char *reference_name = "reference";
+  const char *scaled_name = "scaled";
+  const char *filename = "multigroup-photon-shared-opacid.sp5";
+
+  DataBox kappa_reference(NRho, NT, ngroups);
+  kappa_reference.setRange(1, lTMin, lTMax, NT);
+  kappa_reference.setRange(2, lRhoMin, lRhoMax, NRho);
+  DataBox kappa_scaled;
+  kappa_scaled.copyMetadata(kappa_reference);
+  for (int iRho = 0; iRho < NRho; ++iRho) {
+    for (int iT = 0; iT < NT; ++iT) {
+      for (int group = 0; group < ngroups; ++group) {
+        const Real base = 1.e-2 * (1. + iRho + 2. * iT + 3. * group);
+        kappa_reference(iRho, iT, group) = base;
+        kappa_scaled(iRho, iT, group) = multiplier * base;
+      }
+    }
+  }
+
+  photons::MeanOpacityBase reference(kappa_reference, kappa_reference,
+                                     group_bounds);
+  photons::MeanOpacityBase scaled(kappa_scaled, kappa_scaled, group_bounds);
+  reference.Save(filename, shared_opacid, reference_name);
+  scaled.Save(filename, shared_opacid, scaled_name, true);
+
+  // Both groups carry opacid 42, so the name is what disambiguates them.
+  photons::MeanOpacityBase loaded_reference(filename, shared_opacid,
+                                            reference_name);
+  photons::MeanOpacityBase loaded_scaled(filename, shared_opacid, scaled_name);
+  photons::MeanOpacityBase scaled_by_name(filename, std::string(scaled_name));
+
+  REQUIRE(loaded_reference.ngroups() == ngroups);
+  REQUIRE(loaded_scaled.ngroups() == ngroups);
+  REQUIRE(scaled_by_name.ngroups() == ngroups);
+
+  for (int iRho = 0; iRho < NRho; ++iRho) {
+    const Real rho_test =
+        std::pow(10., lRhoMin + (lRhoMax - lRhoMin) / (NRho - 1) * iRho);
+    for (int iT = 0; iT < NT; ++iT) {
+      const Real temp_test =
+          std::pow(10., lTMin + (lTMax - lTMin) / (NT - 1) * iT);
+      for (int group = 0; group < ngroups; ++group) {
+        const Real alpha_reference_expected =
+            rho_test * kappa_reference(iRho, iT, group);
+        const Real alpha_scaled_expected =
+            rho_test * kappa_scaled(iRho, iT, group);
+        REQUIRE(FractionalDifference(
+                    loaded_reference.PlanckGroupAbsorptionCoefficient(
+                        rho_test, temp_test, group),
+                    alpha_reference_expected) < EPS_TEST);
+        REQUIRE(
+            FractionalDifference(loaded_scaled.PlanckGroupAbsorptionCoefficient(
+                                     rho_test, temp_test, group),
+                                 alpha_scaled_expected) < EPS_TEST);
+        REQUIRE(FractionalDifference(
+                    scaled_by_name.PlanckGroupAbsorptionCoefficient(
+                        rho_test, temp_test, group),
+                    alpha_scaled_expected) < EPS_TEST);
+      }
+    }
+  }
+
+  // The opacid alone no longer identifies a single group, so resolving on it
+  // is reported as ambiguous instead of picking one of the two.
+  hid_t file = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+  REQUIRE(file >= 0);
+  REQUIRE(photons::impl::OpenMaterialGroupByOpacid(file, shared_opacid) ==
+          photons::impl::MaterialAmbiguous);
+  REQUIRE(photons::impl::OpenMaterialGroupByOpacid(file, shared_opacid + 1) ==
+          photons::impl::MaterialNotFound);
+  REQUIRE(photons::impl::OpenMaterialGroupByName(file, "no-such-material") ==
+          photons::impl::MaterialNotFound);
+  H5Fclose(file);
+
+  loaded_reference.Finalize();
+  loaded_scaled.Finalize();
+  scaled_by_name.Finalize();
+  reference.Finalize();
+  scaled.Finalize();
+  kappa_reference.finalize();
+  kappa_scaled.finalize();
 }
 #endif
 
@@ -315,7 +417,7 @@ TEST_CASE("Photon multigroup frequency lookup uses half-open group bounds",
   }
 
   photons::MeanOpacityBase multigroup_host(kappa_planck, kappa_rosseland,
-                                                 group_bounds);
+                                           group_bounds);
   photons::MeanOpacity multigroup = multigroup_host;
 
   REQUIRE(multigroup.HasGroupBounds());
@@ -338,7 +440,8 @@ TEST_CASE("Photon multigroup frequency lookup uses half-open group bounds",
           EPS_TEST);
   REQUIRE(FractionalDifference(
               multigroup.AbsorptionCoefficientFromNu(rho, temp, nu_mid),
-              multigroup.AbsorptionCoefficient(rho, temp, 1, photons::Rosseland)) < EPS_TEST);
+              multigroup.AbsorptionCoefficient(rho, temp, 1,
+                                               photons::Rosseland)) < EPS_TEST);
 
   multigroup.Finalize();
   kappa_planck.finalize();
@@ -379,13 +482,11 @@ TEST_CASE("Photon multigroup non-CGS wrapper converts units",
   }
 
   photons::MeanOpacityBase reference_host(kappa_planck, kappa_rosseland,
-                                                group_bounds);
+                                          group_bounds);
   photons::MeanOpacityBase multigroup_base(kappa_planck, kappa_rosseland,
-                                                 group_bounds);
-  auto funny_host =
-      photons::MeanNonCGSUnits<photons::MeanOpacityBase>(
-          std::move(multigroup_base), time_unit, mass_unit, length_unit,
-          temp_unit);
+                                           group_bounds);
+  auto funny_host = photons::MeanNonCGSUnits<photons::MeanOpacityBase>(
+      std::move(multigroup_base), time_unit, mass_unit, length_unit, temp_unit);
 
   REQUIRE(funny_host.ngroups() == ngroups);
   REQUIRE(funny_host.HasGroupBounds());
@@ -453,8 +554,9 @@ TEST_CASE("Photon multigroup non-CGS wrapper converts units",
   kappa_rosseland.finalize();
 }
 
-TEST_CASE("Photon multigroup scattering non-CGS wrapper reports code-unit constants",
-          "[MultigroupPhotons][MultigroupScattering]") {
+TEST_CASE(
+    "Photon multigroup scattering non-CGS wrapper reports code-unit constants",
+    "[MultigroupPhotons][MultigroupScattering]") {
   constexpr Real time_unit = 11.;
   constexpr Real mass_unit = 13.;
   constexpr Real length_unit = 17.;
@@ -500,16 +602,14 @@ TEST_CASE("Photon multigroup non-CGS wrapper works for monochromatic-built "
                                                       1.e14, 3.e15};
 
   photons::Gray opac_host(kappa);
-  photons::MeanOpacityBase reference_host(
-      opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, group_bounds,
-      ngroups, nnu_per_group);
-  photons::MeanOpacityBase multigroup_base(
-      opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, group_bounds,
-      ngroups, nnu_per_group);
-  auto funny_host =
-      photons::MeanNonCGSUnits<photons::MeanOpacityBase>(
-          std::move(multigroup_base), time_unit, mass_unit, length_unit,
-          temp_unit);
+  photons::MeanOpacityBase reference_host(opac_host, lRhoMin, lRhoMax, NRho,
+                                          lTMin, lTMax, NT, group_bounds,
+                                          ngroups, nnu_per_group);
+  photons::MeanOpacityBase multigroup_base(opac_host, lRhoMin, lRhoMax, NRho,
+                                           lTMin, lTMax, NT, group_bounds,
+                                           ngroups, nnu_per_group);
+  auto funny_host = photons::MeanNonCGSUnits<photons::MeanOpacityBase>(
+      std::move(multigroup_base), time_unit, mass_unit, length_unit, temp_unit);
   auto funny = funny_host.GetOnDevice();
 
   REQUIRE(funny.ngroups() == ngroups);
@@ -663,9 +763,9 @@ TEST_CASE("Photon multigroup with tail groups 0 to nu_mid and nu_mid to "
       0., nu_mid, std::numeric_limits<Real>::infinity()};
 
   photons::Gray opac_host(kappa);
-  photons::MeanOpacityBase multigroup_host(
-      opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, tail_bounds, ngroups,
-      nnu_per_group);
+  photons::MeanOpacityBase multigroup_host(opac_host, lRhoMin, lRhoMax, NRho,
+                                           lTMin, lTMax, NT, tail_bounds,
+                                           ngroups, nnu_per_group);
 
   REQUIRE(multigroup_host.ngroups() == ngroups);
 
@@ -729,9 +829,9 @@ TEST_CASE("Photon multigroup with asymmetric tail groups is numerically stable",
       std::numeric_limits<Real>::infinity()};
 
   photons::Gray opac_host(kappa);
-  photons::MeanOpacityBase multigroup_host(
-      opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, asymmetric_bounds,
-      ngroups, nnu_per_group);
+  photons::MeanOpacityBase multigroup_host(opac_host, lRhoMin, lRhoMax, NRho,
+                                           lTMin, lTMax, NT, asymmetric_bounds,
+                                           ngroups, nnu_per_group);
 
   REQUIRE(multigroup_host.ngroups() == ngroups);
 
@@ -780,9 +880,9 @@ TEST_CASE("Photon multigroup with single group 0 to nuMax recovers gray "
   const std::array<Real, ngroups + 1> low_tail_bounds = {0., nu_max};
 
   photons::Gray opac_host(kappa);
-  photons::MeanOpacityBase multigroup_host(
-      opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, low_tail_bounds,
-      ngroups, nnu_per_group);
+  photons::MeanOpacityBase multigroup_host(opac_host, lRhoMin, lRhoMax, NRho,
+                                           lTMin, lTMax, NT, low_tail_bounds,
+                                           ngroups, nnu_per_group);
 
   REQUIRE(multigroup_host.ngroups() == ngroups);
   REQUIRE(multigroup_host.HasGroupBounds());
@@ -841,9 +941,9 @@ TEST_CASE("Photon multigroup with single group nuMin to infinity recovers "
       nu_min, std::numeric_limits<Real>::infinity()};
 
   photons::Gray opac_host(kappa);
-  photons::MeanOpacityBase multigroup_host(
-      opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, high_tail_bounds,
-      ngroups, nnu_per_group);
+  photons::MeanOpacityBase multigroup_host(opac_host, lRhoMin, lRhoMax, NRho,
+                                           lTMin, lTMax, NT, high_tail_bounds,
+                                           ngroups, nnu_per_group);
 
   REQUIRE(multigroup_host.ngroups() == ngroups);
   REQUIRE(multigroup_host.HasGroupBounds());
@@ -904,9 +1004,9 @@ TEST_CASE("Photon multigroup GroupOfNu handles extreme bounds correctly",
       0., nu_low, nu_high, std::numeric_limits<Real>::infinity()};
 
   photons::Gray opac_host(kappa);
-  photons::MeanOpacityBase multigroup_host(
-      opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, extreme_bounds,
-      ngroups, nnu_per_group);
+  photons::MeanOpacityBase multigroup_host(opac_host, lRhoMin, lRhoMax, NRho,
+                                           lTMin, lTMax, NT, extreme_bounds,
+                                           ngroups, nnu_per_group);
 
   REQUIRE(multigroup_host.ngroups() == ngroups);
   REQUIRE(multigroup_host.HasGroupBounds());
@@ -971,9 +1071,9 @@ TEST_CASE("Photon multigroup gray scattering opacities are exact",
                                                       1.e14, 3.e15};
 
   photons::GraySOpacity<PhysicalConstantsCGS> s_opac_host(sigma, apm);
-  photons::MeanSOpacityBase multigroup_host(
-      s_opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, group_bounds,
-      ngroups, nnu_per_group);
+  photons::MeanSOpacityBase multigroup_host(s_opac_host, lRhoMin, lRhoMax, NRho,
+                                            lTMin, lTMax, NT, group_bounds,
+                                            ngroups, nnu_per_group);
 
   REQUIRE(multigroup_host.ngroups() == ngroups);
 
@@ -1052,9 +1152,9 @@ TEST_CASE("Photon multigroup scattering GroupOfNu handles extreme bounds",
       0., nu_low, nu_high, std::numeric_limits<Real>::infinity()};
 
   photons::GraySOpacity<PhysicalConstantsCGS> s_opac_host(sigma, apm);
-  photons::MeanSOpacityBase multigroup_host(
-      s_opac_host, lRhoMin, lRhoMax, NRho, lTMin, lTMax, NT, extreme_bounds,
-      ngroups, nnu_per_group);
+  photons::MeanSOpacityBase multigroup_host(s_opac_host, lRhoMin, lRhoMax, NRho,
+                                            lTMin, lTMax, NT, extreme_bounds,
+                                            ngroups, nnu_per_group);
 
   REQUIRE(multigroup_host.ngroups() == ngroups);
   REQUIRE(multigroup_host.HasGroupBounds());
@@ -1155,7 +1255,101 @@ TEST_CASE("Photon multigroup scattering tables can round-trip through SP5 HDF",
 
   loaded.Finalize();
   loaded_by_name.Finalize();
+  loaded_by_id.Finalize();
   saved.Finalize();
   sigma_rosseland.finalize();
+}
+
+TEST_CASE("Photon multigroup scattering materials may share an opacid under "
+          "distinct names",
+          "[MultigroupPhotons][MultigroupScattering]") {
+  using DataBox = Spiner::DataBox<Real>;
+
+  constexpr int NRho = 2;
+  constexpr int NT = 2;
+  constexpr int ngroups = 3;
+  constexpr Real sigma0 = 1.5e-24;
+  constexpr Real multiplier = 9.;
+  const Real lRhoMin = -4.;
+  const Real lRhoMax = 2.;
+  const Real lTMin = 2.;
+  const Real lTMax = 8.;
+  constexpr Real nu_min = 2.e11;
+  constexpr Real nu_max = 4.e11;
+  const std::array<Real, ngroups + 1> group_bounds = {
+      0., nu_min, nu_max, std::numeric_limits<Real>::infinity()};
+
+  constexpr int shared_opacid = 42;
+  const char *reference_name = "reference";
+  const char *scaled_name = "scaled";
+  const char *filename = "multigroup-photon-scattering-shared-opacid.sp5";
+
+  DataBox sigma_reference(NRho, NT, ngroups);
+  sigma_reference.setRange(1, lTMin, lTMax, NT);
+  sigma_reference.setRange(2, lRhoMin, lRhoMax, NRho);
+  DataBox sigma_scaled;
+  sigma_scaled.copyMetadata(sigma_reference);
+
+  for (int iRho = 0; iRho < NRho; ++iRho) {
+    const Real rho = std::pow(10., sigma_reference.range(2).x(iRho));
+    for (int iT = 0; iT < NT; ++iT) {
+      for (int group = 0; group < ngroups; ++group) {
+        const Real base = sigma0 * rho / (group + 1.);
+        sigma_reference(iRho, iT, group) = base;
+        sigma_scaled(iRho, iT, group) = multiplier * base;
+      }
+    }
+  }
+
+  photons::MeanSOpacityBase reference(sigma_reference, group_bounds);
+  photons::MeanSOpacityBase scaled(sigma_scaled, group_bounds);
+  reference.Save(filename, shared_opacid, reference_name);
+  scaled.Save(filename, shared_opacid, scaled_name, true);
+
+  photons::MeanSOpacityBase loaded_reference(filename, shared_opacid,
+                                             reference_name);
+  photons::MeanSOpacityBase loaded_scaled(filename, shared_opacid, scaled_name);
+  photons::MeanSOpacityBase scaled_by_name(filename, std::string(scaled_name));
+
+  for (int iRho = 0; iRho < NRho; ++iRho) {
+    const Real rho_test =
+        std::pow(10., lRhoMin + (lRhoMax - lRhoMin) / (NRho - 1) * iRho);
+    for (int iT = 0; iT < NT; ++iT) {
+      const Real temp_test =
+          std::pow(10., lTMin + (lTMax - lTMin) / (NT - 1) * iT);
+      for (int group = 0; group < ngroups; ++group) {
+        const Real alpha_reference_expected =
+            rho_test * sigma_reference(iRho, iT, group);
+        const Real alpha_scaled_expected =
+            rho_test * sigma_scaled(iRho, iT, group);
+        REQUIRE(FractionalDifference(
+                    loaded_reference.RosselandGroupScatteringCoefficient(
+                        rho_test, temp_test, group),
+                    alpha_reference_expected) < EPS_TEST);
+        REQUIRE(FractionalDifference(
+                    loaded_scaled.RosselandGroupScatteringCoefficient(
+                        rho_test, temp_test, group),
+                    alpha_scaled_expected) < EPS_TEST);
+        REQUIRE(FractionalDifference(
+                    scaled_by_name.RosselandGroupScatteringCoefficient(
+                        rho_test, temp_test, group),
+                    alpha_scaled_expected) < EPS_TEST);
+      }
+    }
+  }
+
+  hid_t file = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+  REQUIRE(file >= 0);
+  REQUIRE(photons::impl::OpenMaterialGroupByOpacid(file, shared_opacid) ==
+          photons::impl::MaterialAmbiguous);
+  H5Fclose(file);
+
+  loaded_reference.Finalize();
+  loaded_scaled.Finalize();
+  scaled_by_name.Finalize();
+  reference.Finalize();
+  scaled.Finalize();
+  sigma_reference.finalize();
+  sigma_scaled.finalize();
 }
 #endif
