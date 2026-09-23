@@ -282,6 +282,77 @@ TEST_CASE("Photon multigroup tables can round-trip through SP5 HDF",
   kappa_rosseland.finalize();
 }
 
+TEST_CASE("Photon multigroup tables round-trip with only one average present",
+          "[MultigroupPhotons]") {
+  constexpr int NRho = 2;
+  constexpr int NT = 2;
+  constexpr int ngroups = 3;
+  const Real lRhoMin = -4.;
+  const Real lRhoMax = 2.;
+  const Real lTMin = 2.;
+  const Real lTMax = 8.;
+  constexpr Real nu_min = 2.e11;
+  constexpr Real nu_max = 4.e11;
+  const std::array<Real, ngroups + 1> group_bounds = {
+      0., nu_min, nu_max, std::numeric_limits<Real>::infinity()};
+  using DataBox = Spiner::DataBox<Real>;
+
+  DataBox kappa(NRho, NT, ngroups);
+  kappa.setRange(1, lTMin, lTMax, NT);
+  kappa.setRange(2, lRhoMin, lRhoMax, NRho);
+  for (int iRho = 0; iRho < NRho; ++iRho) {
+    for (int iT = 0; iT < NT; ++iT) {
+      for (int group = 0; group < ngroups; ++group) {
+        kappa(iRho, iT, group) = 1.e-2 * (1. + iRho + 2. * iT + 3. * group);
+      }
+    }
+  }
+
+  const int gmodes[2] = {photons::Planck, photons::Rosseland};
+  const char *filenames[2] = {"multigroup-photon-table-planck-only.sp5",
+                              "multigroup-photon-table-rosseland-only.sp5"};
+  for (int i = 0; i < 2; ++i) {
+    const bool is_planck = (gmodes[i] == photons::Planck);
+    photons::MeanOpacityBase saved(kappa, gmodes[i], group_bounds);
+    REQUIRE(saved.HasPlanckOpacity() == is_planck);
+    REQUIRE(saved.HasRosselandOpacity() == !is_planck);
+
+    saved.Save(filenames[i], 7, "single-average-material");
+    photons::MeanOpacityBase loaded(filenames[i], "single-average-material");
+    REQUIRE(loaded.HasPlanckOpacity() == is_planck);
+    REQUIRE(loaded.HasRosselandOpacity() == !is_planck);
+    REQUIRE(loaded.ngroups() == ngroups);
+
+    photons::MeanOpacityBase on_device = loaded.GetOnDevice();
+    REQUIRE(on_device.HasPlanckOpacity() == is_planck);
+    REQUIRE(on_device.HasRosselandOpacity() == !is_planck);
+
+    for (int iRho = 0; iRho < NRho; ++iRho) {
+      const Real rho_test =
+          std::pow(10., lRhoMin + (lRhoMax - lRhoMin) / (NRho - 1) * iRho);
+      for (int iT = 0; iT < NT; ++iT) {
+        const Real temp_test =
+            std::pow(10., lTMin + (lTMax - lTMin) / (NT - 1) * iT);
+        for (int group = 0; group < ngroups; ++group) {
+          const Real alpha_expected = rho_test * kappa(iRho, iT, group);
+          const Real alpha = is_planck
+                                 ? loaded.PlanckGroupAbsorptionCoefficient(
+                                       rho_test, temp_test, group)
+                                 : loaded.RosselandGroupAbsorptionCoefficient(
+                                       rho_test, temp_test, group);
+          REQUIRE(FractionalDifference(alpha, alpha_expected) < EPS_TEST);
+        }
+      }
+    }
+
+    on_device.Finalize();
+    loaded.Finalize();
+    saved.Finalize();
+  }
+
+  kappa.finalize();
+}
+
 TEST_CASE(
     "Photon multigroup materials may share an opacid under distinct names",
     "[MultigroupPhotons]") {
