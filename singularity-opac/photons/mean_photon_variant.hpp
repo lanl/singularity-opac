@@ -94,12 +94,6 @@ class MeanVariant {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real AbsorptionCoefficient(const Real rho, const Real temp,
-                             const int gmode = Rosseland) const {
-    return AbsorptionCoefficient(rho, temp, 0, gmode);
-  }
-
-  PORTABLE_INLINE_FUNCTION
   Real Emissivity(const Real rho, const Real temp, const int gmode = Rosseland,
                   Real *lambda = nullptr) const {
     return PortsOfCall::visit(
@@ -147,7 +141,7 @@ class MeanVariant {
 
   PORTABLE_INLINE_FUNCTION
   Real AbsorptionCoefficient(const Real rho, const Real temp, const int group,
-                             const int gmode) const {
+                             const int gmode = Rosseland) const {
     return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.AbsorptionCoefficient(rho, temp, group, gmode);

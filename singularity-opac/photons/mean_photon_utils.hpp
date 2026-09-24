@@ -84,12 +84,13 @@ inline hid_t OpenFileRead(const std::string &filename) {
 }
 
 inline hid_t OpenFileWrite(const std::string &filename, const bool append) {
-  const hid_t file = append
+  const bool reuse = append && std::filesystem::exists(filename);
+  const hid_t file = reuse
                          ? H5Fopen(filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT)
                          : H5Fcreate(filename.c_str(), H5F_ACC_TRUNC,
                                      H5P_DEFAULT, H5P_DEFAULT);
   if (file < 0) {
-    FailH5(std::string(append ? "opening " : "creating ") + filename +
+    FailH5(std::string(reuse ? "opening " : "creating ") + filename +
            " for writing");
   }
   return file;
@@ -130,11 +131,15 @@ inline void SetAttribute(const hid_t file, const std::string &path,
       "writing attribute " + std::string(name) + " on " + path);
 }
 
-// State for the root-group scan that matches an opacid attribute.
+// State for the root-group scan that matches an opacid attribute. A group whose
+// own name is the opacid is tracked separately, since it claims that opacid
+// whether or not it also carries the attribute.
 struct MaterialOpacidSearch {
   int requested = 0;
+  std::string direct_name;
   std::string path;
   int matches = 0;
+  bool direct_matched = false;
 };
 
 inline bool LinkIsGroup(const hid_t loc, const char *link_name) {
@@ -160,9 +165,18 @@ inline herr_t FindMaterialByOpacid(hid_t file, const char *link_name,
     return 0;
   }
   search->matches += 1;
+  if (link_name == search->direct_name) search->direct_matched = true;
   if (search->path.empty()) search->path = "/" + std::string(link_name);
   // Keep iterating so that duplicate opacids are detected rather than masked.
   return 0;
+}
+
+// Opens a group that H5Lexists has already reported as present, so a failure
+// here is a real HDF5 error rather than a missing material.
+inline hid_t OpenExistingGroup(const hid_t file, const std::string &path) {
+  const hid_t group = H5Gopen(file, path.c_str(), H5P_DEFAULT);
+  if (group < 0) FailH5("opening material group " + path);
+  return group;
 }
 
 inline hid_t OpenMaterialGroupByName(const hid_t file,
@@ -173,28 +187,35 @@ inline hid_t OpenMaterialGroupByName(const hid_t file,
       !LinkIsGroup(file, path.c_str())) {
     return MaterialNotFound;
   }
-  return H5Gopen(file, path.c_str(), H5P_DEFAULT);
+  return OpenExistingGroup(file, path);
 }
 
 inline hid_t OpenMaterialGroupByOpacid(const hid_t file, const int opacid) {
   ScopedH5ErrorHandler h5_errors;
-  const std::string direct_path = "/" + std::to_string(opacid);
-  if (H5Lexists(file, direct_path.c_str(), H5P_DEFAULT) > 0 &&
-      LinkIsGroup(file, direct_path.c_str())) {
-    return H5Gopen(file, direct_path.c_str(), H5P_DEFAULT);
-  }
+  const std::string direct_name = std::to_string(opacid);
+  const std::string direct_path = "/" + direct_name;
+  const bool direct = H5Lexists(file, direct_path.c_str(), H5P_DEFAULT) > 0 &&
+                      LinkIsGroup(file, direct_path.c_str());
 
+  // Scanning happens even when /<opacid> exists, so that a group named for the
+  // opacid and a differently named group carrying it as an attribute collide.
   MaterialOpacidSearch search;
   search.requested = opacid;
-  hid_t root = H5Gopen(file, "/", H5P_DEFAULT);
-  if (root < 0) return MaterialNotFound;
+  search.direct_name = direct_name;
+  const hid_t root = H5Gopen(file, "/", H5P_DEFAULT);
+  if (root < 0) FailH5("opening the root group");
   hsize_t index = 0;
-  H5Literate(root, H5_INDEX_NAME, H5_ITER_NATIVE, &index, FindMaterialByOpacid,
-             &search);
-  H5Gclose(root);
-  if (search.matches > 1) return MaterialAmbiguous;
+  const herr_t status = H5Literate(root, H5_INDEX_NAME, H5_ITER_NATIVE, &index,
+                                   FindMaterialByOpacid, &search);
+  RequireH5Success(H5Gclose(root), "closing the root group");
+  if (status < 0) FailH5("scanning materials for opacid " + direct_name);
+
+  const int claimants =
+      search.matches + (direct && !search.direct_matched ? 1 : 0);
+  if (claimants > 1) return MaterialAmbiguous;
+  if (direct) return OpenExistingGroup(file, direct_path);
   return search.path.empty() ? MaterialNotFound
-                             : H5Gopen(file, search.path.c_str(), H5P_DEFAULT);
+                             : OpenExistingGroup(file, search.path);
 }
 
 struct MaterialSelector {

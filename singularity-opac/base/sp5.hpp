@@ -63,19 +63,20 @@ constexpr char opac_T[] = "opac_TOffset";
 } // namespace Offsets
 
 namespace Material {
-constexpr char opac_comments[] = "opac_comments";
 constexpr char opacid[] = "opacid";
 constexpr char opac_name[] = "opac_name";
+constexpr char opac_multiplier[] = "opac_multiplier";
 } // namespace Material
 
-// IPCRESS-only quantities
+// IPCRESS-only quantities, held in a subgroup of the material group.
 namespace IPCRESS {
+constexpr char GroupName[] = "ipcress";
 constexpr char RosselandTotalMultigroupOpacity[] =
     "rosseland total multigroup opacity";
-constexpr char PlanckTotalMultigroupOpacity[] =
-    "planck total multigroup opacity";
 constexpr char RosselandTotalGrayOpacity[] = "rosseland total gray opacity";
-constexpr char PlanckTotalGrayOpacity[] = "planck total gray opacity";
+constexpr char RosselandGrayAbsorptionOpacity[] =
+    "rosseland gray absorption opacity";
+constexpr char PlanckGrayAbsorptionOpacity[] = "planck gray absorption opacity";
 } // namespace IPCRESS
 
 } // namespace SP5

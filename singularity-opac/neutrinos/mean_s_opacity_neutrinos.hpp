@@ -109,9 +109,9 @@ class MeanSOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real PlanckMeanTotalScatteringCoefficient(const Real rho, const Real temp,
-                                            const Real Ye,
-                                            const RadiationType type) const {
+  Real PlanckMeanScatteringCoefficient(const Real rho, const Real temp,
+                                       const Real Ye,
+                                       const RadiationType type) const {
     Real lRho = toLog_(rho);
     Real lT = toLog_(temp);
     int idx = RadType2Idx(type);
@@ -119,9 +119,9 @@ class MeanSOpacity {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real RosselandMeanTotalScatteringCoefficient(const Real rho, const Real temp,
-                                               const Real Ye,
-                                               const RadiationType type) const {
+  Real RosselandMeanScatteringCoefficient(const Real rho, const Real temp,
+                                          const Real Ye,
+                                          const RadiationType type) const {
     Real lRho = toLog_(rho);
     Real lT = toLog_(temp);
     int idx = RadType2Idx(type);

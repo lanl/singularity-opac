@@ -228,37 +228,44 @@ int main(int argc, char *argv[]) {
     int post_nmg = nmg;
     int post_ngray = ngray;
 
-    std::string ramg_keyword = "ramg";
-    std::string rsmg_keyword = "rsmg";
-    std::string rtmg_keyword = "rtmg";
-    std::string pmg_keyword = "pmg";
-    std::string ragray_keyword = "ragray";
-    std::string rgray_keyword = "rgray";
-    std::string pgray_keyword = "pgray";
+    // IPCRESS key, the SP5 dataset it becomes, whether it is a multigroup or a
+    // gray quantity, and whether singularity-opac reads it.  Archival fields go
+    // into the material's IPCRESS subgroup.
+    struct IpcressField {
+      const char *keyword;
+      const char *sp5_name;
+      bool multigroup;
+      bool archival;
+    };
+    const std::array<IpcressField, 7> ipcress_fields{
+        {{"ramg", SP5::MultigroupOpac::RosselandGroupOpacity, true, false},
+         {"rsmg", SP5::MultigroupSOpac::RosselandGroupSOpacity, true, false},
+         {"pmg", SP5::MultigroupOpac::PlanckGroupOpacity, true, false},
+         {"rtmg", SP5::IPCRESS::RosselandTotalMultigroupOpacity, true, true},
+         {"ragray", SP5::IPCRESS::RosselandGrayAbsorptionOpacity, false, true},
+         {"rgray", SP5::IPCRESS::RosselandTotalGrayOpacity, false, true},
+         {"pgray", SP5::IPCRESS::PlanckGrayAbsorptionOpacity, false, true}}};
 
-    std::array<std::string, 7> mg_opac_keywords{
-        ramg_keyword,   rsmg_keyword,  rtmg_keyword, pmg_keyword,
-        ragray_keyword, rgray_keyword, pgray_keyword};
-    std::array<std::string, 7> mg_fields{
-        SP5::MultigroupOpac::RosselandGroupOpacity,
-        SP5::MultigroupSOpac::RosselandGroupSOpacity,
-        SP5::IPCRESS::RosselandTotalMultigroupOpacity,
-        SP5::IPCRESS::PlanckTotalMultigroupOpacity,
-        SP5::MeanOpac::RosselandMeanOpacity,
-        SP5::IPCRESS::RosselandTotalGrayOpacity,
-        SP5::IPCRESS::PlanckTotalGrayOpacity};
+    hid_t ipcressGroup = H5Gcreate(matGroup, SP5::IPCRESS::GroupName,
+                                   H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    if (ipcressGroup < 0) {
+      std::cerr << "WARNING: could not create IPCRESS subgroup for material "
+                << mat_ID << std::endl;
+      status += -1;
+    }
 
     // TODO Thread these variables through the input
     bool log_T_rho_hnu =
         true; // form a new grid from max and min evenly spaced in log10
 
-    for (size_t i = 0; i < mg_opac_keywords.size(); ++i) {
-      auto key = mg_opac_keywords[i];
-      auto sp5_field_name = mg_fields[i];
+    bool wrote_group_bounds = false;
+    for (const auto &field : ipcress_fields) {
+      std::string key = field.keyword;
+      const hid_t dest = field.archival ? ipcressGroup : matGroup;
       std::cout << "Interpolating and building databox for " << mat_ID
                 << " and " << key << std::endl;
       // multigroup opacities
-      if (key == "ramg" || key == "rsmg" || key == "rtmg" || key == "pmg") {
+      if (field.multigroup) {
         std::vector<double> opacity_data(nmg, 0.0);
         c_ggetmg(filename_char, &mat_ID, key.data(), temperature_points.data(),
                  &nt, &post_nt, density_points.data(), &nrho, &post_nrho,
@@ -278,7 +285,7 @@ int main(int argc, char *argv[]) {
                        });
 
         // only save the group bounds once for this material
-        if (i == 0) {
+        if (!wrote_group_bounds) {
           Spiner::DataBox<double> group_bounds_databox(new_group_bounds.size());
           group_bounds_databox.setIndexType(0, Spiner::IndexType::Indexed);
           for (size_t igroup = 0; igroup < new_group_bounds.size(); ++igroup) {
@@ -287,10 +294,11 @@ int main(int argc, char *argv[]) {
           status += group_bounds_databox.saveHDF(matGroup,
                                                  SP5::Multigroup::GroupBounds);
           group_bounds_databox.finalize();
+          wrote_group_bounds = true;
         }
         std::cout << "Saving multigroup databox for " << mat_ID << " and "
                   << key << std::endl;
-        saveMaterial(file_loc, matGroup, mat_ID, sMatID, sp5_field_name,
+        saveMaterial(file_loc, dest, mat_ID, sMatID, field.sp5_name,
                      spiner_opacity_databox);
       }
       // gray opacites
@@ -306,10 +314,11 @@ int main(int argc, char *argv[]) {
 
         std::cout << "Saving gray databox for " << mat_ID << " and " << key
                   << std::endl;
-        saveMaterial(file_loc, matGroup, mat_ID, sMatID, sp5_field_name,
+        saveMaterial(file_loc, dest, mat_ID, sMatID, field.sp5_name,
                      spiner_opacity_databox);
       }
     }
+    status += H5Gclose(ipcressGroup);
     status += H5Gclose(matGroup);
   }
 

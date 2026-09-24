@@ -75,3 +75,29 @@ set_target_properties(${PROJECT_NAME}_unit_tests
 
 include(Catch)
 catch_discover_tests(${PROJECT_NAME}_unit_tests)
+
+# The SP5 table consistency checks are exercised out of process, by exit code.
+if(SINGULARITY_USE_HDF5)
+  add_executable(test_sp5_table_guards)
+  target_sources(test_sp5_table_guards PRIVATE
+                 test_sp5_table_guards.cpp)
+  target_link_libraries(test_sp5_table_guards
+  PRIVATE
+    ${PROJECT_NAME}
+    singularity-opac::flags)
+  set_target_properties(test_sp5_table_guards
+    PROPERTIES CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS NO)
+
+  foreach(reader absorption scattering)
+    add_test(NAME sp5_table_guards_${reader}_accepts_consistent
+             COMMAND test_sp5_table_guards ${reader}-good)
+    foreach(bad short long flat_rho flat_T)
+      add_test(NAME sp5_table_guards_${reader}_rejects_${bad}
+               COMMAND test_sp5_table_guards ${reader}-${bad})
+      set_tests_properties(sp5_table_guards_${reader}_rejects_${bad}
+                           PROPERTIES WILL_FAIL TRUE)
+    endforeach()
+  endforeach()
+endif()

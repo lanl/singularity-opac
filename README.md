@@ -70,7 +70,6 @@ with the following function signatures:
     RosselandMeanAbsorptionCoefficient(density, temperature)
     PlanckGroupAbsorptionCoefficient(density, temperature, group index)
     RosselandGroupAbsorptionCoefficient(density, temperature, group index)
-    AbsorptionCoefficient(density, temperature, gmode [Planck, Rosseland])
     AbsorptionCoefficient(density, temperature, group index, gmode [Planck, Rosseland])
     Emissivity(density, temperature, gmode [Planck, Rosseland])
     GroupOfNu(frequency)
@@ -95,12 +94,43 @@ dataset. Likewise, a lower tail group `[0, nu_1)` is represented by setting
 the first bound to `0.`. A very large finite number is still interpreted as a
 finite bound.
 
-An SP5 file may contain multiple materials. Neither `matid` nor `name` is
-individually required, but each material must have at least one of them as a
-usable selector. A material group may therefore be keyed by its integer
-`matid`, keyed by its string name, or keyed by `matid` with an additional
-`name` attribute. `MeanOpacity` and `MeanSOpacity` provide constructors and
-`Save` overloads for both selectors.
+An SP5 file may contain multiple materials. Each material is one HDF5 group whose
+name is its `opac_name`. To load a material from an existing file, `MeanOpacity`
+and `MeanSOpacity` provide one constructor taking an integer `opacid` and one
+taking a string `opac_name`,
+
+    MeanOpacity(filename, int opacid)
+    MeanOpacity(filename, std::string opac_name)
+
+and a given load uses exactly one of them.
+
+Which of the two can find a material is fixed when the file is written, since the
+`Save` overloads accept `opac_name`, `opacid`, or both:
+
+| Saved with | Resulting `opac_name` | Can later be loaded by |
+| ---------- | --------------------- | ---------------------- |
+| `opac_name` | as given | `opac_name` |
+| `opacid` | the `opacid` as a string | `opacid`, or that same string as `opac_name` |
+| `opacid` and `opac_name` | as given | either |
+
+When only an `opacid` is supplied, the `opac_name` therefore defaults to the
+`opacid` converted to a string: a material saved with `opacid` 10001 can be
+loaded either by the integer `10001` or by the `opac_name` `"10001"`.
+
+Loading by `opacid` matches a material whose `opac_name` is that integer as well
+as any material recording that `opacid` alongside a different `opac_name`, and it
+fails if more than one material claims the value. Materials that intentionally
+share an `opacid` (for instance a reference table and a scaled copy of it) must
+therefore be loaded by `opac_name`.
+
+A table need not carry both averagings. `HasPlanckOpacity()`,
+`HasRosselandOpacity()`, and their scattering counterparts `HasPlanckSOpacity()`
+and `HasRosselandSOpacity()` report which are present. `HasGroupBounds()` is
+provided for API symmetry and always returns true, since every mean opacity
+carries group bounds. Calling a Planck or Rosseland
+accessor for an averaging the table does not contain is undefined behavior: the
+internal check compiles away in release builds (`NDEBUG`), so it is the caller's
+responsibility to query the corresponding `Has*` accessor first.
 
 For frequency-dependent scattering opacities, the following functions are provided
 | Function              | Expression | Description            | Units   |
@@ -118,10 +148,12 @@ with the following function signatures:
 For mean scattering opacities, the following functions are provided:
 | Function              | Expression | Description            | Units   |
 | --------------------- | ---------- | ---------------------  | ------- |
+| PlanckMeanScatteringCoefficient | $n \sigma$ | Planck mean scattering coefficient | ${\rm cm}^{-1}$ |
 | RosselandMeanScatteringCoefficient | $n \sigma$ | Rosseland mean scattering coefficient | ${\rm cm}^{-1}$ |
 
 with the following function signatures:
 
+    PlanckMeanScatteringCoefficient(density, temperature)
     RosselandMeanScatteringCoefficient(density, temperature)
 
 Note that `ThermalDistributionOfTNu` is the per-steradian Planck function `B_\nu`, so

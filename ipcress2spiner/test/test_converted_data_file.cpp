@@ -32,9 +32,15 @@
 
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/sp5.hpp>
+#include <singularity-opac/constants/constants.hpp>
 #include <utils/spiner/spiner/databox.hpp>
 #include <utils/spiner/spiner/interpolation.hpp>
 #include <utils/spiner/spiner/sp5.hpp>
+
+// The gold values below come from Draco's ipcress interpreter, which reports
+// temperature in keV. SP5 tabulates it in Kelvin.
+constexpr double KEV_TO_KELVIN = 1.e3 * singularity::PhysicalConstantsCGS::eV /
+                                 singularity::PhysicalConstantsCGS::kb;
 
 int main() {
 
@@ -45,6 +51,7 @@ int main() {
 
   hid_t file;
   hid_t dataset;
+  hid_t ipcress_dataset;
   hid_t dataspace;
 
   // Open HDF5 file read-only
@@ -52,12 +59,14 @@ int main() {
 
   // Open dataset
   dataset = H5Gopen2(file, group_name, H5P_DEFAULT);
+  ipcress_dataset = H5Gopen2(dataset, SP5::IPCRESS::GroupName, H5P_DEFAULT);
 
   // test gray databox
   {
     std::cout << "--- Testing gray databox interpolation--- " << std::endl;
     Spiner::DataBox<double> gray_databox;
-    gray_databox.loadHDF(dataset, SP5::IPCRESS::RosselandTotalGrayOpacity);
+    gray_databox.loadHDF(ipcress_dataset,
+                         SP5::IPCRESS::RosselandTotalGrayOpacity);
 
     // make sure gray databox has the expected values
     if (gray_databox.rank() != 2) {
@@ -101,11 +110,11 @@ int main() {
     std::cout << "T     gold    interpolated_value   relative_diff"
               << std::endl;
     for (size_t i = 0; i < T_points.size(); ++i) {
-      double interp_T = log10(T_points[i]);
+      double interp_T = log10(T_points[i] * KEV_TO_KELVIN);
       double interped_value = gray_databox.interpToReal(interp_rho, interp_T);
       double relative_diff =
           std::fabs(interped_value - gold_values[i]) / gold_values[i];
-      std::cout << std::pow(10, interp_T) << "  " << gold_values[i] << "  "
+      std::cout << T_points[i] << "  " << gold_values[i] << "  "
                 << interped_value << "  " << relative_diff << std::endl;
       if (relative_diff > tolerance) {
         std::cout << "Value doesn't match to " << tolerance
@@ -159,8 +168,8 @@ int main() {
     */
 
     // interpolate at rho = 0.9 and T = 0.67 keV
-    double interp_rho = log10(0.9); // g/cc
-    double interp_T = log10(0.67);  // keV
+    double interp_rho = log10(0.9);                // g/cc
+    double interp_T = log10(0.67 * KEV_TO_KELVIN); // 0.67 keV, in Kelvin
 
     double tolerance = 0.05;
     std::vector<double> hnu_points{0.02, 0.05, 0.085, 0.2,  0.5,  0.85,
@@ -175,7 +184,8 @@ int main() {
               << std::endl;
     for (size_t i = 0; i < hnu_points.size(); ++i) {
       double interp_hnu = log10(hnu_points[i]);
-      double interped_value = mg_databox.interpToReal(interp_rho, interp_T, i);
+      double interped_value =
+          mg_databox.interpToReal(interp_rho, interp_T, static_cast<int>(i));
       double relative_diff =
           std::fabs(interped_value - gold_values[i]) / gold_values[i];
       std::cout << std::pow(10, interp_hnu) << "  " << gold_values[i] << "  "

@@ -17,6 +17,23 @@
 #ifndef _IPCRESS2SPINER_MAKE_SPINER_DATABOX_HPP_
 #define _IPCRESS2SPINER_MAKE_SPINER_DATABOX_HPP_
 
+#include <cmath>
+
+#include <singularity-opac/constants/constants.hpp>
+
+// IPCRESS tabulates temperature in keV; SP5 stores it in Kelvin.
+constexpr double KEV_TO_KELVIN = 1.e3 * singularity::PhysicalConstantsCGS::eV /
+                                 singularity::PhysicalConstantsCGS::kb;
+
+inline Spiner::RegularGrid1D<double>
+temperature_grid_in_kelvin(const Spiner::RegularGrid1D<double> &grid_keV,
+                           const bool log_T) {
+  const double scale = log_T ? std::log10(KEV_TO_KELVIN) : KEV_TO_KELVIN;
+  const double min = log_T ? grid_keV.min() + scale : grid_keV.min() * scale;
+  const double max = log_T ? grid_keV.max() + scale : grid_keV.max() * scale;
+  return Spiner::RegularGrid1D<double>(min, max, grid_keV.nPoints());
+}
+
 inline std::pair<Spiner::DataBox<double>, std::vector<double>>
 build_multigroup_opacity_spiner_databox(
     const std::vector<double> &temperature_points,
@@ -55,7 +72,8 @@ build_multigroup_opacity_spiner_databox(
   Spiner::DataBox<double> opacity_databox(
       n_points_multiplier * density_points.size(),
       n_points_multiplier * temperature_points.size(), n_groups);
-  opacity_databox.setRange(1, new_temperature);
+  opacity_databox.setRange(
+      1, temperature_grid_in_kelvin(new_temperature, log_T_rho_hnu));
   opacity_databox.setRange(2, new_density);
 
   if (verbose_mode) {
@@ -127,7 +145,8 @@ build_gray_opacity_spiner_databox(const std::vector<double> &temperature_points,
   Spiner::DataBox<double> opacity_databox(
       n_points_multiplier * density_points.size(),
       n_points_multiplier * temperature_points.size());
-  opacity_databox.setRange(0, new_temperature);
+  opacity_databox.setRange(
+      0, temperature_grid_in_kelvin(new_temperature, log_T_rho_hnu));
   opacity_databox.setRange(1, new_density);
 
   if (verbose_mode) {

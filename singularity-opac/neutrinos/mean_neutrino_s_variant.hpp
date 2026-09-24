@@ -70,23 +70,21 @@ class MeanSVariant {
         s_opac_);
   }
 
-  PORTABLE_INLINE_FUNCTION Real PlanckMeanTotalScatteringCoefficient(
+  PORTABLE_INLINE_FUNCTION Real PlanckMeanScatteringCoefficient(
       const Real rho, const Real temp, const Real Ye,
       const RadiationType type) const {
     return PortsOfCall::visit(
         [=](const auto &s_opac) {
-          return s_opac.PlanckMeanTotalScatteringCoefficient(rho, temp, Ye,
-                                                             type);
+          return s_opac.PlanckMeanScatteringCoefficient(rho, temp, Ye, type);
         },
         s_opac_);
   }
-  PORTABLE_INLINE_FUNCTION Real RosselandMeanTotalScatteringCoefficient(
+  PORTABLE_INLINE_FUNCTION Real RosselandMeanScatteringCoefficient(
       const Real rho, const Real temp, const Real Ye,
       const RadiationType type) const {
     return PortsOfCall::visit(
         [=](const auto &s_opac) {
-          return s_opac.RosselandMeanTotalScatteringCoefficient(rho, temp, Ye,
-                                                                type);
+          return s_opac.RosselandMeanScatteringCoefficient(rho, temp, Ye, type);
         },
         s_opac_);
   }

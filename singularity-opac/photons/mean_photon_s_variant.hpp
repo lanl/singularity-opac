@@ -22,6 +22,7 @@
 #include <ports-of-call/variant.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
+#include <singularity-opac/photons/mean_photon_types.hpp>
 #include <singularity-opac/photons/photon_s_variant.hpp>
 
 namespace singularity {
@@ -72,6 +73,15 @@ class MeanSVariant {
   }
 
   PORTABLE_INLINE_FUNCTION Real
+  PlanckMeanScatteringCoefficient(const Real rho, const Real temp) const {
+    return PortsOfCall::visit(
+        [=](const auto &s_opac) {
+          return s_opac.PlanckMeanScatteringCoefficient(rho, temp);
+        },
+        s_opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION Real
   RosselandMeanScatteringCoefficient(const Real rho, const Real temp) const {
     return PortsOfCall::visit(
         [=](const auto &s_opac) {
@@ -93,17 +103,36 @@ class MeanSVariant {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real RosselandGroupScatteringCoefficient(const Real rho, const Real temp,
-                                           const int group) const {
-    return ScatteringCoefficient(rho, temp, group);
+  bool HasPlanckSOpacity() const noexcept {
+    return PortsOfCall::visit(
+        [](const auto &s_opac) { return s_opac.HasPlanckSOpacity(); }, s_opac_);
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real ScatteringCoefficient(const Real rho, const Real temp,
-                             const int group) const {
+  bool HasRosselandSOpacity() const noexcept {
+    return PortsOfCall::visit(
+        [](const auto &s_opac) { return s_opac.HasRosselandSOpacity(); },
+        s_opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckGroupScatteringCoefficient(const Real rho, const Real temp,
+                                        const int group) const {
+    return ScatteringCoefficient(rho, temp, group, Planck);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandGroupScatteringCoefficient(const Real rho, const Real temp,
+                                           const int group) const {
+    return ScatteringCoefficient(rho, temp, group, Rosseland);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real ScatteringCoefficient(const Real rho, const Real temp, const int group,
+                             const int gmode = Rosseland) const {
     return PortsOfCall::visit(
         [=](const auto &s_opac) {
-          return s_opac.ScatteringCoefficient(rho, temp, group);
+          return s_opac.ScatteringCoefficient(rho, temp, group, gmode);
         },
         s_opac_);
   }
@@ -115,18 +144,25 @@ class MeanSVariant {
   }
 
   PORTABLE_INLINE_FUNCTION
+  Real PlanckGroupScatteringCoefficientFromNu(const Real rho, const Real temp,
+                                              const Real nu) const {
+    return ScatteringCoefficientFromNu(rho, temp, nu, Planck);
+  }
+
+  PORTABLE_INLINE_FUNCTION
   Real RosselandGroupScatteringCoefficientFromNu(const Real rho,
                                                  const Real temp,
                                                  const Real nu) const {
-    return ScatteringCoefficientFromNu(rho, temp, nu);
+    return ScatteringCoefficientFromNu(rho, temp, nu, Rosseland);
   }
 
   PORTABLE_INLINE_FUNCTION
   Real ScatteringCoefficientFromNu(const Real rho, const Real temp,
-                                   const Real nu) const {
+                                   const Real nu,
+                                   const int gmode = Rosseland) const {
     return PortsOfCall::visit(
         [=](const auto &s_opac) {
-          return s_opac.ScatteringCoefficientFromNu(rho, temp, nu);
+          return s_opac.ScatteringCoefficientFromNu(rho, temp, nu, gmode);
         },
         s_opac_);
   }
