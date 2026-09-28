@@ -77,12 +77,14 @@ class MeanSOpacity {
   }
 
 #ifdef SPINER_USE_HDF
-  MeanSOpacity(const std::string &filename, const int opacid) {
-    LoadHDF_(filename, opacid);
+  MeanSOpacity(const std::string &filename, const int opacid,
+               const bool ipcress_units = false) {
+    LoadHDF_(filename, opacid, ipcress_units);
   }
 
-  MeanSOpacity(const std::string &filename, const std::string &material_name) {
-    LoadHDF_(filename, material_name);
+  MeanSOpacity(const std::string &filename, const std::string &material_name,
+               const bool ipcress_units = false) {
+    LoadHDF_(filename, material_name, ipcress_units);
   }
 
   void Save(const std::string &filename, const std::string &material_name,
@@ -332,19 +334,22 @@ class MeanSOpacity {
 
  private:
 #ifdef SPINER_USE_HDF
-  void LoadHDF_(const std::string &filename, const int opacid) {
+  void LoadHDF_(const std::string &filename, const int opacid,
+                const bool ipcress_units) {
     MaterialSelector selector;
     selector.opacid = opacid;
-    LoadHDF_(filename, selector);
+    LoadHDF_(filename, selector, ipcress_units);
   }
 
-  void LoadHDF_(const std::string &filename, const std::string &material_name) {
+  void LoadHDF_(const std::string &filename, const std::string &material_name,
+                const bool ipcress_units) {
     MaterialSelector selector;
     selector.name = material_name;
-    LoadHDF_(filename, selector);
+    LoadHDF_(filename, selector, ipcress_units);
   }
 
-  void LoadHDF_(const std::string &filename, const MaterialSelector &selector) {
+  void LoadHDF_(const std::string &filename, const MaterialSelector &selector,
+                const bool ipcress_units) {
     DataBox sigmaPlanck;
     DataBox sigmaRosseland;
     DataBox groupBounds;
@@ -384,6 +389,12 @@ class MeanSOpacity {
     if (groupBounds.size() != file_ngroups + 1) {
       OPAC_ERROR("photons::MeanSOpacity: group bounds count is inconsistent "
                  "with the scattering table group count");
+    }
+
+    if (ipcress_units) {
+      if (has_planck) ConvertIpcressTemperature<pc>(sigmaPlanck);
+      if (has_rosseland) ConvertIpcressTemperature<pc>(sigmaRosseland);
+      ConvertIpcressGroupBounds<pc>(groupBounds);
     }
 
     LoadScatteringTables_(has_planck ? &sigmaPlanck : nullptr,

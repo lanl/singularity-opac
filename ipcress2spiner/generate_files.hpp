@@ -23,17 +23,23 @@
 #include <utils/spiner/spiner/sp5.hpp>
 #include <vector>
 
+constexpr char IPCRESS_UNITS_MESSAGE[] =
+    "Opacity quantities are functions of log_10(X)\n"
+    "for X = density rho or temperature T, with T in keV; group boundaries\n"
+    "are photon energies in keV and are indexed directly.\n";
+
 herr_t saveMaterial(hid_t loc, hid_t matGroup, const int matid,
                     const std::string &sMatid,
                     const std::string &sp5_field_name,
-                    Spiner::DataBox<double> &opacity) {
+                    Spiner::DataBox<double> &opacity,
+                    const bool ipcress_units) {
 
   double zero_offset = 0.0;
   herr_t status = 0;
   // Dependent variables metadata
-  status += H5LTset_attribute_string(loc, sMatid.c_str(),
-                                     SP5::Offsets::opac_messageName,
-                                     SP5::Offsets::opac_message);
+  status += H5LTset_attribute_string(
+      loc, sMatid.c_str(), SP5::Offsets::opac_messageName,
+      ipcress_units ? IPCRESS_UNITS_MESSAGE : SP5::Offsets::opac_message);
   status += H5LTset_attribute_double(loc, sMatid.c_str(),
                                      SP5::Offsets::opac_rho, &zero_offset, 1);
   status += H5LTset_attribute_double(loc, sMatid.c_str(), SP5::Offsets::opac_T,

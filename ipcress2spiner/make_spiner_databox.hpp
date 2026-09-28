@@ -40,7 +40,7 @@ build_multigroup_opacity_spiner_databox(
     const std::vector<double> &density_points,
     const std::vector<double> &group_bounds,
     const std::vector<double> &full_multigroup_data, const bool log_T_rho_hnu,
-    const bool verbose_mode = false) {
+    const bool ipcress_units, const bool verbose_mode = false) {
 
   const auto n_groups = group_bounds.size() - 1;
   const double temperature_start = (log_T_rho_hnu)
@@ -73,7 +73,9 @@ build_multigroup_opacity_spiner_databox(
       n_points_multiplier * density_points.size(),
       n_points_multiplier * temperature_points.size(), n_groups);
   opacity_databox.setRange(
-      1, temperature_grid_in_kelvin(new_temperature, log_T_rho_hnu));
+      1, ipcress_units
+             ? new_temperature
+             : temperature_grid_in_kelvin(new_temperature, log_T_rho_hnu));
   opacity_databox.setRange(2, new_density);
 
   if (verbose_mode) {
@@ -116,12 +118,11 @@ build_multigroup_opacity_spiner_databox(
   return {opacity_databox, vector_new_group_bounds};
 }
 
-inline Spiner::DataBox<double>
-build_gray_opacity_spiner_databox(const std::vector<double> &temperature_points,
-                                  const std::vector<double> &density_points,
-                                  const std::vector<double> &full_gray_data,
-                                  const bool log_T_rho_hnu,
-                                  const bool verbose_mode = false) {
+inline Spiner::DataBox<double> build_gray_opacity_spiner_databox(
+    const std::vector<double> &temperature_points,
+    const std::vector<double> &density_points,
+    const std::vector<double> &full_gray_data, const bool log_T_rho_hnu,
+    const bool ipcress_units, const bool verbose_mode = false) {
 
   const double temperature_start = (log_T_rho_hnu)
                                        ? log10(temperature_points.front())
@@ -146,7 +147,9 @@ build_gray_opacity_spiner_databox(const std::vector<double> &temperature_points,
       n_points_multiplier * density_points.size(),
       n_points_multiplier * temperature_points.size());
   opacity_databox.setRange(
-      0, temperature_grid_in_kelvin(new_temperature, log_T_rho_hnu));
+      0, ipcress_units
+             ? new_temperature
+             : temperature_grid_in_kelvin(new_temperature, log_T_rho_hnu));
   opacity_databox.setRange(1, new_density);
 
   if (verbose_mode) {

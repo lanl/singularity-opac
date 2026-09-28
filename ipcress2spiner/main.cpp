@@ -130,9 +130,11 @@ int main(int argc, char *argv[]) {
   std::string filename;
   std::string savename, helpMessage;
   bool printMetadata = false;
+  bool ipcressUnits = false;
   herr_t status = H5_SUCCESS;
 
-  parseCLI(argc, argv, savename, filename, printMetadata, helpMessage);
+  parseCLI(argc, argv, savename, filename, printMetadata, ipcressUnits,
+           helpMessage);
 
   std::cout << "ipcress2spiner                            \n"
             << "-----------------------------------------\n"
@@ -275,14 +277,16 @@ int main(int argc, char *argv[]) {
         auto [spiner_opacity_databox, new_group_bounds] =
             build_multigroup_opacity_spiner_databox(
                 temperature_points, density_points, group_bounds, opacity_data,
-                log_T_rho_hnu);
+                log_T_rho_hnu, ipcressUnits);
 
-        std::transform(new_group_bounds.begin(), new_group_bounds.end(),
-                       new_group_bounds.begin(), [](const double hnu) {
-                         return hnu * 1.e3 *
-                                singularity::PhysicalConstantsCGS::eV /
-                                singularity::PhysicalConstantsCGS::h;
-                       });
+        if (!ipcressUnits) {
+          std::transform(new_group_bounds.begin(), new_group_bounds.end(),
+                         new_group_bounds.begin(), [](const double hnu) {
+                           return hnu * 1.e3 *
+                                  singularity::PhysicalConstantsCGS::eV /
+                                  singularity::PhysicalConstantsCGS::h;
+                         });
+        }
 
         // only save the group bounds once for this material
         if (!wrote_group_bounds) {
@@ -299,7 +303,7 @@ int main(int argc, char *argv[]) {
         std::cout << "Saving multigroup databox for " << mat_ID << " and "
                   << key << std::endl;
         saveMaterial(file_loc, dest, mat_ID, sMatID, field.sp5_name,
-                     spiner_opacity_databox);
+                     spiner_opacity_databox, ipcressUnits);
       }
       // gray opacites
       else {
@@ -310,12 +314,13 @@ int main(int argc, char *argv[]) {
                    opacity_data.data(), &ngray, &post_ngray, &ier);
 
         auto spiner_opacity_databox = build_gray_opacity_spiner_databox(
-            temperature_points, density_points, opacity_data, log_T_rho_hnu);
+            temperature_points, density_points, opacity_data, log_T_rho_hnu,
+            ipcressUnits);
 
         std::cout << "Saving gray databox for " << mat_ID << " and " << key
                   << std::endl;
         saveMaterial(file_loc, dest, mat_ID, sMatID, field.sp5_name,
-                     spiner_opacity_databox);
+                     spiner_opacity_databox, ipcressUnits);
       }
     }
     status += H5Gclose(ipcressGroup);

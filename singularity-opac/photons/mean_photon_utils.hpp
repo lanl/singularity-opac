@@ -245,6 +245,24 @@ inline void LoadDataBox(const hid_t material, const char *field,
   RequireH5Success(data.loadHDF(material, field),
                    "reading " + std::string(field));
 }
+
+// IPCRESS units: temperature and group bounds in keV. Converts a table's
+// log10 temperature axis to Kelvin.
+template <typename PC>
+inline void ConvertIpcressTemperature(MeanUtilsDataBox &table) {
+  constexpr Real keV_to_K = 1.e3 * PC::eV / PC::kb;
+  const Real shift = std::log10(keV_to_K);
+  const auto lT = table.range(1);
+  table.setRange(1, lT.min() + shift, lT.max() + shift, lT.nPoints());
+}
+
+// Converts group bounds from photon energies in keV to frequencies in Hz.
+template <typename PC>
+inline void ConvertIpcressGroupBounds(MeanUtilsDataBox &group_bounds) {
+  for (int i = 0; i < group_bounds.size(); ++i) {
+    group_bounds(i) = group_bounds(i) * 1.e3 * PC::eV / PC::h;
+  }
+}
 #endif
 
 // Log/anti-log transforms used to store and interpolate opacities. A small
