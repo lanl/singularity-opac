@@ -38,48 +38,46 @@ constexpr char PlanckMeanSOpacity[] = "Planck mean scattering opacity";
 constexpr char RosselandMeanSOpacity[] = "Rosseland mean scattering opacity";
 } // namespace MeanSOpac
 
+namespace Multigroup {
+constexpr char GroupBounds[] = "group bounds";
+} // namespace Multigroup
+
 namespace MultigroupOpac {
 constexpr char PlanckGroupOpacity[] = "Planck group opacity";
 constexpr char RosselandGroupOpacity[] = "Rosseland group opacity";
-constexpr char GroupBounds[] = "group bounds";
 } // namespace MultigroupOpac
 
 namespace MultigroupSOpac {
 constexpr char PlanckGroupSOpacity[] = "Planck group scattering opacity";
 constexpr char RosselandGroupSOpacity[] = "Rosseland group scattering opacity";
-constexpr char GroupBounds[] = "group bounds";
 } // namespace MultigroupSOpac
 
-// constants and fields below used in ipcress2spiner utility
 namespace Offsets {
-constexpr char messageName[] = "interpretation";
-constexpr char message[] =
-    "All quantities are functions of log_10(X)\n"
-    "for X = density rho, temperature T, or group boundaries hnu\n"
-    "where conversion is X = 10^{Xlog}\n";
-constexpr char rho[] = "rhoOffset";
-constexpr char T[] = "TOffset";
-constexpr char group_bounds[] = "groupBoundsOffset";
+constexpr char opac_messageName[] = "opac_interpretation";
+constexpr char opac_message[] =
+    "Opacity quantities are functions of log_10(X)\n"
+    "for X = density rho or temperature T; group boundaries nu are physical\n"
+    "frequency values in Hz and are indexed directly.\n";
+constexpr char opac_rho[] = "opac_rhoOffset";
+constexpr char opac_T[] = "opac_TOffset";
 } // namespace Offsets
 
 namespace Material {
-constexpr char comments[] = "comments";
-constexpr char matid[] = "matid";
-constexpr char name[] = "name";
+constexpr char opacid[] = "opacid";
+constexpr char opac_name[] = "opac_name";
+constexpr char opac_multiplier[] = "opac_multiplier";
 } // namespace Material
 
-namespace Fields {
-constexpr char ramg[] = "rosseland absorption multigroup opacity";
-constexpr char rsmg[] =  "rosseland scattering multigroup opacity";
-constexpr char rtmg[] =  "rosseland total multigroup opacity";
-constexpr char pmg[] = "planck total multigroup opacity";
-constexpr char ragray[] = "rosseland absorption gray opacity";
-constexpr char rgray[] = "rosseland total gray opacity";
-constexpr char pgray[] =  "planck total gray opacity";
-constexpr char T[] = "temperature";
-constexpr char rho[] = "density";
-constexpr char group_bounds[] = "group boundaries";
-} // namespace Fields
+// IPCRESS-only quantities, held in a subgroup of the material group.
+namespace IPCRESS {
+constexpr char GroupName[] = "ipcress";
+constexpr char RosselandTotalMultigroupOpacity[] =
+    "rosseland total multigroup opacity";
+constexpr char RosselandTotalGrayOpacity[] = "rosseland total gray opacity";
+constexpr char RosselandGrayAbsorptionOpacity[] =
+    "rosseland gray absorption opacity";
+constexpr char PlanckGrayAbsorptionOpacity[] = "planck gray absorption opacity";
+} // namespace IPCRESS
 
 } // namespace SP5
 

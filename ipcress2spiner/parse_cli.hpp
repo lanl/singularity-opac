@@ -23,7 +23,7 @@
 const std::string DEFAULT_SAVENAME = "converted_ipcress.h5";;
 
 void parseCLI(int argc, char *argv[], std::string &savename,
-              std::string &filename, bool &printMetadata,
+              std::string &filename, bool &printMetadata, bool &ipcressUnits,
               std::string &helpMessage);
 
 #endif // _IPCRESS2SPINER_PARSER_HPP_

@@ -96,8 +96,9 @@ class MeanNonCGSUnitsS {
         freq_unit_(1. / time_unit_) {}
 
   auto GetOnDevice() {
-    return MeanNonCGSUnitsS<MeanSOpac>(multigroup_s_opac_.GetOnDevice(), time_unit_,
-                                       mass_unit_, length_unit_, temp_unit_);
+    return MeanNonCGSUnitsS<MeanSOpac>(multigroup_s_opac_.GetOnDevice(),
+                                       time_unit_, mass_unit_, length_unit_,
+                                       temp_unit_);
   }
   inline void Finalize() noexcept { multigroup_s_opac_.Finalize(); }
 
@@ -107,6 +108,16 @@ class MeanNonCGSUnitsS {
   PORTABLE_INLINE_FUNCTION
   bool HasGroupBounds() const noexcept {
     return multigroup_s_opac_.HasGroupBounds();
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  bool HasPlanckSOpacity() const noexcept {
+    return multigroup_s_opac_.HasPlanckSOpacity();
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  bool HasRosselandSOpacity() const noexcept {
+    return multigroup_s_opac_.HasRosselandSOpacity();
   }
 
   std::vector<Real> GetGroupBounds() const {
@@ -123,23 +134,52 @@ class MeanNonCGSUnitsS {
   }
 
 #ifdef SPINER_USE_HDF
-  void Save(const std::string &filename) const {
-    return multigroup_s_opac_.Save(filename);
+  void Save(const std::string &filename, const std::string &material_name,
+            const bool append = false) const {
+    return multigroup_s_opac_.Save(filename, material_name, append);
+  }
+
+  void Save(const std::string &filename, const int opacid,
+            const bool append = false) const {
+    return multigroup_s_opac_.Save(filename, opacid, append);
+  }
+
+  void Save(const std::string &filename, const int opacid,
+            const std::string &material_name, const bool append = false) const {
+    return multigroup_s_opac_.Save(filename, opacid, material_name, append);
+  }
+
+  void Save(const std::string &filename, const int opacid,
+            const char *material_name, const bool append = false) const {
+    return multigroup_s_opac_.Save(filename, opacid, material_name, append);
   }
 #endif
 
   PORTABLE_INLINE_FUNCTION
-  Real PlanckGroupScatteringCoefficient(const Real rho,
-                                        const Real temp,
+  Real PlanckGroupScatteringCoefficient(const Real rho, const Real temp,
                                         const int group) const {
     return ScatteringCoefficient(rho, temp, group, Planck);
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real RosselandGroupScatteringCoefficient(const Real rho,
-                                           const Real temp,
+  Real RosselandGroupScatteringCoefficient(const Real rho, const Real temp,
                                            const int group) const {
     return ScatteringCoefficient(rho, temp, group, Rosseland);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckMeanScatteringCoefficient(const Real rho, const Real temp) const {
+    return multigroup_s_opac_.PlanckMeanScatteringCoefficient(
+               rho_unit_ * rho, temp_unit_ * temp) *
+           length_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandMeanScatteringCoefficient(const Real rho,
+                                          const Real temp) const {
+    return multigroup_s_opac_.RosselandMeanScatteringCoefficient(
+               rho_unit_ * rho, temp_unit_ * temp) *
+           length_unit_;
   }
 
   PORTABLE_INLINE_FUNCTION
@@ -173,7 +213,7 @@ class MeanNonCGSUnitsS {
                                    const Real nu,
                                    const int gmode = Rosseland) const {
     const Real alpha = multigroup_s_opac_.ScatteringCoefficientFromNu(
-              rho_unit_ * rho, temp_unit_ * temp, nu * freq_unit_, gmode);
+        rho_unit_ * rho, temp_unit_ * temp, nu * freq_unit_, gmode);
     return alpha * length_unit_;
   }
 

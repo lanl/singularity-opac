@@ -25,17 +25,20 @@
 #include "parse_cli.hpp"
 
 void parseCLI(int argc, char *argv[], std::string &savename,
-              std::string &filename, bool &printMetadata,
+              std::string &filename, bool &printMetadata, bool &ipcressUnits,
               std::string &helpMessage) {
 
   std::stringstream helpStream;
   helpStream << "Usage: " << argv[0]
-             << "[-p] [-w] [-h] [-v] [-vv] [-d] [-s <savename>] <parameter file>\n\n"
+             << "[-p] [-k] [-w] [-h] [-v] [-vv] [-d] [-s <savename>] "
+             << "<parameter file>\n\n"
              << "\t <ipcress file>: input ipcress file\n"
              << "\t-s <savename>: filename to save to. Defaults to " << DEFAULT_SAVENAME
              << "\n"
              << "\t-p:  print metadata associated with materials "
              << "in parameter files\n"
+             << "\t-k:  keep IPCRESS units: temperature and group bounds "
+             << "in keV instead of K and Hz\n"
              << "\t-v:  print ipcress warnings\n"
              << "\t-vv: print debug information\n"
              << "\t-w:  same as -v\n"
@@ -61,6 +64,8 @@ void parseCLI(int argc, char *argv[], std::string &savename,
       std::exit(0);
     } else if (std::strcmp(argv[i], "-p") == 0) {
       printMetadata = true;
+    } else if (std::strcmp(argv[i], "-k") == 0) {
+      ipcressUnits = true;
     } else if (std::strcmp(argv[i], "-s") == 0) {
       savename = argv[++i];
     } else {

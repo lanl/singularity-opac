@@ -22,6 +22,7 @@
 #include <ports-of-call/variant.hpp>
 #include <singularity-opac/base/opac_error.hpp>
 #include <singularity-opac/base/radiation_types.hpp>
+#include <singularity-opac/photons/mean_photon_types.hpp>
 #include <singularity-opac/photons/photon_s_variant.hpp>
 
 namespace singularity {
@@ -72,18 +73,19 @@ class MeanSVariant {
   }
 
   PORTABLE_INLINE_FUNCTION Real
-  PlanckMeanTotalScatteringCoefficient(const Real rho, const Real temp) const {
+  PlanckMeanScatteringCoefficient(const Real rho, const Real temp) const {
     return PortsOfCall::visit(
         [=](const auto &s_opac) {
-          return s_opac.PlanckMeanTotalScatteringCoefficient(rho, temp);
+          return s_opac.PlanckMeanScatteringCoefficient(rho, temp);
         },
         s_opac_);
   }
-  PORTABLE_INLINE_FUNCTION Real RosselandMeanTotalScatteringCoefficient(
-      const Real rho, const Real temp) const {
+
+  PORTABLE_INLINE_FUNCTION Real
+  RosselandMeanScatteringCoefficient(const Real rho, const Real temp) const {
     return PortsOfCall::visit(
         [=](const auto &s_opac) {
-          return s_opac.RosselandMeanTotalScatteringCoefficient(rho, temp);
+          return s_opac.RosselandMeanScatteringCoefficient(rho, temp);
         },
         s_opac_);
   }
@@ -98,6 +100,19 @@ class MeanSVariant {
   bool HasGroupBounds() const noexcept {
     return PortsOfCall::visit(
         [](const auto &s_opac) { return s_opac.HasGroupBounds(); }, s_opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  bool HasPlanckSOpacity() const noexcept {
+    return PortsOfCall::visit(
+        [](const auto &s_opac) { return s_opac.HasPlanckSOpacity(); }, s_opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  bool HasRosselandSOpacity() const noexcept {
+    return PortsOfCall::visit(
+        [](const auto &s_opac) { return s_opac.HasRosselandSOpacity(); },
+        s_opac_);
   }
 
   PORTABLE_INLINE_FUNCTION

@@ -21,15 +21,249 @@
 
 #include <ports-of-call/portability.hpp>
 #include <singularity-opac/base/opac_error.hpp>
+#include <singularity-opac/base/sp5.hpp>
 #include <singularity-opac/photons/mean_photon_types.hpp>
 #include <singularity-opac/photons/thermal_distributions_photons.hpp>
 #include <spiner/databox.hpp>
+
+#ifdef SPINER_USE_HDF
+#include <filesystem>
+#include <hdf5.h>
+#include <hdf5_hl.h>
+#include <optional>
+#include <string>
+#endif
 
 namespace singularity {
 namespace photons {
 namespace impl {
 
 using MeanUtilsDataBox = Spiner::DataBox<Real>;
+
+#ifdef SPINER_USE_HDF
+// Sentinels returned by the material-group openers below.
+constexpr hid_t MaterialNotFound = -1;
+constexpr hid_t MaterialAmbiguous = -2;
+
+// Suppresses HDF5's automatic error printing for the current scope and restores
+// whatever handler was installed on the way out.
+class ScopedH5ErrorHandler {
+ public:
+  ScopedH5ErrorHandler() {
+    H5Eget_auto2(H5E_DEFAULT, &func_, &data_);
+    H5Eset_auto2(H5E_DEFAULT, nullptr, nullptr);
+  }
+  ~ScopedH5ErrorHandler() { H5Eset_auto2(H5E_DEFAULT, func_, data_); }
+  ScopedH5ErrorHandler(const ScopedH5ErrorHandler &) = delete;
+  ScopedH5ErrorHandler &operator=(const ScopedH5ErrorHandler &) = delete;
+
+ private:
+  H5E_auto2_t func_ = nullptr;
+  void *data_ = nullptr;
+};
+
+inline void FailH5(const std::string &what) {
+  const std::string message =
+      "photons multigroup: HDF5 error while " + what + "\n";
+  OPAC_ERROR(message.c_str());
+}
+
+inline void RequireH5Success(const herr_t status, const std::string &what) {
+  if (status != H5_SUCCESS) FailH5(what);
+}
+
+inline hid_t OpenFileRead(const std::string &filename) {
+  if (!std::filesystem::exists(filename)) {
+    const std::string message =
+        "photons multigroup: HDF5 file does not exist: " + filename + "\n";
+    OPAC_ERROR(message.c_str());
+  }
+  const hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+  if (file < 0) FailH5("opening " + filename + " for reading");
+  return file;
+}
+
+inline hid_t OpenFileWrite(const std::string &filename, const bool append) {
+  const bool reuse = append && std::filesystem::exists(filename);
+  const hid_t file = reuse
+                         ? H5Fopen(filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT)
+                         : H5Fcreate(filename.c_str(), H5F_ACC_TRUNC,
+                                     H5P_DEFAULT, H5P_DEFAULT);
+  if (file < 0) {
+    FailH5(std::string(reuse ? "opening " : "creating ") + filename +
+           " for writing");
+  }
+  return file;
+}
+
+inline void CloseFile(const hid_t file) {
+  RequireH5Success(H5Fclose(file), "closing HDF5 file");
+}
+
+inline void CloseGroup(const hid_t group) {
+  RequireH5Success(H5Gclose(group), "closing HDF5 group");
+}
+
+inline hid_t CreateOrOpenGroup(const hid_t file, const std::string &path,
+                               const bool reuse_existing) {
+  const bool reuse =
+      reuse_existing && H5Lexists(file, path.c_str(), H5P_DEFAULT) > 0;
+  const hid_t group = reuse ? H5Gopen(file, path.c_str(), H5P_DEFAULT)
+                            : H5Gcreate(file, path.c_str(), H5P_DEFAULT,
+                                        H5P_DEFAULT, H5P_DEFAULT);
+  if (group < 0) {
+    FailH5(std::string(reuse ? "opening" : "creating") + " material group " +
+           path);
+  }
+  return group;
+}
+
+inline void SetAttribute(const hid_t file, const std::string &path,
+                         const char *name, const int value) {
+  RequireH5Success(H5LTset_attribute_int(file, path.c_str(), name, &value, 1),
+                   "writing attribute " + std::string(name) + " on " + path);
+}
+
+inline void SetAttribute(const hid_t file, const std::string &path,
+                         const char *name, const std::string &value) {
+  RequireH5Success(
+      H5LTset_attribute_string(file, path.c_str(), name, value.c_str()),
+      "writing attribute " + std::string(name) + " on " + path);
+}
+
+// State for the root-group scan that matches an opacid attribute. A group whose
+// own name is the opacid is tracked separately, since it claims that opacid
+// whether or not it also carries the attribute.
+struct MaterialOpacidSearch {
+  int requested = 0;
+  std::string direct_name;
+  std::string path;
+  int matches = 0;
+  bool direct_matched = false;
+};
+
+inline bool LinkIsGroup(const hid_t loc, const char *link_name) {
+  hid_t candidate = H5Gopen(loc, link_name, H5P_DEFAULT);
+  if (candidate < 0) return false;
+  H5Gclose(candidate);
+  return true;
+}
+
+inline herr_t FindMaterialByOpacid(hid_t file, const char *link_name,
+                                   const H5L_info_t *, void *opaque) {
+  auto *search = static_cast<MaterialOpacidSearch *>(opaque);
+  if (!LinkIsGroup(file, link_name) ||
+      H5Aexists_by_name(file, link_name, SP5::Material::opacid, H5P_DEFAULT) <=
+          0) {
+    return 0;
+  }
+
+  int candidate = 0;
+  if (H5LTget_attribute_int(file, link_name, SP5::Material::opacid,
+                            &candidate) < 0 ||
+      candidate != search->requested) {
+    return 0;
+  }
+  search->matches += 1;
+  if (link_name == search->direct_name) search->direct_matched = true;
+  if (search->path.empty()) search->path = "/" + std::string(link_name);
+  // Keep iterating so that duplicate opacids are detected rather than masked.
+  return 0;
+}
+
+// Opens a group that H5Lexists has already reported as present, so a failure
+// here is a real HDF5 error rather than a missing material.
+inline hid_t OpenExistingGroup(const hid_t file, const std::string &path) {
+  const hid_t group = H5Gopen(file, path.c_str(), H5P_DEFAULT);
+  if (group < 0) FailH5("opening material group " + path);
+  return group;
+}
+
+inline hid_t OpenMaterialGroupByName(const hid_t file,
+                                     const std::string &name) {
+  ScopedH5ErrorHandler h5_errors;
+  const std::string path = "/" + name;
+  if (H5Lexists(file, path.c_str(), H5P_DEFAULT) <= 0 ||
+      !LinkIsGroup(file, path.c_str())) {
+    return MaterialNotFound;
+  }
+  return OpenExistingGroup(file, path);
+}
+
+inline hid_t OpenMaterialGroupByOpacid(const hid_t file, const int opacid) {
+  ScopedH5ErrorHandler h5_errors;
+  const std::string direct_name = std::to_string(opacid);
+  const std::string direct_path = "/" + direct_name;
+  const bool direct = H5Lexists(file, direct_path.c_str(), H5P_DEFAULT) > 0 &&
+                      LinkIsGroup(file, direct_path.c_str());
+
+  // Scanning happens even when /<opacid> exists, so that a group named for the
+  // opacid and a differently named group carrying it as an attribute collide.
+  MaterialOpacidSearch search;
+  search.requested = opacid;
+  search.direct_name = direct_name;
+  const hid_t root = H5Gopen(file, "/", H5P_DEFAULT);
+  if (root < 0) FailH5("opening the root group");
+  hsize_t index = 0;
+  const herr_t status = H5Literate(root, H5_INDEX_NAME, H5_ITER_NATIVE, &index,
+                                   FindMaterialByOpacid, &search);
+  RequireH5Success(H5Gclose(root), "closing the root group");
+  if (status < 0) FailH5("scanning materials for opacid " + direct_name);
+
+  const int claimants =
+      search.matches + (direct && !search.direct_matched ? 1 : 0);
+  if (claimants > 1) return MaterialAmbiguous;
+  if (direct) return OpenExistingGroup(file, direct_path);
+  return search.path.empty() ? MaterialNotFound
+                             : OpenExistingGroup(file, search.path);
+}
+
+struct MaterialSelector {
+  std::optional<int> opacid;
+  std::string name;
+};
+
+inline hid_t OpenMaterialGroup(const hid_t file,
+                               const MaterialSelector &selector) {
+  if (!selector.name.empty()) {
+    return OpenMaterialGroupByName(file, selector.name);
+  }
+  if (selector.opacid.has_value()) {
+    return OpenMaterialGroupByOpacid(file, *selector.opacid);
+  }
+  return MaterialNotFound;
+}
+
+inline void SaveDataBox(const hid_t material, const char *field,
+                        const MeanUtilsDataBox &data) {
+  RequireH5Success(data.saveHDF(material, field),
+                   "writing " + std::string(field));
+}
+
+inline void LoadDataBox(const hid_t material, const char *field,
+                        MeanUtilsDataBox &data) {
+  RequireH5Success(data.loadHDF(material, field),
+                   "reading " + std::string(field));
+}
+
+// IPCRESS units: temperature and group bounds in keV. Converts a table's
+// log10 temperature axis to Kelvin.
+template <typename PC>
+inline void ConvertIpcressTemperature(MeanUtilsDataBox &table) {
+  constexpr Real keV_to_K = 1.e3 * PC::eV / PC::kb;
+  const Real shift = std::log10(keV_to_K);
+  const auto lT = table.range(1);
+  table.setRange(1, lT.min() + shift, lT.max() + shift, lT.nPoints());
+}
+
+// Converts group bounds from photon energies in keV to frequencies in Hz.
+template <typename PC>
+inline void ConvertIpcressGroupBounds(MeanUtilsDataBox &group_bounds) {
+  for (int i = 0; i < group_bounds.size(); ++i) {
+    group_bounds(i) = group_bounds(i) * 1.e3 * PC::eV / PC::h;
+  }
+}
+#endif
 
 // Log/anti-log transforms used to store and interpolate opacities. A small
 // floor keeps toLog well-defined at zero.

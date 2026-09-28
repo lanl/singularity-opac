@@ -19,6 +19,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdio>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -65,61 +66,117 @@ class MeanOpacity {
     // Table-backed multigroup opacities always carry explicit group bounds.
     // To represent [nu_max, infinity), the final bound must literally be
     // IEEE +infinity, not a large finite proxy value.
-    LoadOpacityTables_(kappaPlanck, kappaRosseland, group_bounds);
+    LoadOpacityTables_(kappaPlanck.size() > 0 ? &kappaPlanck : nullptr,
+                       kappaRosseland.size() > 0 ? &kappaRosseland : nullptr,
+                       group_bounds);
+  }
+
+  template <typename GroupBoundsIndexer>
+  MeanOpacity(const DataBox &opacity, const int gmode,
+              const GroupBoundsIndexer &group_bounds) {
+    if (gmode != Planck && gmode != Rosseland) {
+      OPAC_ERROR("photons::MeanOpacity: invalid opacity averaging mode");
+    }
+    LoadOpacityTables_(gmode == Planck ? &opacity : nullptr,
+                       gmode == Rosseland ? &opacity : nullptr, group_bounds);
   }
 
 #ifdef SPINER_USE_HDF
-  MeanOpacity(const std::string &filename) {
-    // HDF-backed multigroup tables are expected to provide an ngroups + 1
-    // "group bounds" dataset. If the last group is [nu_max, infinity), then
-    // the final stored bound must be IEEE +infinity.
-    DataBox kappaPlanck;
-    DataBox kappaRosseland;
-    DataBox groupBounds;
-    herr_t status = H5_SUCCESS;
-    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-    status +=
-        kappaPlanck.loadHDF(file, SP5::MultigroupOpac::PlanckGroupOpacity);
-    status += kappaRosseland.loadHDF(
-        file, SP5::MultigroupOpac::RosselandGroupOpacity);
-    status += groupBounds.loadHDF(file, SP5::MultigroupOpac::GroupBounds);
-    status += H5Fclose(file);
-
-    if (status != H5_SUCCESS) {
-      OPAC_ERROR("photons::MeanOpacity: HDF5 error\n");
-    }
-
-    LoadOpacityTables_(kappaPlanck, kappaRosseland, groupBounds);
-    groupBounds.finalize();
-    kappaPlanck.finalize();
-    kappaRosseland.finalize();
+  MeanOpacity(const std::string &filename, const int opacid,
+              const bool ipcress_units = false) {
+    LoadHDF_(filename, opacid, ipcress_units);
   }
 
-  void Save(const std::string &filename) const {
+  MeanOpacity(const std::string &filename, const std::string &material_name,
+              const bool ipcress_units = false) {
+    LoadHDF_(filename, material_name, ipcress_units);
+  }
+
+  void Save(const std::string &filename, const std::string &material_name,
+            const bool append = false) const {
+    if (material_name.empty()) {
+      OPAC_ERROR("photons::MeanOpacity: material name must not be empty");
+    }
+    Save_(filename, "/" + material_name, std::nullopt, material_name, append);
+  }
+
+  void Save(const std::string &filename, const int opacid,
+            const bool append = false) const {
+    Save(filename, opacid, std::string(), append);
+  }
+
+  // A name, when supplied, keys the material group; the opacid is recorded as
+  // metadata so that several groups may share one opacid.
+  void Save(const std::string &filename, const int opacid,
+            const std::string &material_name, const bool append = false) const {
+    const std::string material_path = material_name.empty()
+                                          ? "/" + std::to_string(opacid)
+                                          : "/" + material_name;
+    Save_(filename, material_path, opacid, material_name, append);
+  }
+
+  void Save(const std::string &filename, const int opacid,
+            const char *material_name, const bool append = false) const {
+    Save(filename, opacid, std::string(material_name), append);
+  }
+
+ private:
+  void Save_(const std::string &filename, const std::string &material_path,
+             const std::optional<int> opacid, const std::string &material_name,
+             const bool append) const {
     DataBox kappaPlanck;
     DataBox kappaRosseland;
     DataBox groupBounds;
     ExportOpacityTables_(kappaPlanck, kappaRosseland);
     ExportGroupBounds(groupBounds, groupBounds_, ngroups_);
 
-    herr_t status = H5_SUCCESS;
-    hid_t file =
-        H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    status +=
-        kappaPlanck.saveHDF(file, SP5::MultigroupOpac::PlanckGroupOpacity);
-    status += kappaRosseland.saveHDF(
-        file, SP5::MultigroupOpac::RosselandGroupOpacity);
-    status += groupBounds.saveHDF(file, SP5::MultigroupOpac::GroupBounds);
-    status += H5Fclose(file);
+    ScopedH5ErrorHandler h5_errors;
+    hid_t file = OpenFileWrite(filename, append);
+    hid_t material = CreateOrOpenGroup(file, material_path, append);
+    SetAttribute(file, material_path, SP5::Offsets::opac_messageName,
+                 SP5::Offsets::opac_message);
+    if (opacid.has_value()) {
+      SetAttribute(file, material_path, SP5::Material::opacid, *opacid);
+    }
+    if (!material_name.empty()) {
+      SetAttribute(file, material_path, SP5::Material::opac_name,
+                   material_name);
+    }
+    if (HasPlanckOpacity()) {
+      SaveDataBox(material, SP5::MultigroupOpac::PlanckGroupOpacity,
+                  kappaPlanck);
+    }
+    if (HasRosselandOpacity()) {
+      SaveDataBox(material, SP5::MultigroupOpac::RosselandGroupOpacity,
+                  kappaRosseland);
+    }
+    // Absorption and scattering share group bounds when appended.
+    bool bounds_compatible = true;
+    if (H5Lexists(material, SP5::Multigroup::GroupBounds, H5P_DEFAULT) > 0) {
+      DataBox existingBounds;
+      LoadDataBox(material, SP5::Multigroup::GroupBounds, existingBounds);
+      bounds_compatible = existingBounds.size() == groupBounds.size();
+      for (int i = 0; bounds_compatible && i < groupBounds.size(); ++i) {
+        bounds_compatible = existingBounds(i) == groupBounds(i);
+      }
+      existingBounds.finalize();
+    } else {
+      SaveDataBox(material, SP5::Multigroup::GroupBounds, groupBounds);
+    }
+    CloseGroup(material);
+    CloseFile(file);
 
     kappaPlanck.finalize();
     kappaRosseland.finalize();
     groupBounds.finalize();
 
-    if (status != H5_SUCCESS) {
-      OPAC_ERROR("photons::MeanOpacity: HDF5 error\n");
+    if (!bounds_compatible) {
+      OPAC_ERROR("photons::MeanOpacity: existing material group bounds are "
+                 "incompatible with appended opacity tables");
     }
   }
+
+ public:
 #endif
 
   PORTABLE_INLINE_FUNCTION
@@ -153,6 +210,15 @@ class MeanOpacity {
   PORTABLE_INLINE_FUNCTION
   bool HasGroupBounds() const noexcept { return true; }
 
+  // A table that was never loaded is default constructed, and so has rank 0.
+  PORTABLE_INLINE_FUNCTION
+  bool HasPlanckOpacity() const noexcept { return lkappaPlanck_.rank() > 0; }
+
+  PORTABLE_INLINE_FUNCTION
+  bool HasRosselandOpacity() const noexcept {
+    return lkappaRosseland_.rank() > 0;
+  }
+
   std::vector<Real> GetGroupBounds() const {
     std::vector<Real> bounds(ngroups_ + 1);
     for (int group = 0; group <= ngroups_; ++group) {
@@ -161,12 +227,8 @@ class MeanOpacity {
     return bounds;
   }
 
-  // The group-index-less "mean" accessors only make sense when there is a
-  // single group. In that case the lone group spans the entire spectrum, so
-  // its group-integrated coefficient (stored at group 0) IS the traditional
-  // gray mean. We therefore require ngroups==1 and forward to group 0. This is
-  // not a distinguished "mean slot": for ngroups>1, group 0 is simply the
-  // lowest-frequency group and callers must use the group-index API.
+  // With ngroups==1 the lone group spans the spectrum, so group 0 is the gray
+  // mean. There is no distinguished "mean slot" for ngroups>1.
   PORTABLE_INLINE_FUNCTION
   Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
     PORTABLE_REQUIRE(
@@ -192,12 +254,16 @@ class MeanOpacity {
   PORTABLE_INLINE_FUNCTION
   Real PlanckGroupAbsorptionCoefficient(const Real rho, const Real temp,
                                         const int group) const {
+    PORTABLE_REQUIRE(HasPlanckOpacity(),
+                     "photons::MeanOpacity: Planck opacity is unavailable");
     return GroupAbsorptionCoefficient_(lkappaPlanck_, rho, temp, group);
   }
 
   PORTABLE_INLINE_FUNCTION
   Real RosselandGroupAbsorptionCoefficient(const Real rho, const Real temp,
                                            const int group) const {
+    PORTABLE_REQUIRE(HasRosselandOpacity(),
+                     "photons::MeanOpacity: Rosseland opacity is unavailable");
     return GroupAbsorptionCoefficient_(lkappaRosseland_, rho, temp, group);
   }
 
@@ -215,6 +281,8 @@ class MeanOpacity {
   Real PlanckGroupDLogAbsorptionCoefficientDLogT(const Real rho,
                                                  const Real temp,
                                                  const int group) const {
+    PORTABLE_REQUIRE(HasPlanckOpacity(),
+                     "photons::MeanOpacity: Planck opacity is unavailable");
     return GroupDLogAbsCoeffDLogT_(lkappaPlanck_, rho, temp, group);
   }
 
@@ -222,6 +290,8 @@ class MeanOpacity {
   Real RosselandGroupDLogAbsorptionCoefficientDLogT(const Real rho,
                                                     const Real temp,
                                                     const int group) const {
+    PORTABLE_REQUIRE(HasRosselandOpacity(),
+                     "photons::MeanOpacity: Rosseland opacity is unavailable");
     return GroupDLogAbsCoeffDLogT_(lkappaRosseland_, rho, temp, group);
   }
 
@@ -278,6 +348,84 @@ class MeanOpacity {
   }
 
  private:
+#ifdef SPINER_USE_HDF
+  void LoadHDF_(const std::string &filename, const int opacid,
+                const bool ipcress_units) {
+    MaterialSelector selector;
+    selector.opacid = opacid;
+    LoadHDF_(filename, selector, ipcress_units);
+  }
+
+  void LoadHDF_(const std::string &filename, const std::string &material_name,
+                const bool ipcress_units) {
+    MaterialSelector selector;
+    selector.name = material_name;
+    LoadHDF_(filename, selector, ipcress_units);
+  }
+
+  void LoadHDF_(const std::string &filename, const MaterialSelector &selector,
+                const bool ipcress_units) {
+    DataBox kappaPlanck;
+    DataBox kappaRosseland;
+    DataBox groupBounds;
+    ScopedH5ErrorHandler h5_errors;
+    hid_t file = OpenFileRead(filename);
+    hid_t material = OpenMaterialGroup(file, selector);
+    if (material < 0) {
+      const bool ambiguous = material == MaterialAmbiguous;
+      CloseFile(file);
+      if (ambiguous) {
+        OPAC_ERROR("photons::MeanOpacity: several material groups share the "
+                   "requested opacid; select by name instead");
+      }
+      OPAC_ERROR("photons::MeanOpacity: material group not found in HDF5 file");
+    }
+
+    const bool has_planck = LoadOpacityDataBoxIfPresent_(
+        material, SP5::MultigroupOpac::PlanckGroupOpacity, kappaPlanck);
+    const bool has_rosseland = LoadOpacityDataBoxIfPresent_(
+        material, SP5::MultigroupOpac::RosselandGroupOpacity, kappaRosseland);
+    LoadDataBox(material, SP5::Multigroup::GroupBounds, groupBounds);
+    CloseGroup(material);
+    CloseFile(file);
+
+    if (!has_planck && !has_rosseland) {
+      OPAC_ERROR("photons::MeanOpacity: no opacity table found in material "
+                 "group\n");
+    }
+    if (has_planck) ValidateOpacityTable_(kappaPlanck, "Planck");
+    if (has_rosseland) ValidateOpacityTable_(kappaRosseland, "Rosseland");
+
+    // ValidateGroupBounds and SetGroupBounds both walk group_bounds(0 ...
+    // ngroups).
+    const int file_ngroups =
+        has_planck ? kappaPlanck.dim(1) : kappaRosseland.dim(1);
+    if (groupBounds.size() != file_ngroups + 1) {
+      OPAC_ERROR("photons::MeanOpacity: group bounds count is inconsistent "
+                 "with the opacity table group count");
+    }
+
+    if (ipcress_units) {
+      if (has_planck) ConvertIpcressTemperature<pc>(kappaPlanck);
+      if (has_rosseland) ConvertIpcressTemperature<pc>(kappaRosseland);
+      ConvertIpcressGroupBounds<pc>(groupBounds);
+    }
+
+    LoadOpacityTables_(has_planck ? &kappaPlanck : nullptr,
+                       has_rosseland ? &kappaRosseland : nullptr, groupBounds);
+    groupBounds.finalize();
+    kappaPlanck.finalize();
+    kappaRosseland.finalize();
+  }
+
+  bool LoadOpacityDataBoxIfPresent_(const hid_t material, const char *field,
+                                    DataBox &data) const {
+    if (H5Lexists(material, field, H5P_DEFAULT) <= 0) return false;
+    LoadDataBox(material, field, data);
+    return true;
+  }
+#endif
+
   PORTABLE_INLINE_FUNCTION
   Real GroupAbsorptionCoefficient_(const DataBox &lkappa, const Real rho,
                                    const Real temp, const int group) const {
@@ -305,48 +453,93 @@ class MeanOpacity {
     return (L_hi - L_lo) / dlT;
   }
 
-  void ValidateOpacityTables_(const DataBox &kappaPlanck,
-                              const DataBox &kappaRosseland) const {
-    if (kappaPlanck.rank() != 3 || kappaRosseland.rank() != 3) {
-      OPAC_ERROR("photons::MeanOpacity: opacity tables must be rank 3");
+  void ValidateOpacityTable_(const DataBox &table,
+                             const char *averaging_name) const {
+    if (table.rank() != 3) {
+      const std::string message = "photons::MeanOpacity: the " +
+                                  std::string(averaging_name) +
+                                  " opacity table must be rank 3\n";
+      OPAC_ERROR(message.c_str());
     }
+    if (table.dim(1) <= 0) {
+      const std::string message = "photons::MeanOpacity: the " +
+                                  std::string(averaging_name) +
+                                  " opacity table needs a positive ngroups\n";
+      OPAC_ERROR(message.c_str());
+    }
+    if (table.dim(2) < 2) {
+      const std::string message =
+          "photons::MeanOpacity: the " + std::string(averaging_name) +
+          " opacity table needs at least two temperature points\n";
+      OPAC_ERROR(message.c_str());
+    }
+    if (table.dim(3) < 2) {
+      const std::string message =
+          "photons::MeanOpacity: the " + std::string(averaging_name) +
+          " opacity table needs at least two density points\n";
+      OPAC_ERROR(message.c_str());
+    }
+  }
+
+  void ValidateOpacityCompatibility_(const DataBox &first,
+                                     const DataBox &second) const {
     for (int dim = 1; dim <= 3; ++dim) {
-      if (kappaPlanck.dim(dim) != kappaRosseland.dim(dim)) {
+      if (first.dim(dim) != second.dim(dim)) {
         OPAC_ERROR("photons::MeanOpacity: table dimensions do not match");
       }
     }
-    if (kappaPlanck.dim(1) <= 0) {
-      OPAC_ERROR("photons::MeanOpacity: ngroups must be positive");
-    }
-    if (kappaPlanck.range(1) != kappaRosseland.range(1) ||
-        kappaPlanck.range(2) != kappaRosseland.range(2)) {
+    if (first.range(1) != second.range(1) ||
+        first.range(2) != second.range(2)) {
       OPAC_ERROR("photons::MeanOpacity: table ranges do not match");
     }
   }
 
   template <typename GroupBoundsIndexer>
-  void LoadOpacityTables_(const DataBox &kappaPlanck,
-                          const DataBox &kappaRosseland,
+  void LoadOpacityTables_(const DataBox *kappaPlanck,
+                          const DataBox *kappaRosseland,
                           const GroupBoundsIndexer &group_bounds) {
-    ValidateOpacityTables_(kappaPlanck, kappaRosseland);
-    ngroups_ = kappaPlanck.dim(1);
+    if (kappaPlanck == nullptr && kappaRosseland == nullptr) {
+      OPAC_ERROR(
+          "photons::MeanOpacity: at least one opacity table is required");
+    }
+    if (kappaPlanck != nullptr) ValidateOpacityTable_(*kappaPlanck, "Planck");
+    if (kappaRosseland != nullptr)
+      ValidateOpacityTable_(*kappaRosseland, "Rosseland");
+    if (kappaPlanck != nullptr && kappaRosseland != nullptr) {
+      ValidateOpacityCompatibility_(*kappaPlanck, *kappaRosseland);
+    }
+    const DataBox &reference =
+        kappaPlanck != nullptr ? *kappaPlanck : *kappaRosseland;
+    ngroups_ = reference.dim(1);
     ValidateGroupBounds(group_bounds, ngroups_);
     SetGroupBounds(groupBounds_, group_bounds, ngroups_);
-    lkappaPlanck_.copyMetadata(kappaPlanck);
-    lkappaRosseland_.copyMetadata(kappaRosseland);
-    for (int i = 0; i < kappaPlanck.size(); ++i) {
-      lkappaPlanck_(i) = ToLog(kappaPlanck(i));
-      lkappaRosseland_(i) = ToLog(kappaRosseland(i));
+    if (kappaPlanck != nullptr) {
+      lkappaPlanck_.copyMetadata(*kappaPlanck);
+      for (int i = 0; i < kappaPlanck->size(); ++i) {
+        lkappaPlanck_(i) = ToLog((*kappaPlanck)(i));
+      }
+    }
+    if (kappaRosseland != nullptr) {
+      lkappaRosseland_.copyMetadata(*kappaRosseland);
+      for (int i = 0; i < kappaRosseland->size(); ++i) {
+        lkappaRosseland_(i) = ToLog((*kappaRosseland)(i));
+      }
     }
   }
 
   void ExportOpacityTables_(DataBox &kappaPlanck,
                             DataBox &kappaRosseland) const {
-    kappaPlanck.copyMetadata(lkappaPlanck_);
-    kappaRosseland.copyMetadata(lkappaRosseland_);
-    for (int i = 0; i < lkappaPlanck_.size(); ++i) {
-      kappaPlanck(i) = FromLog(lkappaPlanck_(i));
-      kappaRosseland(i) = FromLog(lkappaRosseland_(i));
+    if (HasPlanckOpacity()) {
+      kappaPlanck.copyMetadata(lkappaPlanck_);
+      for (int i = 0; i < lkappaPlanck_.size(); ++i) {
+        kappaPlanck(i) = FromLog(lkappaPlanck_(i));
+      }
+    }
+    if (HasRosselandOpacity()) {
+      kappaRosseland.copyMetadata(lkappaRosseland_);
+      for (int i = 0; i < lkappaRosseland_.size(); ++i) {
+        kappaRosseland(i) = FromLog(lkappaRosseland_(i));
+      }
     }
   }
 

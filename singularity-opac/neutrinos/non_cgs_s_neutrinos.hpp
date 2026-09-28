@@ -105,10 +105,10 @@ class MeanNonCGSUnitsS {
   int nlambda() const noexcept { return mean_s_opac_.nlambda(); }
 
   PORTABLE_INLINE_FUNCTION
-  Real PlanckMeanTotalScatteringCoefficient(const Real rho, const Real temp,
-                                            const Real Ye,
-                                            const RadiationType type) const {
-    const Real alpha = mean_s_opac_.PlanckMeanTotalScatteringCoefficient(
+  Real PlanckMeanScatteringCoefficient(const Real rho, const Real temp,
+                                       const Real Ye,
+                                       const RadiationType type) const {
+    const Real alpha = mean_s_opac_.PlanckMeanScatteringCoefficient(
         rho_unit_ * rho, temp_unit_ * temp, Ye, type);
     // alpha output in units of 1/cm. Want to convert out of CGS.
     // multiplication by length_unit converts length to cm.
@@ -118,10 +118,10 @@ class MeanNonCGSUnitsS {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real RosselandMeanTotalScatteringCoefficient(const Real rho, const Real temp,
-                                               const Real Ye,
-                                               const RadiationType type) const {
-    const Real alpha = mean_s_opac_.RosselandMeanTotalScatteringCoefficient(
+  Real RosselandMeanScatteringCoefficient(const Real rho, const Real temp,
+                                          const Real Ye,
+                                          const RadiationType type) const {
+    const Real alpha = mean_s_opac_.RosselandMeanScatteringCoefficient(
         rho_unit_ * rho, temp_unit_ * temp, Ye, type);
     // alpha output in units of 1/cm. Want to convert out of CGS.
     // multiplication by length_unit converts length to cm.

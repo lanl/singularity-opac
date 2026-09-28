@@ -266,6 +266,16 @@ class MeanNonCGSUnits {
     return multigroup_opac_.HasGroupBounds();
   }
 
+  PORTABLE_INLINE_FUNCTION
+  bool HasPlanckOpacity() const noexcept {
+    return multigroup_opac_.HasPlanckOpacity();
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  bool HasRosselandOpacity() const noexcept {
+    return multigroup_opac_.HasRosselandOpacity();
+  }
+
   std::vector<Real> GetGroupBounds() const {
     std::vector<Real> bounds = multigroup_opac_.GetGroupBounds();
     for (auto &b : bounds)
@@ -280,8 +290,24 @@ class MeanNonCGSUnits {
   }
 
 #ifdef SPINER_USE_HDF
-  void Save(const std::string &filename) const {
-    return multigroup_opac_.Save(filename);
+  void Save(const std::string &filename, const std::string &material_name,
+            const bool append = false) const {
+    return multigroup_opac_.Save(filename, material_name, append);
+  }
+
+  void Save(const std::string &filename, const int opacid,
+            const bool append = false) const {
+    return multigroup_opac_.Save(filename, opacid, append);
+  }
+
+  void Save(const std::string &filename, const int opacid,
+            const std::string &material_name, const bool append = false) const {
+    return multigroup_opac_.Save(filename, opacid, material_name, append);
+  }
+
+  void Save(const std::string &filename, const int opacid,
+            const char *material_name, const bool append = false) const {
+    return multigroup_opac_.Save(filename, opacid, material_name, append);
   }
 #endif
 
@@ -289,6 +315,21 @@ class MeanNonCGSUnits {
   Real PlanckGroupAbsorptionCoefficient(const Real rho, const Real temp,
                                         const int group) const {
     return AbsorptionCoefficient(rho, temp, group, Planck);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real PlanckMeanAbsorptionCoefficient(const Real rho, const Real temp) const {
+    return multigroup_opac_.PlanckMeanAbsorptionCoefficient(rho_unit_ * rho,
+                                                            temp_unit_ * temp) *
+           length_unit_;
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  Real RosselandMeanAbsorptionCoefficient(const Real rho,
+                                          const Real temp) const {
+    return multigroup_opac_.RosselandMeanAbsorptionCoefficient(
+               rho_unit_ * rho, temp_unit_ * temp) *
+           length_unit_;
   }
 
   PORTABLE_INLINE_FUNCTION
@@ -333,10 +374,12 @@ class MeanNonCGSUnits {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real Emissivity(const Real rho, const Real temp,
-                  const int gmode = Rosseland) const {
-    const Real J = multigroup_opac_.Emissivity(rho * rho_unit_, temp * temp_unit_, gmode);
-    const Real inv_emiss_unit_(length_unit_ * time_unit_ * time_unit_ / mass_unit_);
+  Real Emissivity(const Real rho, const Real temp, const int gmode = Rosseland,
+                  Real *lambda = nullptr) const {
+    const Real J = multigroup_opac_.Emissivity(
+        rho * rho_unit_, temp * temp_unit_, gmode, lambda);
+    const Real inv_emiss_unit_(length_unit_ * time_unit_ * time_unit_ /
+                               mass_unit_);
     // Jnu integrated over frequency, but divide by frequency to get out of cgs
     return J * inv_emiss_unit_ * time_unit_;
   }

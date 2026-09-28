@@ -94,16 +94,12 @@ class MeanVariant {
   }
 
   PORTABLE_INLINE_FUNCTION
-  Real AbsorptionCoefficient(const Real rho, const Real temp,
-                             const int gmode = Rosseland) const {
-    return AbsorptionCoefficient(rho, temp, 0, gmode);
-  }
-
-  PORTABLE_INLINE_FUNCTION
   Real Emissivity(const Real rho, const Real temp, const int gmode = Rosseland,
                   Real *lambda = nullptr) const {
     return PortsOfCall::visit(
-        [=](const auto &opac) { return opac.Emissivity(rho, temp, gmode); },
+        [=](const auto &opac) {
+          return opac.Emissivity(rho, temp, gmode, lambda);
+        },
         opac_);
   }
 
@@ -120,6 +116,18 @@ class MeanVariant {
   }
 
   PORTABLE_INLINE_FUNCTION
+  bool HasPlanckOpacity() const noexcept {
+    return PortsOfCall::visit(
+        [](const auto &opac) { return opac.HasPlanckOpacity(); }, opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
+  bool HasRosselandOpacity() const noexcept {
+    return PortsOfCall::visit(
+        [](const auto &opac) { return opac.HasRosselandOpacity(); }, opac_);
+  }
+
+  PORTABLE_INLINE_FUNCTION
   Real PlanckGroupAbsorptionCoefficient(const Real rho, const Real temp,
                                         const int group) const {
     return AbsorptionCoefficient(rho, temp, group, Planck);
@@ -133,7 +141,7 @@ class MeanVariant {
 
   PORTABLE_INLINE_FUNCTION
   Real AbsorptionCoefficient(const Real rho, const Real temp, const int group,
-                             const int gmode) const {
+                             const int gmode = Rosseland) const {
     return PortsOfCall::visit(
         [=](const auto &opac) {
           return opac.AbsorptionCoefficient(rho, temp, group, gmode);
@@ -177,9 +185,31 @@ class MeanVariant {
   }
 
 #ifdef SPINER_USE_HDF
-  void Save(const std::string &filename) const {
-    return PortsOfCall::visit([=](auto &opac) { return opac.Save(filename); },
-                              opac_);
+  void Save(const std::string &filename, const std::string &material_name,
+            const bool append = false) const {
+    return PortsOfCall::visit(
+        [=](auto &opac) { return opac.Save(filename, material_name, append); },
+        opac_);
+  }
+
+  void Save(const std::string &filename, const int opacid,
+            const bool append = false) const {
+    return PortsOfCall::visit(
+        [=](auto &opac) { return opac.Save(filename, opacid, append); }, opac_);
+  }
+
+  void Save(const std::string &filename, const int opacid,
+            const std::string &material_name, const bool append = false) const {
+    return PortsOfCall::visit(
+        [=](auto &opac) {
+          return opac.Save(filename, opacid, material_name, append);
+        },
+        opac_);
+  }
+
+  void Save(const std::string &filename, const int opacid,
+            const char *material_name, const bool append = false) const {
+    Save(filename, opacid, std::string(material_name), append);
   }
 #endif
 };
