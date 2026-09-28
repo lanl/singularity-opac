@@ -123,7 +123,7 @@ fails if more than one material claims the value. Materials that intentionally
 share an `opacid` (for instance a reference table and a scaled copy of it) must
 therefore be loaded by `opac_name`.
 
-A table need not carry both averagings. `HasPlanckOpacity()`,
+A table need not provide data averaged by both schemes. `HasPlanckOpacity()`,
 `HasRosselandOpacity()`, and their scattering counterparts `HasPlanckSOpacity()`
 and `HasRosselandSOpacity()` report which are present. `HasGroupBounds()` is
 provided for API symmetry and always returns true, since every mean opacity
