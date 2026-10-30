@@ -43,7 +43,43 @@ namespace impl {
 // TODO(BRR) Note: It is assumed that lambda is constant for all densities and
 // temperatures
 
-template <typename pc = PhysicalConstantsCGS>
+struct Identity {
+  Real operator()(Real rho, Real temp) const {
+    return rho;
+  }
+  Real ddT (Real rho, Real temp) const {
+    return 0.0;
+  }
+  Real dlRhodlT (Real rho, Real temp) const {
+    return 0.0;
+  }
+};
+
+struct RFromRhoCGS {
+  Real operator() (Real rho, Real temp) const {
+    return (rho / (temp * temp * temp)) * 1.e18;
+  }
+  Real ddT (Real rho, Real temp) const {
+    return (-3e18 * rho) / (temp * temp * temp * temp);
+  }
+  Real dlRhodlT (Real rho, Real temp) const {
+    return -3.0;
+  }
+};
+
+struct RFromRhoSI {
+  Real operator() (Real rho, Real temp) const {
+    return (rho / (temp * temp * temp)) * 1.e15;
+  }
+  Real ddT (Real rho, Real temp) const {
+    return (-3e15 * rho) / (temp * temp * temp * temp);
+  }
+  Real dlRhodlT (Real rho, Real temp) const {
+    return -3.0;
+  }
+};
+
+template <typename pc = PhysicalConstantsCGS, typename RhoTransform = Identity>
 class MeanOpacity {
  public:
   using PC = pc;
@@ -429,7 +465,7 @@ class MeanOpacity {
   PORTABLE_INLINE_FUNCTION
   Real GroupAbsorptionCoefficient_(const DataBox &lkappa, const Real rho,
                                    const Real temp, const int group) const {
-    const Real lRho = ToLog(rho);
+    const Real lRho = ToLog(RhoTransform()(rho, temp));
     const Real lT = ToLog(temp);
     return rho * FromLog(lkappa.interpToReal(lRho, lT, group));
   }
@@ -440,7 +476,7 @@ class MeanOpacity {
   PORTABLE_INLINE_FUNCTION
   Real GroupDLogAbsCoeffDLogT_(const DataBox &lkappa, const Real rho,
                                const Real temp, const int group) const {
-    const Real lRho = ToLog(rho);
+    const Real lR = ToLog(RhoTransform()(rho, temp));
     const Real lT = ToLog(temp);
     const auto lT_grid =
         lkappa.range(1); // axis 1 is log10(T) (see setRange in Impl_)
@@ -448,9 +484,20 @@ class MeanOpacity {
     const int iT = lT_grid.index(lT); // clamped to a valid cell [iT, iT+1]
     const Real lT_lo = lT_grid.x(iT);
     const Real lT_hi = lT_grid.x(iT + 1);
-    const Real L_lo = lkappa.interpToReal(lRho, lT_lo, group);
-    const Real L_hi = lkappa.interpToReal(lRho, lT_hi, group);
-    return (L_hi - L_lo) / dlT;
+    const Real lk_lT_lo = lkappa.interpToReal(lR, lT_lo, group);
+    const Real lk_lT_hi = lkappa.interpToReal(lR, lT_hi, group);
+    if constexpr(std::is_same_v<RhoTransform,Identity>) {
+        return ((lk_lT_hi - lk_lT_lo) / dlT);
+    }
+    const auto lR_grid = lkappa.range(0);
+    const Real dlR = lR_grid.dx();
+    const int iR = lR_grid.index(lR);
+    const Real lR_lo = lR_grid.x(iR);
+    const Real lR_hi = lR_grid.x(iR + 1);
+    const Real lk_lR_lo = lkappa.interpToReal(lR_lo, lT, group);
+    const Real lk_lR_hi = lkappa.interpToReal(lR_hi, lT, group);
+    const Real dlR_dlT = RhoTransform().dlRhodlT(rho, temp);
+    return ((lk_lT_hi - lk_lT_lo) / dlT) + dlR_dlT * ((lk_lR_hi - lk_lR_lo) / dlR);
   }
 
   void ValidateOpacityTable_(const DataBox &table,
