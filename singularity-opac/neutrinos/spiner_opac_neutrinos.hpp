@@ -421,7 +421,7 @@ class SpinerOpacity {
     }
     DataBox kappa_file(NE, NTYPE, NY, NT, NR); // 1/cm
     status =
-        H5LTread_dataset_double(file, "absorption_opacity", jnu_file.data());
+        H5LTread_dataset_double(file, "absorption_opacity", kappa_file.data());
     if (status != H5_SUCCESS) {
       OPAC_ERROR("An HDF5 error ocurred while reading absorption opacities");
     }
